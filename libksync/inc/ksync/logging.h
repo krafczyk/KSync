@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef KSYNC_LOGGING_HDR
 #define KSYNC_LOGGING_HDR
 
+#include <cstring>
+
 #define TNRM  "\x1B[0m"
 #define TRED  "\x1B[31m"
 #define TGRN  "\x1B[32m"
