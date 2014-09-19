@@ -14,7 +14,7 @@
 #You should have received a copy of the GNU General Public License
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-add_library (libksync SHARED src/messages.cxx src/logging.cxx)
+add_library (libksync SHARED src/messages.cxx src/logging.cxx src/optparse.cxx)
 set_target_properties(libksync PROPERTIES COMPILE_FLAGS " -std=c++11 -Wall -Wextra -Werror")
 include_directories(inc)
 target_include_directories (libksync PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/inc)
