@@ -14,10 +14,10 @@
 #You should have received a copy of the GNU General Public License
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-add_library (libksync SHARED src/messages.cxx src/logging.cxx src/optparse.cxx)
-set_target_properties(libksync PROPERTIES COMPILE_FLAGS " -std=c++11 -Wall -Wextra -Werror")
+add_library (ksync SHARED src/messages.cxx src/logging.cxx src/optparse.cxx)
+set_target_properties(ksync PROPERTIES COMPILE_FLAGS " -std=c++11 -Wall -Wextra -Werror")
 include_directories(inc)
-target_include_directories (libksync PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+target_include_directories (ksync PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
-install (TARGETS libksync DESTINATION lib)
+install (TARGETS ksync DESTINATION lib)
 install (DIRECTORY inc/ksync DESTINATION include FILES_MATCHING PATTERN "*.h")

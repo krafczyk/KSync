@@ -22,6 +22,6 @@ find_package(Qt5Widgets REQUIRED)
 add_executable(ksync_client src/client.cpp)
 set_target_properties(ksync_client PROPERTIES COMPILE_FLAGS " -std=c++11 -Wall -Wextra -Werror")
 include_directories(inc)
-target_link_libraries(ksync_client libksync)
+target_link_libraries(ksync_client ksync)
 
 install (TARGETS ksync_client DESTINATION bin)
