@@ -27,26 +27,31 @@ namespace KSync {
 		public:
 			//Type management
 			typedef int Type_t;
-			const Type_t Bool = 0;
-			const Type_t Str = 1;
-			const Type_t Int = 2;
-			const Type_t Float = 3;
+			static const Type_t Bool;
+			static const Type_t Str;
+			static const Type_t Int;
+			static const Type_t Float;
 
 			//Mode management
 			typedef int Mode_t;
-			const Mode_t Single = 0;
-			const Mode_t Multiple = 1;
+			static const Mode_t Single;
+			static const Mode_t Multiple;
+
+			//Required management
+			typedef bool Req_t;
+			static const Req_t Required;
+			static const Req_t Optional;
 
 		public:
-			Option(const std::string& call_name, const std::string& help_text, bool* option);
-			Option(const std::string& call_name, const std::string& help_text, std::vector<bool>* options);
-			Option(const std::string& call_name, const std::string& help_text, std::string* option);
-			Option(const std::string& call_name, const std::string& help_text, std::vector<std::string>* options);
-			Option(const std::string& call_name, const std::string& help_text, int* options);
-			Option(const std::string& call_name, const std::string& help_text, std::vector<int>* options);
-			Option(const std::string& call_name, const std::string& help_text, double* options);
-			Option(const std::string& call_name, const std::string& help_text, std::vector<double>* options);
-			Option(const std::string& call_name, const Type_t& Type, const Mode_t& Mode, const std::string& help_text, void* options);
+			Option(const std::string& call_name, const std::string& help_text, bool* option, const Req_t required = Optional);
+			Option(const std::string& call_name, const std::string& help_text, std::vector<bool>* options, const Req_t required = Optional);
+			Option(const std::string& call_name, const std::string& help_text, std::string* option, const Req_t required = Optional);
+			Option(const std::string& call_name, const std::string& help_text, std::vector<std::string>* options, const Req_t requred = Optional);
+			Option(const std::string& call_name, const std::string& help_text, int* options, const Req_t required = Optional);
+			Option(const std::string& call_name, const std::string& help_text, std::vector<int>* options, const Req_t required = Optional);
+			Option(const std::string& call_name, const std::string& help_text, double* options, const Req_t required = Optional);
+			Option(const std::string& call_name, const std::string& help_text, std::vector<double>* options, const Req_t required = Optional);
+			Option(const std::string& call_name, const Type_t& Type, const Mode_t& Mode, const std::string& help_text, const Req_t required, void* options);
 
 			//Getters/Setters
 			std::string GetHelpText();
@@ -63,11 +68,23 @@ namespace KSync {
 			int SetValue(const char* optarg) __attribute__((warn_unused_result));
 
 			static std::vector<std::string> GetCallNames(const std::string& combined_names);
+
+			bool WasDefined() const {
+				return defined;
+			}
+			void SetRequired(const Req_t required) {
+				this->required = required;
+			}
+			Req_t IsRequired() const {
+				return required;
+			}
 			
 		private:
 			std::vector<std::string> call_names;
 			Type_t type;
 			Mode_t mode;
+			bool required;
+			bool defined;
 			std::string help_text;
 			void* value;
 	};

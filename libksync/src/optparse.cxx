@@ -23,53 +23,64 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ksync/optparse.h"
 
 namespace KSync {
-	Option::Option(const std::string& call_name, const Type_t& Type, const Mode_t& Mode, const std::string& help_text, void* options) {
+	const Option::Type_t Option::Bool = 0;
+	const Option::Type_t Option::Str = 1;
+	const Option::Type_t Option::Int = 2;
+	const Option::Type_t Option::Float = 3;
+
+	const Option::Mode_t Option::Single = 0;
+	const Option::Mode_t Option::Multiple = 1;
+
+	const Option::Req_t Option::Required = true;
+	const Option::Req_t Option::Optional = false;
+
+	Option::Option(const std::string& call_name, const Type_t& Type, const Mode_t& Mode, const std::string& help_text, const Req_t required, void* options) {
 		this->call_names = GetCallNames(call_name);
 		this->type = Type;
 		this->mode = Mode;
 		this->help_text = help_text;
 		this->value = options;
+		this->required = required;
+		this->defined = false;
 	}
 
-	Option::Option(const std::string& call_name, const std::string& help_text, bool* option) {
-		Option(call_name, Bool, Single, help_text, (void*) option);
+	Option::Option(const std::string& call_name, const std::string& help_text, bool* option, const Req_t required) : Option(call_name, Bool, Single, help_text, required, (void*) option) {
 	}
 
-	Option::Option(const std::string& call_name, const std::string& help_text, std::vector<bool>* option) {
-		Option(call_name, Bool, Multiple, help_text, (void*) option);
+	Option::Option(const std::string& call_name, const std::string& help_text, std::vector<bool>* option, const Req_t required) : Option(call_name, Bool, Multiple, help_text, required, (void*) option) {
 	}
 
-	Option::Option(const std::string& call_name, const std::string& help_text, std::string* option) {
-		Option(call_name, Str, Single, help_text, (void*) option);
+	Option::Option(const std::string& call_name, const std::string& help_text, std::string* option, const Req_t required) : Option(call_name, Str, Single, help_text, required, (void*) option) {
 	}
 
-	Option::Option(const std::string& call_name, const std::string& help_text, std::vector<std::string>* option) {
-		Option(call_name, Str, Multiple, help_text, (void*) option);
+	Option::Option(const std::string& call_name, const std::string& help_text, std::vector<std::string>* option, const Req_t required) : Option(call_name, Str, Multiple, help_text, required, (void*) option) {
 	}
 
-	Option::Option(const std::string& call_name, const std::string& help_text, int* option) {
-		Option(call_name, Int, Single, help_text, (void*) option);
+	Option::Option(const std::string& call_name, const std::string& help_text, int* option, const Req_t required) : Option(call_name, Int, Single, help_text, required, (void*) option) {
 	}
 
-	Option::Option(const std::string& call_name, const std::string& help_text, std::vector<int>* option) {
-		Option(call_name, Int, Multiple, help_text, (void*) option);
+	Option::Option(const std::string& call_name, const std::string& help_text, std::vector<int>* option, const Req_t required) : Option(call_name, Int, Multiple, help_text, required, (void*) option) {
 	}
 
-	Option::Option(const std::string& call_name, const std::string& help_text, double* option) {
-		Option(call_name, Float, Single, help_text, (void*) option);
+	Option::Option(const std::string& call_name, const std::string& help_text, double* option, const Req_t required) : Option(call_name, Float, Single, help_text, required, (void*) option) {
 	}
 
-	Option::Option(const std::string& call_name, const std::string& help_text, std::vector<double>* option) {
-		Option(call_name, Float, Multiple, help_text, (void*) option);
+	Option::Option(const std::string& call_name, const std::string& help_text, std::vector<double>* option, const Req_t required) : Option(call_name, Float, Multiple, help_text, required, (void*) option) {
 	}
 
 	std::vector<std::string> Option::GetCallNames(const std::string& combined_names) {
 		std::vector<std::string> answer;
-		std::stringstream ss(combined_names);
-		std::string name;
-		while(std::getline(ss, name, '/')) {
-			answer.push_back(name);
-		}
+		const size_t buffer_size = combined_names.size();
+		char temp_buffer[buffer_size];
+		strcpy(temp_buffer, combined_names.c_str());
+		char* token = strtok(temp_buffer, "/");
+		do {
+			if(token == NULL) {
+				break;
+			}
+			answer.push_back(std::string(token));
+			token = strtok(NULL, "/");
+		} while (true);
 		return answer;
 	}
 
@@ -103,8 +114,7 @@ namespace KSync {
 			if(call_names[i].size() == 1) {
 				ss << "-" << call_names[i];
 				return ss.str();
-			}
-			else {
+			} else {
 				ss << "--" << call_names[i];
 				return ss.str();
 			}
@@ -163,10 +173,12 @@ namespace KSync {
 			if(mode == Single) {
 				std::string* string = (std::string*) value;
 				*string = std::string(optarg);
+				defined = true;
 				return 0;
 			} else if (mode == Multiple) {
 				std::vector<std::string>* vec_string = (std::vector<std::string>*) value;
 				vec_string->push_back(std::string(optarg));
+				defined = true;
 				return 0;
 			}
 		} else if (type == Int) {
@@ -175,11 +187,13 @@ namespace KSync {
 					int* val = (int*) value;
 					char* p;
 					*val = strtol(optarg, &p, 10);
+					defined = true;
 					return 0;
 				} else if (mode == Multiple) {
 					std::vector<int>* vec_val = (std::vector<int>*) value;
 					char* p;
 					vec_val->push_back(strtol(optarg, &p, 10));
+					defined = true;
 					return 0;
 				}
 			} else {
@@ -192,11 +206,13 @@ namespace KSync {
 					double* val = (double*) value;
 					char* p;
 					*val = strtod(optarg, &p);
+					defined = true;
 					return 0;
 				} else if (mode == Multiple) {
 					std::vector<double>* vec_val = (std::vector<double>*) value;
 					char* p;
 					vec_val->push_back(strtod(optarg, &p));
+					defined = true;
 					return 0;
 				}
 			} else {
@@ -281,6 +297,14 @@ namespace KSync {
 				return -2;
 			}
 			++arg_i;
+		}
+		for(size_t i=0;i<options.size();++i) {
+			if(options[i]->IsRequired()) {
+				if(!options[i]->WasDefined()) {
+					Error("The option (%s) needs to be defined.\n", options[i]->GetName().c_str());
+					return -3;
+				}
+			}
 		}
 		return 0;
 	}
