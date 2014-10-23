@@ -32,8 +32,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ksync/server.h"
 #include "ksync/optparse.h"
 #include "ksync/logging.h"
+#include "ksync/messages.h"
 
 #define PORT "3490"
+
+#define MAXDATASIZE 100 // max number of bytes we can get at once
 
 #define BACKLOG 10
 
@@ -74,7 +77,7 @@ int main(int argc, char** argv) {
 	hints.ai_flags = AI_PASSIVE; // use my IP
 
 	if ((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0) {
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+		Error("getaddrinfo: %s\n", gai_strerror(rv));
 		return 1;
 	}
 
@@ -82,19 +85,19 @@ int main(int argc, char** argv) {
 	for(p = servinfo; p != NULL; p = p->ai_next) {
 		if ((sockfd = socket(p->ai_family, p->ai_socktype,
 				p->ai_protocol)) == -1) {
-			perror("server: socket");
+			Error("server: socket");
 			continue;
 		}
 
 		if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes,
 				sizeof(int)) == -1) {
-			perror("setsockopt");
+			Error("setsockopt");
 			exit(1);
 		}
 
 		if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
 			close(sockfd);
-			perror("server: bind");
+			Error("server: bind");
 			continue;
 		}
 
@@ -102,14 +105,14 @@ int main(int argc, char** argv) {
 	}
 
 	if (p == NULL)  {
-		fprintf(stderr, "server: failed to bind\n");
+		Error("server: failed to bind\n");
 		return 2;
 	}
 
 	freeaddrinfo(servinfo); // all done with this structure
 
 	if (listen(sockfd, BACKLOG) == -1) {
-		perror("listen");
+		Error("listen");
 		exit(1);
 	}
 
@@ -117,29 +120,93 @@ int main(int argc, char** argv) {
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_RESTART;
 	if (sigaction(SIGCHLD, &sa, NULL) == -1) {
-		perror("sigaction");
+		Error("sigaction");
 		exit(1);
 	}
 
-	printf("server: waiting for connections...\n");
+	KPrint("server: waiting for connections...\n");
 
 	while(1) {  // main accept() loop
 		sin_size = sizeof their_addr;
 		new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
 		if (new_fd == -1) {
-			perror("accept");
+			Error("accept");
 			continue;
 		}
 
 		inet_ntop(their_addr.ss_family,
 			get_in_addr((struct sockaddr *)&their_addr),
 			s, sizeof s);
-		printf("server: got connection from %s\n", s);
+		KPrint("server: got connection from %s\n", s);
 
 		if (!fork()) { // this is the child process
 			close(sockfd); // child doesn't need the listener
-			if (send(new_fd, "Hello, world!", 13, 0) == -1)
-				perror("send");
+
+			bool quit = false;
+			while(!quit) {
+				//Receive message
+				int numbytes;
+				char buf[MAXDATASIZE];
+				if ((numbytes = recv(new_fd, buf, MAXDATASIZE-1, 0)) == -1) {
+					Error("recv");
+					quit = true;
+					continue;
+				}
+				buf[numbytes] = '\0';
+
+				KPrint("Received: %s\n", buf);
+
+				std::string message(buf);
+
+				//Formulate Reply
+				std::string reply;
+				std::string unwrapped_message;
+				bool ready_to_send = false;
+				KSync::Messages::Message_t message_type;
+				if(KSync::Messages::UnWrapMessage(unwrapped_message, message_type, message)<0) {
+					Warning("Failed to unwrap message(%s)\n", message.c_str());
+					if(KSync::Messages::WrapAsReply(reply, "Failed to unwrap message.")<0) {
+						Error("Failed to wrap a reply.\n");
+						quit = true;
+						continue;
+					}
+					ready_to_send = true;
+				}
+
+				if(message_type == KSync::Messages::Quit) {
+					quit = true;
+					KSync::Messages::CreateQuit(reply);
+					ready_to_send = true;
+				}
+	
+				if(!ready_to_send) {
+					//Here I would execute the command
+					if(KSync::Messages::WrapAsReply(reply, unwrapped_message)<0) {
+						Warning("Failed to wrap reply (%s)\n", buf);
+						continue;
+					}
+				} 
+				//Send the quit and simple replies.
+				//Send Reply
+				KPrint("Sending reply\n");
+				if (send(new_fd, reply.c_str(), reply.size(), 0) == -1) {
+					Error("send");
+					quit = true;
+					continue;
+				}
+				if(quit) {
+					continue;
+				} else {
+					KPrint("Sending end\n");
+					KSync::Messages::CreateEnd(reply);
+					if (send(new_fd, reply.c_str(), reply.size(), 0) == -1) {
+						Error("send");
+						quit = true;
+						continue;
+					}
+				}
+			}
+			KPrint("I'm quitting.\n");
 			close(new_fd);
 			exit(0);
 		}

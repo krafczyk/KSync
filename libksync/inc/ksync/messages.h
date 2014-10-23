@@ -16,13 +16,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef KSYNC_MESSAGES_MESSAGES_HDR
-#define KSYNC_MESSAGES_MESSAGES_HDR
+#ifndef KSYNC_MESSAGES_HDR
+#define KSYNC_MESSAGES_HDR
 
 namespace KSync {
-	enum Messages {
-		Sync
-	};
+	namespace Messages {
+		typedef unsigned int Message_t;
+		extern const Message_t Command;
+		extern const Message_t Reply;
+		extern const Message_t End;
+		extern const Message_t Quit;
+
+		void CreateEnd(std::string& end);
+		void CreateQuit(std::string& quit);
+		int WrapAsCommand(std::string& command, const std::string& in) __attribute__((warn_unused_result));
+		int WrapAsReply(std::string& reply, const std::string& in) __attribute__((warn_unused_result));
+		int UnWrapMessage(std::string& unwrapped_message, Message_t& Message_Type, const std::string& message) __attribute__((warn_unused_result));
+	}
 }
 
 #endif

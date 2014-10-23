@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <iostream>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -31,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ksync/logging.h"
 #include "ksync/optparse.h"
 #include "ksync/client.h"
+#include "ksync/messages.h"
 
 #define PORT "3490" // the port client will be connecting to 
 
@@ -69,7 +72,7 @@ int main(int argc, char** argv) {
 	hints.ai_socktype = SOCK_STREAM;
 
 	if ((rv = getaddrinfo(hostname.c_str(), PORT, &hints, &servinfo)) != 0) {
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+		Error("getaddrinfo: %s\n", gai_strerror(rv));
 		return 1;
 	}
 
@@ -77,13 +80,13 @@ int main(int argc, char** argv) {
 	for(p = servinfo; p != NULL; p = p->ai_next) {
 		if ((sockfd = socket(p->ai_family, p->ai_socktype,
 				p->ai_protocol)) == -1) {
-			perror("client: socket");
+			Error("client: socket\n");
 			continue;
 		}
 
 		if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
 			close(sockfd);
-			perror("client: connect");
+			Error("client: connect\n");
 			continue;
 		}
 
@@ -91,24 +94,79 @@ int main(int argc, char** argv) {
 	}
 
 	if (p == NULL) {
-		fprintf(stderr, "client: failed to connect\n");
+		Error("client: failed to connect\n");
 		return 2;
 	}
 
 	inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
 			s, sizeof s);
-	printf("client: connecting to %s\n", s);
+	KPrint("client: connecting to %s\n", s);
 
 	freeaddrinfo(servinfo); // all done with this structure
 
-	if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
-		perror("recv");
-		exit(1);
+	KPrint("KSync: Client Server command test\n");
+	KPrint("'quit' to quit.\n");
+	bool quit = false;
+	while(!quit) {
+
+		KPrint("ksync_client: ");
+		std::string command;
+		std::getline(std::cin, command);
+		std::string wrapped_message;
+
+		if(command == "quit") {
+			KSync::Messages::CreateQuit(wrapped_message);
+		} else {
+			if(KSync::Messages::WrapAsCommand(wrapped_message, command)<0) {
+				Warning("Failed to wrap command (%s)\n", command.c_str());
+				continue;
+			}
+		}
+
+		if (send(sockfd, wrapped_message.c_str(), wrapped_message.size(), 0) == -1) {
+			Warning("Failed to send command.\n");
+			quit = true;
+			continue;
+		}
+
+		while(true) {
+			KPrint("Receiving a reply.\n");
+			if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
+				Error("recv\n");
+				quit = true;
+				break;
+			}
+			buf[numbytes] = '\0';
+
+			//Unwrap reply.
+			std::string message(buf);
+			KSync::Messages::Message_t message_type;
+			std::string unwrapped_message;
+			if(KSync::Messages::UnWrapMessage(unwrapped_message, message_type, message)<0) {
+				Error("Couldn't unwrap the message (%s)\n", message.c_str());
+				quit = true;
+				break;
+			}
+	
+			if(message_type == KSync::Messages::Quit) {
+				quit = true;
+				break;
+			}
+
+			if(message_type == KSync::Messages::End) {
+				KPrint("Received End\n");
+				break;
+			}
+
+			if(message_type == KSync::Messages::Reply) {
+				KPrint("Received Reply: (%s)\n", unwrapped_message.c_str());
+			}
+		}
 	}
 
-	buf[numbytes] = '\0';
-
-	printf("client: received '%s'\n",buf);
+	KPrint("Quitting.\n");
+	
+	//Close the connection;
 
 	close(sockfd);
 
