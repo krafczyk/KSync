@@ -17,6 +17,10 @@
 cmake_minimum_required (VERSION 2.8.11)
 project (ksync)
 
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+find_package(ArgParse)
+
 add_subdirectory(libksync)
 add_subdirectory(server)
 add_subdirectory(client)
