@@ -19,6 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef KSYNC_MESSAGES_HDR
 #define KSYNC_MESSAGES_HDR
 
+#include <string>
+
 namespace KSync {
 	namespace Messages {
 		typedef unsigned int Message_t;

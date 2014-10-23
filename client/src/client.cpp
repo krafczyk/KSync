@@ -31,9 +31,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <arpa/inet.h>
 
 #include "ksync/logging.h"
-#include "ksync/optparse.h"
 #include "ksync/client.h"
 #include "ksync/messages.h"
+
+#include "ArgParse/ArgParse.h"
 
 #define PORT "3490" // the port client will be connecting to 
 
@@ -48,10 +49,10 @@ void *get_in_addr(struct sockaddr *sa) {
 }
 
 int main(int argc, char** argv) {
-	KSync::ArgParser arg_parser("KSync Server - Server side of a Client-Server synchonization system using rsync.");
+	ArgParse::ArgParser arg_parser("KSync Server - Server side of a Client-Server synchonization system using rsync.");
 
 	std::string hostname;
-	KSync::Option hostname_option("host", "The host name to use.", &hostname, KSync::Option::Required);
+	ArgParse::Option hostname_option("host", "The host name to use.", &hostname, ArgParse::Option::Required);
 	arg_parser.AddOption(&hostname_option);
 
 	int status;

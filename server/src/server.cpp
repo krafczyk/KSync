@@ -30,9 +30,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <signal.h>
 
 #include "ksync/server.h"
-#include "ksync/optparse.h"
 #include "ksync/logging.h"
 #include "ksync/messages.h"
+
+#include "ArgParse/ArgParse.h"
 
 #define PORT "3490"
 
@@ -53,7 +54,7 @@ void *get_in_addr(struct sockaddr *sa) {
 }
 
 int main(int argc, char** argv) {
-	KSync::ArgParser arg_parser("KSync Server - Server side of a Client-Server synchonization system using rsync.");
+	ArgParse::ArgParser arg_parser("KSync Server - Server side of a Client-Server synchonization system using rsync.");
 
 	int status;
 	if((status = arg_parser.ParseArgs(argc, argv)) < 0) {
