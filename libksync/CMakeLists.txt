@@ -14,10 +14,11 @@
 #You should have received a copy of the GNU General Public License
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+set(libksync_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/inc" CACHE INTERNAL "ksync include dir")
+
 add_library (ksync SHARED src/messages.cxx src/logging.cxx)
 set_target_properties(ksync PROPERTIES COMPILE_FLAGS " -std=c++11 -Wall -Wextra -Werror")
-include_directories(inc)
-target_include_directories (ksync PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+include_directories(${libksync_INCLUDE_DIR})
 
 install (TARGETS ksync DESTINATION lib)
 install (DIRECTORY inc/ksync DESTINATION include FILES_MATCHING PATTERN "*.h")
