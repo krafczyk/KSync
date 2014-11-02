@@ -35,6 +35,155 @@ namespace KSync {
 		const char* Reply_Message = "Reply";
 		const std::string End_Message = "End";
 		const std::string Quit_Message = "Quit";
+		const char EscapeChar = '\\';
+		const char QuoteChar = '"';
+
+		std::string GenRandomString(size_t string_length) {
+			std::string answer;
+			answer.reserve(string_length);
+			for(size_t i=0; i<string_length; ++i ) {
+				char gen = rand() % 256;
+				answer.push_back(gen);
+			}
+			return answer;
+		}
+
+		std::vector<char> GenRandomVecChar(size_t string_length) {
+			std::vector<char> answer;
+			answer.reserve(string_length);
+			for(size_t i=0; i<string_length; ++i ) {
+				char gen = rand() % 256;
+				answer.push_back(gen);
+			}
+			return answer;
+		}
+
+		int CountUnEscapes(const std::vector<char>& string) {
+			size_t N = 0;
+			for(size_t i=0; i < string.size();++i) {
+				if(string[i] == QuoteChar) {
+					++N;
+					if(i == string.size()-1) {
+						break;
+					} else {
+						++i;
+					}
+				} else {
+					++N;
+				}
+			}
+			return N;
+		}
+
+		int CountUnEscapes(const std::string& string) {
+			size_t N = 0;
+			for(size_t i=0; i < string.size();++i) {
+				if(string[i] == QuoteChar) {
+					++N;
+					if(i == string.size()-1) {
+						break;
+					} else {
+						++i;
+					}
+				} else {
+					++N;
+				}
+			}
+			return N;
+		}
+
+		int CountQuotesAndEscapes(const std::vector<char>& string) {
+			size_t N = 0;
+			for(size_t i=0; i < string.size();++i) {
+				if(string[i] == QuoteChar) {
+					++N;
+				} else if (string[i] == EscapeChar) {
+					++N;
+				}
+			}
+			return N;
+		}
+
+		int CountQuotesAndEscapes(const std::string& string) {
+			size_t N = 0;
+			for(size_t i=0; i < string.size();++i) {
+				if(string[i] == QuoteChar) {
+					++N;
+				} else if (string[i] == EscapeChar) {
+					++N;
+				}
+			}
+			return N;
+		}
+
+		int EscapeString(std::vector<char>& escaped_string, const std::vector<char>& string) {
+			int N = CountQuotesAndEscapes(string);
+			escaped_string.clear();
+			escaped_string.reserve(string.size()+N);
+			for(size_t i=0; i < string.size(); ++i) {
+				if(string[i] == EscapeChar) {
+					escaped_string.push_back(EscapeChar);
+					escaped_string.push_back(EscapeChar);
+				} else if (string[i] == QuoteChar) {
+					escaped_string.push_back(EscapeChar);
+					escaped_string.push_back(QuoteChar);
+				} else {
+					escaped_string.push_back(string[i]);
+				}
+			}
+			return 0;
+		}
+
+		int EscapeString(std::string& escaped_string, const std::string& string) {
+			int N = CountQuotesAndEscapes(string);
+			escaped_string.clear();
+			escaped_string.reserve(string.size()+N);
+			for(size_t i=0; i < string.size(); ++i) {
+				if(string[i] == EscapeChar) {
+					escaped_string.push_back(EscapeChar);
+					escaped_string.push_back(EscapeChar);
+				} else if (string[i] == QuoteChar) {
+					escaped_string.push_back(EscapeChar);
+					escaped_string.push_back(QuoteChar);
+				} else {
+					escaped_string.push_back(string[i]);
+				}
+			}
+			return 0;
+		}
+
+		int UnEscapeString(std::vector<char>& unescaped_string, const std::vector<char>& string) {
+			int N = CountUnEscapes(string);
+			unescaped_string.clear();
+			unescaped_string.reserve(string.size()-N);
+			for(size_t i=0; i < string.size(); ++i) {
+				if(string[i] == EscapeChar) {
+					if(i == string.size()-1) {
+						return -1;
+					}
+					++i;
+				}
+				unescaped_string.push_back(string[i]);
+			}
+			return 0;
+		}
+
+		int UnEscapeString(std::string& unescaped_string, const std::string& string) {
+			int N = CountUnEscapes(string);
+			unescaped_string.clear();
+			unescaped_string.reserve(string.size()-N);
+			for(size_t i=0; i < string.size(); ++i) {
+				if(string[i] == EscapeChar) {
+					if(i == string.size()-1) {
+						return -1;
+					}
+					++i;
+				}
+				unescaped_string.push_back(string[i]);
+			}
+			return 0;
+		}
+
 
 		void CreateEnd(std::string& end) {
 			std::stringstream ss;
