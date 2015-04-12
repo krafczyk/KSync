@@ -49,17 +49,21 @@ void *get_in_addr(struct sockaddr *sa) {
 }
 
 int main(int argc, char** argv) {
-	ArgParse::ArgParser arg_parser("KSync Server - Server side of a Client-Server synchonization system using rsync.");
-
 	std::string hostname;
-	ArgParse::Option hostname_option("host", "The host name to use.", &hostname, ArgParse::Option::Required);
-	arg_parser.AddOption(&hostname_option);
 
-	int status;
-	if((status = arg_parser.ParseArgs(argc, argv)) < 0) {
+	ArgParse::DebugLevel = 10;
+
+	ArgParse::ArgParser arg_parser("KSync Server - Client side of a Client-Server synchonization system using rsync.");
+	arg_parser.AddOption("host", "The host name to use.", &hostname, ArgParse::Option::Required);
+
+	if(arg_parser.ParseArgs(argc, argv) < 0) {
 		Error("Problem parsing arguments\n");
 		arg_parser.PrintHelp();
 		return -1;
+	}
+
+	if(arg_parser.HelpPrinted()) {
+		return 0;
 	}
 
 	int sockfd, numbytes;  
