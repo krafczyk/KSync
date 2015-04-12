@@ -29,6 +29,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sys/wait.h>
 #include <signal.h>
 
+#include <nanomsg/nn.h>
+#include <nanomsg/pair.h>
+
 #include "ksync/server.h"
 #include "ksync/logging.h"
 #include "ksync/messages.h"

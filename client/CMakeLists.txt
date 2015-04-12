@@ -21,7 +21,10 @@ find_package(Qt5Widgets REQUIRED)
 
 add_executable(ksync_client src/client.cpp)
 set_target_properties(ksync_client PROPERTIES COMPILE_FLAGS " -std=c++11 -Wall -Wextra -Werror")
-include_directories(inc ${ARGPARSE_INCLUDE_DIRECTORY} ${libksync_INCLUDE_DIR})
+message(${NANOMSG_INCLUDEDIR})
+message(${NANOMSG_LDFLAGS})
+include_directories(inc ${ARGPARSE_INCLUDE_DIRECTORY} ${libksync_INCLUDE_DIR} ${NANOMSG_INCLUDEDIR})
 target_link_libraries(ksync_client ksync ${ARGPARSE_LIBRARY})
+target_link_libraries(ksync_client ${NANOMSG_LDFLAGS})
 
 install (TARGETS ksync_client DESTINATION bin)

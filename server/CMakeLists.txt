@@ -16,7 +16,8 @@
 
 add_executable(ksync_server src/server.cpp)
 set_target_properties(ksync_server PROPERTIES COMPILE_FLAGS " -std=c++11 -Wall -Wextra -Werror")
-include_directories(inc ${ARGPARSE_INCLUDE_DIRECTORY} ${libksync_INCLUDE_DIR})
+include_directories(inc ${ARGPARSE_INCLUDE_DIRECTORY} ${libksync_INCLUDE_DIR} ${NANOMSG_INCLUDEDIR})
 target_link_libraries(ksync_server ksync ${ARGPARSE_LIBRARY})
+target_link_libraries(ksync_server ${NANOMSG_LDFLAGS})
 
 install (TARGETS ksync_server DESTINATION bin)

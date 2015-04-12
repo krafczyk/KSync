@@ -19,7 +19,9 @@ project (ksync)
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-find_package(ArgParse)
+find_package(ArgParse REQUIRED)
+find_package(PkgConfig)
+pkg_search_module(NANOMSG REQUIRED libnanomsg)
 
 add_subdirectory(libksync)
 add_subdirectory(server)

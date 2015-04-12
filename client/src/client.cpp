@@ -30,6 +30,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <arpa/inet.h>
 
+#include <nanomsg/nn.h>
+#include <nanomsg/pair.h>
+
 #include "ksync/logging.h"
 #include "ksync/client.h"
 #include "ksync/messages.h"
