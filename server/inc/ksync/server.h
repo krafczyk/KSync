@@ -19,7 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef KSYNC_SERVER_SERVER_HDR
 #define KSYNC_SERVER_SERVER_HDR
 
+#include <vector>
+#include <utility>
+
 namespace KSync {
+	namespace Server {
+		int Process_New_Connections(std::vector<std::pair<int,int>> active_sockets, const int connection_socket);
+	}
 }
 
 #endif

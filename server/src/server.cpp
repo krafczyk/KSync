@@ -16,49 +16,42 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <cstdio>
-#include <cstdlib>
 #include <unistd.h>
-#include <errno.h>
-#include <cstring>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <sys/wait.h>
-#include <signal.h>
-
-#include <nanomsg/nn.h>
-#include <nanomsg/pair.h>
+#include <sstream>
+#include <utility>
 
 #include "ksync/server.h"
 #include "ksync/logging.h"
 #include "ksync/messages.h"
+#include "ksync/socket_ops.h"
 
 #include "ArgParse/ArgParse.h"
 
-#define PORT "3490"
-
-#define MAXDATASIZE 100 // max number of bytes we can get at once
-
-#define BACKLOG 10
-
-void sigchld_handler(int s __attribute__((unused))) {
-	while(waitpid(-1, NULL, WNOHANG) > 0);
-}
-
-// get sockaddr, IPv4 or IPv6:
-void *get_in_addr(struct sockaddr *sa) {
-	if (sa->sa_family == AF_INET) {
-		return &(((struct sockaddr_in*)sa)->sin_addr);
-	}
-	return &(((struct sockaddr_in6*)sa)->sin6_addr);
-}
-
 int main(int argc, char** argv) {
-	ArgParse::ArgParser arg_parser("KSync Server - Server side of a Client-Server synchonization system using rsync.");
+	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
+	std::vector<std::pair<int,int>> active_sockets;
 
+	char* login_name = getlogin();
+	//char* login_name = 0;
+	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
+	if(login_name == 0) {
+		Error("Couldn't get the username!\n");
+		return -1;
+	}
+	errno = 0;
+	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
+
+	std::stringstream ss;
+	ss << "ipc:///temp/" << login_name << "/ksync-connect.ipc";
+
+	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
+	std::string connect_socket_url = ss.str();
+
+	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
+	ArgParse::ArgParser arg_parser("KSync Server - Server side of a Client-Server synchonization system using rsync.");
+	arg_parser.AddOption("connect-socket", "Socket to use to negotiate new client connections. Default is : ipc:///ksync/<user>/ksync-connect.ipc", &connect_socket_url);
+
+	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
 	int status;
 	if((status = arg_parser.ParseArgs(argc, argv)) < 0) {
 		Error("Problem parsing arguments\n");
@@ -66,156 +59,55 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-	int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
-	struct addrinfo hints, *servinfo, *p;
-	struct sockaddr_storage their_addr; // connector's address information
-	socklen_t sin_size;
-	struct sigaction sa;
-	int yes=1;
-	char s[INET6_ADDRSTRLEN];
-	int rv;
-
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE; // use my IP
-
-	if ((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0) {
-		Error("getaddrinfo: %s\n", gai_strerror(rv));
-		return 1;
+	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
+	if(arg_parser.HelpPrinted()) {
+		return 0;
 	}
 
-	// loop through all the results and bind to the first we can
-	for(p = servinfo; p != NULL; p = p->ai_next) {
-		if ((sockfd = socket(p->ai_family, p->ai_socktype,
-				p->ai_protocol)) == -1) {
-			Error("server: socket");
-			continue;
-		}
+	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
+	printf("Using the following socket url: %s\n", connect_socket_url.c_str());
 
-		if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes,
-				sizeof(int)) == -1) {
-			Error("setsockopt");
-			exit(1);
-		}
-
-		if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-			close(sockfd);
-			Error("server: bind");
-			continue;
-		}
-
-		break;
-	}
-
-	if (p == NULL)  {
-		Error("server: failed to bind\n");
-		return 2;
-	}
-
-	freeaddrinfo(servinfo); // all done with this structure
-
-	if (listen(sockfd, BACKLOG) == -1) {
-		Error("listen");
-		exit(1);
-	}
-
-	sa.sa_handler = sigchld_handler; // reap all dead processes
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = SA_RESTART;
-	if (sigaction(SIGCHLD, &sa, NULL) == -1) {
-		Error("sigaction");
-		exit(1);
-	}
-
-	KPrint("server: waiting for connections...\n");
-
-	while(1) {  // main accept() loop
-		sin_size = sizeof their_addr;
-		new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
-		if (new_fd == -1) {
-			Error("accept");
-			continue;
-		}
-
-		inet_ntop(their_addr.ss_family,
-			get_in_addr((struct sockaddr *)&their_addr),
-			s, sizeof s);
-		KPrint("server: got connection from %s\n", s);
-
-		if (!fork()) { // this is the child process
-			close(sockfd); // child doesn't need the listener
-
-			bool quit = false;
-			while(!quit) {
-				//Receive message
-				int numbytes;
-				char buf[MAXDATASIZE];
-				if ((numbytes = recv(new_fd, buf, MAXDATASIZE-1, 0)) == -1) {
-					Error("recv");
-					quit = true;
-					continue;
-				}
-				buf[numbytes] = '\0';
-
-				KPrint("Received: %s\n", buf);
-
-				std::string message(buf);
-
-				//Formulate Reply
-				std::string reply;
-				std::string unwrapped_message;
-				bool ready_to_send = false;
-				KSync::Messages::Message_t message_type;
-				if(KSync::Messages::UnWrapMessage(unwrapped_message, message_type, message)<0) {
-					Warning("Failed to unwrap message(%s)\n", message.c_str());
-					if(KSync::Messages::WrapAsReply(reply, "Failed to unwrap message.")<0) {
-						Error("Failed to wrap a reply.\n");
-						quit = true;
-						continue;
-					}
-					ready_to_send = true;
-				}
-
-				if(message_type == KSync::Messages::Quit) {
-					quit = true;
-					KSync::Messages::CreateQuit(reply);
-					ready_to_send = true;
-				}
+	//Start the connection socket
 	
-				if(!ready_to_send) {
-					//Here I would execute the command
-					if(KSync::Messages::WrapAsReply(reply, unwrapped_message)<0) {
-						Warning("Failed to wrap reply (%s)\n", buf);
-						continue;
-					}
-				} 
-				//Send the quit and simple replies.
-				//Send Reply
-				KPrint("Sending reply\n");
-				if (send(new_fd, reply.c_str(), reply.size(), 0) == -1) {
-					Error("send");
-					quit = true;
-					continue;
-				}
-				if(quit) {
-					continue;
-				} else {
-					KPrint("Sending end\n");
-					KSync::Messages::CreateEnd(reply);
-					if (send(new_fd, reply.c_str(), reply.size(), 0) == -1) {
-						Error("send");
-						quit = true;
-						continue;
-					}
-				}
-			}
-			KPrint("I'm quitting.\n");
-			close(new_fd);
-			exit(0);
-		}
-		close(new_fd);  // parent doesn't need this
+	int connection_socket = 0;
+	int endpoint = 0;
+
+	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
+	if(KSync::SocketOps::Create_And_Bind_Connection_Socket(connection_socket, endpoint, connect_socket_url) < 0) {
+		Error("There was a problem creating and binding the connection socket!\n");
+		return -2;
 	}
 
+	active_sockets.push_back(std::pair<int,int>(connection_socket,endpoint));
+
+	bool finished = false;
+	while(!finished) {
+		if(KSync::Server::Process_New_Connections(active_sockets, connection_socket) < 0) {
+			Warning("There was an error processing new connections\n");
+		}
+		usleep(100000);
+	}
+
+	for(size_t i=0; i< active_sockets.size(); ++i) {
+		if(KSync::SocketOps::Shutdown_Socket(active_sockets[i].first, active_sockets[i].second) < 0) {
+			Warning("There was a problem while trying to shutdown the server side of a socket!\n");
+		}
+	}
+
+	return 0;
+}
+
+int KSync::Server::Process_New_Connections(std::vector<std::pair<int,int>> active_sockets, const int connection_socket) {
+	std::string message;
+	int status = KSync::SocketOps::Receive_Message(message, connection_socket);
+	if(status < 0) {
+		Warning("There was a problem receiving a message from the connection socket!\n");
+		return -1;
+	}
+
+	if(status == 0) {
+		printf("Received the message: %s\n", message.c_str());
+	}
+	active_sockets.size();
 	return 0;
 }
