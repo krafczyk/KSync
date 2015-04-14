@@ -42,6 +42,7 @@ namespace KSync {
 #define KPrint(format, ...) KSync::Print(format, ##__VA_ARGS__)
 #define Message(format, ...) KSync::Print("%s%s-M (%s:%i)%s: " format , TMSG, __PRETTY_FUNCTION__, basename(__FILE__), __LINE__, TNRM, ##__VA_ARGS__)
 #define Warning(format, ...) KSync::Print("%s%s-W (%s:%i)%s: " format , TWRN, __PRETTY_FUNCTION__, basename(__FILE__), __LINE__, TNRM, ##__VA_ARGS__)
+#define Debug(format, ...) KSync::Print("%s%s-D (%s:%i)%s: " format , TDBG, __PRETTY_FUNCTION__, basename(__FILE__), __LINE__, TNRM, ##__VA_ARGS__)
 #define Error(format, ...) KSync::Print("%s%s-E (%s:%i)%s: " format , TERR, __PRETTY_FUNCTION__, basename(__FILE__), __LINE__, TNRM, ##__VA_ARGS__)
 
 #endif
