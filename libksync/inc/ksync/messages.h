@@ -22,30 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
+#include <nanomsg/nn.h>
+
 namespace KSync {
 	namespace Messages {
-		typedef unsigned int Message_t;
-		extern const Message_t Command;
-		extern const Message_t Reply;
-		extern const Message_t End;
-		extern const Message_t Quit;
-
-		std::vector<char> GenRandomVecChar(size_t string_length);
-		std::string GenRandomString(size_t string_length);
-
-		int CountUnEscapes(const std::vector<char>& string);
-		int CountUnEscapes(const std::string& string);
-		int CountQuotesAndEscapes(const std::vector<char>& string);
-		int CountQuotesAndEscapes(const std::string& string);
-		int EscapeString(std::vector<char>& escaped_string, const std::vector<char>& string) __attribute__((warn_unused_result));
-		int EscapeString(std::string& escaped_string, const std::string& string) __attribute__((warn_unused_result));
-		int UnEscapeString(std::vector<char>& unescaped_string, const std::vector<char>& string) __attribute__((warn_unused_result));
-		int UnEscapeString(std::string& unescaped_string, const std::string& string) __attribute__((warn_unused_result));
-		void CreateEnd(std::string& end);
-		void CreateQuit(std::string& quit);
-		int WrapAsCommand(std::string& command, const std::string& in) __attribute__((warn_unused_result));
-		int WrapAsReply(std::string& reply, const std::string& in) __attribute__((warn_unused_result));
-		int UnWrapMessage(std::string& unwrapped_message, Message_t& Message_Type, const std::string& message) __attribute__((warn_unused_result));
 	}
 }
 
