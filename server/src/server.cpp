@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <unistd.h>
+#include <signal.h>
 #include <sstream>
 #include <utility>
 
@@ -28,7 +29,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ArgParse/ArgParse.h"
 
+bool finished = false;
+
+//Function to stop the loop if signaled
+static void Cleanup(int signal) {
+	if(signal == SIGTERM) {
+		printf("SIGTERM Sent\n");
+	} else if(signal == SIGINT) {
+		printf("SIGINT Sent\n");
+	}
+	finished = true;
+}
+
 int main(int argc, char** argv) {
+	//Setting the signals to trigger the cleanup function
+	signal(SIGTERM, Cleanup);
+	signal(SIGINT, Cleanup);
+
 	std::vector<std::pair<int,int>> active_sockets;
 
 	std::string connect_socket_url = "";
@@ -73,7 +90,6 @@ int main(int argc, char** argv) {
 
 	active_sockets.push_back(std::pair<int,int>(connection_socket,endpoint));
 
-	bool finished = false;
 	while(!finished) {
 		if(KSync::Server::Process_New_Connections(active_sockets, connection_socket) < 0) {
 			Warning("There was an error processing new connections\n");
