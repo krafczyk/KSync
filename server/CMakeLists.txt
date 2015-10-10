@@ -15,9 +15,9 @@
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 add_executable(ksync_server src/server.cpp)
-set_target_properties(ksync_server PROPERTIES COMPILE_FLAGS " -std=c++11 -Wall -Wextra -Werror")
-include_directories(inc ${ARGPARSE_INCLUDE_DIRECTORY} ${libksync_INCLUDE_DIR} ${NANOMSG_INCLUDEDIR})
-target_link_libraries(ksync_server ksync ${ARGPARSE_LIBRARY})
-target_link_libraries(ksync_server ${NANOMSG_LDFLAGS})
+include_directories(inc ${ArgParse_INCLUDEDIR} ${libksync_INCLUDE_DIR} ${libnanomsg_INCLUDEDIR})
+target_link_libraries(ksync_server ksync)
+target_link_libraries(ksync_server ${ArgParse_LDFLAGS})
+target_link_libraries(ksync_server ${libnanomsg_LDFLAGS})
 
 install (TARGETS ksync_server DESTINATION bin)
