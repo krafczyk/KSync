@@ -28,30 +28,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ArgParse/ArgParse.h"
 
 int main(int argc, char** argv) {
-	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
 	std::vector<std::pair<int,int>> active_sockets;
 
 	char* login_name = getlogin();
-	//char* login_name = 0;
-	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
 	if(login_name == 0) {
 		Error("Couldn't get the username!\n");
 		return -1;
 	}
 	errno = 0;
-	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
 
 	std::stringstream ss;
 	ss << "ipc:///temp/" << login_name << "/ksync-connect.ipc";
 
-	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
 	std::string connect_socket_url = ss.str();
 
-	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
 	ArgParse::ArgParser arg_parser("KSync Server - Server side of a Client-Server synchonization system using rsync.");
 	arg_parser.AddArgument("connect-socket", "Socket to use to negotiate new client connections. Default is : ipc:///ksync/<user>/ksync-connect.ipc", &connect_socket_url);
 
-	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
 	int status;
 	if((status = arg_parser.ParseArgs(argc, argv)) < 0) {
 		Error("Problem parsing arguments\n");
@@ -59,12 +52,10 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
 	if(arg_parser.HelpPrinted()) {
 		return 0;
 	}
 
-	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
 	printf("Using the following socket url: %s\n", connect_socket_url.c_str());
 
 	//Start the connection socket
@@ -72,7 +63,6 @@ int main(int argc, char** argv) {
 	int connection_socket = 0;
 	int endpoint = 0;
 
-	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
 	if(KSync::SocketOps::Create_And_Bind_Connection_Socket(connection_socket, endpoint, connect_socket_url) < 0) {
 		Error("There was a problem creating and binding the connection socket!\n");
 		return -2;
