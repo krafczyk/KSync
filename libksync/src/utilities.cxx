@@ -15,7 +15,7 @@ namespace KSync {
 		}
 		int check_error() {
 			if(nn_errno() != 0) {
-				Error("An error occured! %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
+				Warning("An error occured! %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
 				return nn_errno();
 			}
 			return 0;
