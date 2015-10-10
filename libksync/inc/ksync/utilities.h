@@ -19,10 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef KSYNC_UTILITIES_HDR
 #define KSYNC_UTILITIES_HDR
 
+#include <string>
+
 namespace KSync {
 	namespace Utilities {
 		void reset_error();
 		int check_error();
+		int get_socket_dir(std::string& dir);
 	}
 }
 
