@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
 
 	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
 	ArgParse::ArgParser arg_parser("KSync Server - Server side of a Client-Server synchonization system using rsync.");
-	arg_parser.AddOption("connect-socket", "Socket to use to negotiate new client connections. Default is : ipc:///ksync/<user>/ksync-connect.ipc", &connect_socket_url);
+	arg_parser.AddArgument("connect-socket", "Socket to use to negotiate new client connections. Default is : ipc:///ksync/<user>/ksync-connect.ipc", &connect_socket_url);
 
 	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
 	int status;

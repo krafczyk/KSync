@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
 	std::string connect_socket_url = ss.str();
 
 	ArgParse::ArgParser arg_parser("KSync Server - Client side of a Client-Server synchonization system using rsync.");
-	arg_parser.AddOption("connect-socket", "Socket to use to negotiate new client connections. Default is : ipc:///ksync/<user>/ksync-connect.ipc", &connect_socket_url);
+	arg_parser.AddArgument("connect-socket", "Socket to use to negotiate new client connections. Default is : ipc:///ksync/<user>/ksync-connect.ipc", &connect_socket_url);
 
 	if(arg_parser.ParseArgs(argc, argv) < 0) {
 		Error("Problem parsing arguments\n");
