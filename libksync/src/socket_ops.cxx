@@ -57,7 +57,8 @@ namespace KSync {
 				Error("An error was encountered while trying to bind to the socket. (%s)\n", nn_strerror(nn_errno()));
 				return -1;
 			}
-			if(Utilities::check_error() != 0) {
+			int status = Utilities::check_error();
+			if((status != 0)&&(status != 11)) {
 				return -2;
 			}
 			return 0;
