@@ -62,12 +62,10 @@ int main(int argc, char** argv) {
 	printf("create and connect\n");
 
 	errno=0;
-	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
 	if(KSync::SocketOps::Create_And_Connect_Connection_Socket(connection_socket, connection_endpoint, connect_socket_url) < 0) {
 		Error("Encountered an error trying to create and connect to the connection socket\n");
 		return -1;
 	}
-	Debug("Error: %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
 
 	printf("send\n");
 
