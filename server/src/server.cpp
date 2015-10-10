@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ksync/server.h"
 #include "ksync/logging.h"
 #include "ksync/messages.h"
+#include "ksync/utilities.h"
 #include "ksync/socket_ops.h"
 
 #include "ArgParse/ArgParse.h"
@@ -30,20 +31,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 int main(int argc, char** argv) {
 	std::vector<std::pair<int,int>> active_sockets;
 
-	char* login_name = getlogin();
-	if(login_name == 0) {
-		Error("Couldn't get the username!\n");
-		return -1;
-	}
-	errno = 0;
-
-	std::stringstream ss;
-	ss << "ipc:///temp/" << login_name << "/ksync-connect.ipc";
-
-	std::string connect_socket_url = ss.str();
+	std::string connect_socket_url = "";
+	bool connect_socket_url_defined = false;
 
 	ArgParse::ArgParser arg_parser("KSync Server - Server side of a Client-Server synchonization system using rsync.");
-	arg_parser.AddArgument("connect-socket", "Socket to use to negotiate new client connections. Default is : ipc:///ksync/<user>/ksync-connect.ipc", &connect_socket_url);
+	arg_parser.AddArgument("connect-socket", "Socket to use to negotiate new client connections. Default is : ipc:///tmp/ksync-<user>/ksync-connect.ipc", &connect_socket_url, ArgParse::Argument::Optional, &connect_socket_url_defined);
 
 	int status;
 	if((status = arg_parser.ParseArgs(argc, argv)) < 0) {
@@ -54,6 +46,17 @@ int main(int argc, char** argv) {
 
 	if(arg_parser.HelpPrinted()) {
 		return 0;
+	}
+
+	if(!connect_socket_url_defined){
+		std::string socket_dir;
+		if(KSync::Utilities::get_socket_dir(socket_dir) < 0) {
+			Error("There was a problem getting the default socket directory!\n");
+			return -2;
+		}
+		std::stringstream ss;
+		ss << "ipc://" << socket_dir << "/ksync-connect.ipc";
+		connect_socket_url = ss.str();
 	}
 
 	printf("Using the following socket url: %s\n", connect_socket_url.c_str());
