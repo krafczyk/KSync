@@ -16,8 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef KSYNC_SOCKET_OPS_HDR
-#define KSYNC_SOCKET_OPS_HDR
+#ifndef KSYNC_UTILITIES_HDR
+#define KSYNC_UTILITIES_HDR
 
 namespace KSync {
 	namespace Utilities {
