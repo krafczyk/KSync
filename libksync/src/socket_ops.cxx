@@ -37,41 +37,28 @@ namespace KSync {
 		}
 
 		int Bind_Pair_Socket(int& endpoint, const int socket, const std::string& socket_url) {
-			Utilities::reset_error();
 			endpoint = nn_bind(socket, socket_url.c_str());
 			if(endpoint < 0) {
 				Error("An error was encountered while trying to bind to the socket. (%s)\n", nn_strerror(nn_errno()));
 				return -1;
 			}
-			int status = Utilities::check_error();
-			if((status != 0)&&(status != 11)) {
-				return -2;
-			}
 			return 0;
 		}
 
 		int Connect_Pair_Socket(int& endpoint, const int socket, const std::string& socket_url) {
-			Utilities::reset_error();
 			endpoint = nn_connect(socket, socket_url.c_str());
 			if(endpoint < 0) {
 				Error("An error was encountered while trying to bind to the socket. (%s)\n", nn_strerror(nn_errno()));
 				return -1;
 			}
-			int status = Utilities::check_error();
-			if((status != 0)&&(status != 11)) {
-				return -2;
-			}
 			return 0;
 		}
 
 		int Set_Socket_Timeout(const int socket, const int to) {
-			Utilities::reset_error();
 			if(nn_setsockopt(socket, NN_SOL_SOCKET, NN_RCVTIMEO, &to, sizeof(to)) < 0) {
 				Error("An error was concountered while trying to set the timeout for the connection socket! (%s)\n", nn_strerror(nn_errno()));
 				return -1;
 			}
-			if(Utilities::check_error() != 0) {
-				return -2;
 			return 0;
 		}
 
@@ -126,20 +113,15 @@ namespace KSync {
 		}
 
 		int Shutdown_Socket(const int socket, const int endpoint) {
-			Utilities::reset_error();
 			if(nn_shutdown(socket, endpoint) < 0) {
 				Error("An error was encountered while trying to shutdown an endpoint of a socket! (%s)\n", nn_strerror(nn_errno()));
 				return -1;
-			}
-			if(Utilities::check_error() != 0) {
-				return -2;
 			}
 			return 0;
 		}
 
 		int Receive_Message(std::string& message, const int socket) {
 			char* buf = NULL;
-			Utilities::reset_error();
 			if(nn_recv(socket, &buf, NN_MSG, 0) < 0) {
 				if(nn_errno() == EAGAIN) {
 					return 1;
@@ -147,29 +129,19 @@ namespace KSync {
 				Error("An error was encountered while trying to receive a message from a socket! (%s)\n", nn_strerror(nn_errno()));
 				return -1;
 			}
-			if(Utilities::check_error() != 0) {
-				return -2;
-			}
 			message = buf;
 			if(nn_freemsg(buf) < 0) {
 				Error("An error was encountered while trying to free a message buffer. (%s)\n", nn_strerror(nn_errno()));
 				return -3;
 			}
-			if(Utilities::check_error()) {
-				return -4;
-			}
 			return 0;
 		}
 
 		int Send_Message(const std::string& message, const int socket) {
-			Utilities::reset_error();
 			int send_result = nn_send(socket, (void*) message.c_str(), message.size(), 0);
 			if(send_result < 0) {
 				Error("An error was encountered while sending a message. (%s)\n", nn_strerror(nn_errno()));
 				return -1;
-			}
-			if(Utilities::check_error() != 0) {
-				return -2;
 			}
 
 			if(send_result != (int) message.size()) {
