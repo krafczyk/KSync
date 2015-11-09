@@ -109,6 +109,13 @@ namespace KSync {
 				Error("An error was encountered trying to set the connection socket's timeout!\n");
 				return -3;
 			}
+			if(Set_Socket_Linger(socket, 10000) < 0) {
+				Error("An error was encountered trying to set the connection socket's timeout!\n");
+				return -4;
+			}
+			if(Get_Socket_Linger(socket) < 0) {
+				return -5;
+			}
 			return 0;
 		}
 
