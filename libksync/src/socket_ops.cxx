@@ -114,6 +114,7 @@ namespace KSync {
 				Error("An error was encountered while trying to get the linger for the connection socket! (%s)\n", nn_strerror(nn_errno()));
 				return -1;
 			}
+			printf("this socket has a linger of %i.\n", linger);
 			return 0;
 		}
 
