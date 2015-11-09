@@ -72,6 +72,23 @@ namespace KSync {
 			}
 			if(Utilities::check_error() != 0) {
 				return -2;
+			return 0;
+		}
+
+		int Set_Socket_Linger(const int socket, const int linger) {
+			if(nn_setsockopt(socket, NN_SOL_SOCKET, NN_LINGER, &linger, sizeof(linger)) < 0) {
+				Error("An error was encountered while trying to set the linger for the connection socket! (%s)\n", nn_strerror(nn_errno()));
+				return -1;
+			}
+			return 0;
+		}
+
+		int Get_Socket_Linger(const int socket) {
+			int linger;
+			size_t linger_size = sizeof(linger);
+			if(nn_getsockopt(socket, NN_SOL_SOCKET, NN_LINGER, &linger, &linger_size) < 0) {
+				Error("An error was encountered while trying to get the linger for the connection socket! (%s)\n", nn_strerror(nn_errno()));
+				return -1;
 			}
 			return 0;
 		}
