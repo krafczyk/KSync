@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <nanomsg/nn.h>
 #include <nanomsg/pair.h>
+#include <nanomsg/reqrep.h>
 
 #include "ksync/logging.h"
 #include "ksync/utilities.h"
@@ -27,6 +28,42 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace KSync {
 	namespace SocketOps {
+		int Create_Rep_Socket(int& socket) {
+			socket = nn_socket(AF_SP, NN_REP);
+			if(socket < 0) {
+				Error("An error was encountered while creating the socket. (%s)\n", nn_strerror(nn_errno()));
+				return -1;
+			}
+			return 0;
+		}
+
+		int Bind_Rep_Socket(int& endpoint, const int socket, const std::string& socket_url) {
+			endpoint = nn_bind(socket, socket_url.c_str());
+			if(endpoint < 0) {
+				Error("An error was encountered while trying to bind to the socket. (%s)\n", nn_strerror(nn_errno()));
+				return -1;
+			}
+			return 0;
+		}
+
+		int Create_Req_Socket(int& socket) {
+			socket = nn_socket(AF_SP, NN_REQ);
+			if(socket < 0) {
+				Error("An error was encountered while creating the socket. (%s)\n", nn_strerror(nn_errno()));
+				return -1;
+			}
+			return 0;
+		}
+
+		int Connect_Req_Socket(int& endpoint, const int socket, const std::string& socket_url) {
+			endpoint = nn_connect(socket, socket_url.c_str());
+			if(endpoint < 0) {
+				Error("An error was encountered while trying to bind to the socket. (%s)\n", nn_strerror(nn_errno()));
+				return -1;
+			}
+			return 0;
+		}
+
 		int Create_Pair_Socket(int& socket) {
 			socket = nn_socket(AF_SP, NN_PAIR);
 			if(socket < 0) {

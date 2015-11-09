@@ -23,6 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace KSync {
 	namespace SocketOps {
+		int Create_Rep_Socket(int& socket);
+		int Bind_Rep_Socket(int& endpoint, const int socket, const std::string& socket_url);
+		int Create_Req_Socket(int& socket);
+		int Connect_Req_Socket(int& endpoint, const int socket, const std::string& socket_url);
 		int Create_Pair_Socket(int& socket);
 		int Bind_Pair_Socket(int& endpoint, const int socket, const std::string& socket_url);
 		int Connect_Pair_Socket(int& endpoint, const int socket, const std::string& socket_url);
