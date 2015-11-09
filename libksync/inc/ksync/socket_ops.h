@@ -24,11 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace KSync {
 	namespace SocketOps {
 		int Create_Pair_Socket(int& socket);
-		int Bind_Pair_Socket(int& endpoint, const int socket, const std::string socket_url);
-		int Connect_Pair_Socket(int& endpoint, const int socket, const std::string socket_url);
+		int Bind_Pair_Socket(int& endpoint, const int socket, const std::string& socket_url);
+		int Connect_Pair_Socket(int& endpoint, const int socket, const std::string& socket_url);
 		int Set_Socket_Timeout(const int socket);
-		int Create_And_Bind_Connection_Socket(int& socket, int& endpoint, const std::string connect_socket_url);
-		int Create_And_Connect_Connection_Socket(int& socket, int& endpoint, const std::string connect_socket_url);
+		int Create_And_Bind_Connection_Socket(int& socket, int& endpoint, const std::string& connect_socket_url);
+		int Create_And_Connect_Connection_Socket(int& socket, int& endpoint, const std::string& connect_socket_url);
 		int Shutdown_Socket(const int socket, const int endpoint);
 		int Receive_Message(std::string& message, const int socket);
 		int Send_Message(const std::string& message, const int socket);

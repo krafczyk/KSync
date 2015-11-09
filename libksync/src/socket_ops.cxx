@@ -36,7 +36,7 @@ namespace KSync {
 			return 0;
 		}
 
-		int Bind_Pair_Socket(int& endpoint, const int socket, const std::string socket_url) {
+		int Bind_Pair_Socket(int& endpoint, const int socket, const std::string& socket_url) {
 			Utilities::reset_error();
 			endpoint = nn_bind(socket, socket_url.c_str());
 			if(endpoint < 0) {
@@ -50,7 +50,7 @@ namespace KSync {
 			return 0;
 		}
 
-		int Connect_Pair_Socket(int& endpoint, const int socket, const std::string socket_url) {
+		int Connect_Pair_Socket(int& endpoint, const int socket, const std::string& socket_url) {
 			Utilities::reset_error();
 			endpoint = nn_connect(socket, socket_url.c_str());
 			if(endpoint < 0) {
@@ -76,7 +76,7 @@ namespace KSync {
 			return 0;
 		}
 
-		int Create_And_Bind_Connection_Socket(int& socket, int& endpoint, const std::string connect_socket_url) {
+		int Create_And_Bind_Connection_Socket(int& socket, int& endpoint, const std::string& connect_socket_url) {
 			if(Create_Pair_Socket(socket) < 0) {
 				Error("An error was encountered trying to create the connection socket!\n");
 				return -1;
@@ -92,7 +92,7 @@ namespace KSync {
 			return 0;
 		}
 
-		int Create_And_Connect_Connection_Socket(int& socket, int& endpoint, const std::string connect_socket_url) {
+		int Create_And_Connect_Connection_Socket(int& socket, int& endpoint, const std::string& connect_socket_url) {
 			if(Create_Pair_Socket(socket) < 0) {
 				Error("An error was encountered trying to create the connection socket!\n");
 				return -1;
