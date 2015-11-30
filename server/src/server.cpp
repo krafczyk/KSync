@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 	int connection_socket = 0;
 	int endpoint = 0;
 
-	if(KSync::SocketOps::Create_And_Bind_Connection_Socket(connection_socket, endpoint, connect_socket_url) < 0) {
+	if(KSync::SocketOps::Create_And_Bind_Rep_Socket(connection_socket, endpoint, connect_socket_url) < 0) {
 		Error("There was a problem creating and binding the connection socket!\n");
 		return -2;
 	}

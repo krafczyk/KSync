@@ -28,19 +28,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace KSync {
 	namespace SocketOps {
-		int Create_Rep_Socket(int& socket) {
-			socket = nn_socket(AF_SP, NN_REP);
-			if(socket < 0) {
-				Error("An error was encountered while creating the socket. (%s)\n", nn_strerror(nn_errno()));
+		int Bind_Socket(int& endpoint, const int socket, const std::string& socket_url) {
+			endpoint = nn_bind(socket, socket_url.c_str());
+			if(endpoint < 0) {
+				Error("An error was encountered while trying to bind to the socket. (%s)\n", nn_strerror(nn_errno()));
 				return -1;
 			}
 			return 0;
 		}
 
-		int Bind_Rep_Socket(int& endpoint, const int socket, const std::string& socket_url) {
-			endpoint = nn_bind(socket, socket_url.c_str());
+		int Connect_Socket(int& endpoint, const int socket, const std::string& socket_url) {
+			endpoint = nn_connect(socket, socket_url.c_str());
 			if(endpoint < 0) {
 				Error("An error was encountered while trying to bind to the socket. (%s)\n", nn_strerror(nn_errno()));
+				return -1;
+			}
+			return 0;
+		}
+
+		int Create_Rep_Socket(int& socket) {
+			socket = nn_socket(AF_SP, NN_REP);
+			if(socket < 0) {
+				Error("An error was encountered while creating the socket. (%s)\n", nn_strerror(nn_errno()));
 				return -1;
 			}
 			return 0;
@@ -55,37 +64,10 @@ namespace KSync {
 			return 0;
 		}
 
-		int Connect_Req_Socket(int& endpoint, const int socket, const std::string& socket_url) {
-			endpoint = nn_connect(socket, socket_url.c_str());
-			if(endpoint < 0) {
-				Error("An error was encountered while trying to bind to the socket. (%s)\n", nn_strerror(nn_errno()));
-				return -1;
-			}
-			return 0;
-		}
-
 		int Create_Pair_Socket(int& socket) {
 			socket = nn_socket(AF_SP, NN_PAIR);
 			if(socket < 0) {
 				Error("An error was encountered while creating the socket. (%s)\n", nn_strerror(nn_errno()));
-				return -1;
-			}
-			return 0;
-		}
-
-		int Bind_Pair_Socket(int& endpoint, const int socket, const std::string& socket_url) {
-			endpoint = nn_bind(socket, socket_url.c_str());
-			if(endpoint < 0) {
-				Error("An error was encountered while trying to bind to the socket. (%s)\n", nn_strerror(nn_errno()));
-				return -1;
-			}
-			return 0;
-		}
-
-		int Connect_Pair_Socket(int& endpoint, const int socket, const std::string& socket_url) {
-			endpoint = nn_connect(socket, socket_url.c_str());
-			if(endpoint < 0) {
-				Error("An error was encountered while trying to bind to the socket. (%s)\n", nn_strerror(nn_errno()));
 				return -1;
 			}
 			return 0;
@@ -118,12 +100,12 @@ namespace KSync {
 			return 0;
 		}
 
-		int Create_And_Bind_Connection_Socket(int& socket, int& endpoint, const std::string& connect_socket_url) {
+		int Create_And_Bind_Pair_Socket(int& socket, int& endpoint, const std::string& connect_socket_url) {
 			if(Create_Pair_Socket(socket) < 0) {
 				Error("An error was encountered trying to create the connection socket!\n");
 				return -1;
 			}
-			if(Bind_Pair_Socket(endpoint, socket, connect_socket_url) < 0) {
+			if(Bind_Socket(endpoint, socket, connect_socket_url) < 0) {
 				Error("An error was encountered trying to bind to the connection socket!\n");
 				return -2;
 			}
@@ -134,12 +116,12 @@ namespace KSync {
 			return 0;
 		}
 
-		int Create_And_Connect_Connection_Socket(int& socket, int& endpoint, const std::string& connect_socket_url) {
+		int Create_And_Connect_Pair_Socket(int& socket, int& endpoint, const std::string& connect_socket_url) {
 			if(Create_Pair_Socket(socket) < 0) {
 				Error("An error was encountered trying to create the connection socket!\n");
 				return -1;
 			}
-			if(Connect_Pair_Socket(endpoint, socket, connect_socket_url) < 0) {
+			if(Connect_Socket(endpoint, socket, connect_socket_url) < 0) {
 				Error("An error was encountered trying to bind to the connection socket!\n");
 				return -2;
 			}
@@ -147,12 +129,69 @@ namespace KSync {
 				Error("An error was encountered trying to set the connection socket's timeout!\n");
 				return -3;
 			}
-			if(Set_Socket_Linger(socket, 10000) < 0) {
-				Error("An error was encountered trying to set the connection socket's timeout!\n");
-				return -4;
+			return 0;
+		}
+
+		int Create_And_Bind_Req_Socket(int& socket, int& endpoint, const std::string& connect_socket_url) {
+			if(Create_Req_Socket(socket) < 0) {
+				Error("An error was encountered trying to create the connection socket!\n");
+				return -1;
 			}
-			if(Get_Socket_Linger(socket) < 0) {
-				return -5;
+			if(Bind_Socket(endpoint, socket, connect_socket_url) < 0) {
+				Error("An error was encountered trying to bind to the connection socket!\n");
+				return -2;
+			}
+			if(Set_Socket_Timeout(socket, 100) < 0) {
+				Error("An error was encountered trying to set the connection socket's timeout!\n");
+				return -3;
+			}
+			return 0;
+		}
+
+		int Create_And_Connect_Req_Socket(int& socket, int& endpoint, const std::string& connect_socket_url) {
+			if(Create_Req_Socket(socket) < 0) {
+				Error("An error was encountered trying to create the connection socket!\n");
+				return -1;
+			}
+			if(Connect_Socket(endpoint, socket, connect_socket_url) < 0) {
+				Error("An error was encountered trying to bind to the connection socket!\n");
+				return -2;
+			}
+			if(Set_Socket_Timeout(socket, 100) < 0) {
+				Error("An error was encountered trying to set the connection socket's timeout!\n");
+				return -3;
+			}
+			return 0;
+		}
+
+		int Create_And_Bind_Rep_Socket(int& socket, int& endpoint, const std::string& connect_socket_url) {
+			if(Create_Rep_Socket(socket) < 0) {
+				Error("An error was encountered trying to create the connection socket!\n");
+				return -1;
+			}
+			if(Bind_Socket(endpoint, socket, connect_socket_url) < 0) {
+				Error("An error was encountered trying to bind to the connection socket!\n");
+				return -2;
+			}
+			if(Set_Socket_Timeout(socket, 100) < 0) {
+				Error("An error was encountered trying to set the connection socket's timeout!\n");
+				return -3;
+			}
+			return 0;
+		}
+
+		int Create_And_Connect_Rep_Socket(int& socket, int& endpoint, const std::string& connect_socket_url) {
+			if(Create_Rep_Socket(socket) < 0) {
+				Error("An error was encountered trying to create the connection socket!\n");
+				return -1;
+			}
+			if(Connect_Socket(endpoint, socket, connect_socket_url) < 0) {
+				Error("An error was encountered trying to bind to the connection socket!\n");
+				return -2;
+			}
+			if(Set_Socket_Timeout(socket, 100) < 0) {
+				Error("An error was encountered trying to set the connection socket's timeout!\n");
+				return -3;
 			}
 			return 0;
 		}
