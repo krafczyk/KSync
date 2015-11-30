@@ -26,6 +26,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace KSync {
 	namespace Messages {
+		class MessageDataInterface {
+			public:
+				typedef unsigned char Type_t;
+
+				virtual Type_t GetType() const = 0;
+
+				virtual int Pack(size_t& length, void*& buffer) const = 0;
+				virtual int UnPack(size_t length, void* buffer) = 0;
+		};
 	}
 }
 
