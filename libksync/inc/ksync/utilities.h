@@ -26,6 +26,8 @@ namespace KSync {
 		void reset_error();
 		int check_error();
 		int get_socket_dir(std::string& dir);
+		//char get_random_letter();
+		//std::string get_random_string(const int num_char);
 	}
 }
 
