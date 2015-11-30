@@ -20,7 +20,7 @@ find_package(Qt5Core REQUIRED)
 find_package(Qt5Widgets REQUIRED)
 
 add_executable(ksync_client src/client.cpp)
-include_directories(inc ${ArgParse_INCLUDEDIR} ${libksync_INCLUDE_DIR} ${libnanomsg_INCLUDEDIR})
+include_directories(inc ${libksync_INCLUDE_DIR})
 target_link_libraries(ksync_client ksync)
 target_link_libraries(ksync_client ${ArgParse_LDFLAGS})
 target_link_libraries(ksync_client ${libnanomsg_LDFLAGS})

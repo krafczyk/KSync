@@ -23,6 +23,8 @@ find_package(PkgConfig)
 pkg_search_module(libnanomsg REQUIRED libnanomsg)
 pkg_search_module(ArgParse REQUIRED ArgParse)
 
+include_directories(${libnanomsg_INCLUDEDIR} ${ArgParse_INCLUDEDIR})
+
 add_definitions(-std=c++11 -Wall -Wextra -Werror)
 
 add_subdirectory(libksync)

@@ -16,7 +16,7 @@
 
 set(libksync_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/inc" CACHE INTERNAL "ksync include dir")
 
-include_directories(${libksync_INCLUDE_DIR} ${libnanomsg_INCLUDEDIR})
+include_directories(${libksync_INCLUDE_DIR})
 
 add_library (ksync SHARED src/messages.cxx src/logging.cxx src/socket_ops.cxx src/utilities.cxx)
 

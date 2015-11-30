@@ -15,7 +15,7 @@
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 add_executable(ksync_server src/server.cpp)
-include_directories(inc ${ArgParse_INCLUDEDIR} ${libksync_INCLUDE_DIR} ${libnanomsg_INCLUDEDIR})
+include_directories(inc ${libksync_INCLUDE_DIR})
 target_link_libraries(ksync_server ksync)
 target_link_libraries(ksync_server ${ArgParse_LDFLAGS})
 target_link_libraries(ksync_server ${libnanomsg_LDFLAGS})
