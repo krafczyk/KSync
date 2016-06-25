@@ -66,14 +66,10 @@ int main(int argc, char** argv) {
 	}
 
 	if(!connect_socket_url_defined){
-		std::string socket_dir;
-		if(KSync::Utilities::get_socket_dir(socket_dir) < 0) {
-			Error("There was a problem getting the default socket directory!\n");
+		if(KSync::Utilities::get_default_connection_url(connect_socket_url) < 0) {
+			Error("There was a problem getting the default connection url!\n");
 			return -2;
 		}
-		std::stringstream ss;
-		ss << "ipc://" << socket_dir << "/ksync-connect.ipc";
-		connect_socket_url = ss.str();
 	}
 
 	printf("Using the following socket url: %s\n", connect_socket_url.c_str());
