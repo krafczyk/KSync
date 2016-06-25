@@ -58,6 +58,10 @@ namespace KSync {
 			connection_url = ss.str();
 			return 0;
 		}
+		int get_default_tcp_connection_url(std::string& connection_url) {
+			connection_url = "tcp://localhost:6060";
+			return 0;
+		}
 		int get_default_connection_url(std::string& connection_url) {
 			return get_default_ipc_connection_url(connection_url);
 		}
