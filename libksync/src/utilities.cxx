@@ -47,7 +47,7 @@ namespace KSync {
 
 			return 0;
 		}
-		int get_default_connection_url(std::string& connection_url) {
+		int get_default_ipc_connection_url(std::string& connection_url) {
 			std::string socket_dir;
 			if(KSync::Utilities::get_socket_dir(socket_dir) < 0) {
 				Error("There was a problem getting the default socket directory!\n");
@@ -57,6 +57,9 @@ namespace KSync {
 			ss << "ipc://" << socket_dir << "/ksync-connect.ipc";
 			connection_url = ss.str();
 			return 0;
+		}
+		int get_default_connection_url(std::string& connection_url) {
+			return get_default_ipc_connection_url(connection_url);
 		}
 	}
 }
