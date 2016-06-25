@@ -59,7 +59,9 @@ namespace KSync {
 			return 0;
 		}
 		int get_default_tcp_connection_url(std::string& connection_url) {
-			connection_url = "tcp://localhost:6060";
+			//TODO: Implement dns resolution operator
+			//connection_url = "tcp://localhost:6060";
+			connection_url = "tcp://127.0.0.1:6060";
 			return 0;
 		}
 		int get_default_connection_url(std::string& connection_url) {
