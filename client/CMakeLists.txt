@@ -23,6 +23,6 @@ add_executable(ksync_client src/client.cpp)
 include_directories(inc ${libksync_INCLUDE_DIR})
 target_link_libraries(ksync_client ksync)
 target_link_libraries(ksync_client ${ArgParse_LDFLAGS})
-target_link_libraries(ksync_client ${libnanomsg_LDFLAGS})
+target_link_libraries(ksync_client ${nanomsg_LDFLAGS})
 
 install (TARGETS ksync_client DESTINATION bin)

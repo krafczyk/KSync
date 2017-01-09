@@ -20,10 +20,10 @@ project (ksync)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 find_package(PkgConfig)
-pkg_search_module(libnanomsg REQUIRED libnanomsg)
+pkg_search_module(nanomsg REQUIRED nanomsg)
 pkg_search_module(ArgParse REQUIRED ArgParse)
 
-include_directories(${libnanomsg_INCLUDEDIR} ${ArgParse_INCLUDEDIR})
+include_directories(${nanomsg_INCLUDEDIR} ${ArgParse_INCLUDEDIR})
 
 add_definitions(-std=c++11 -Wall -Wextra -Werror)
 
