@@ -62,6 +62,10 @@ int main(int argc, char** argv) {
 		Error("Encountered an error trying to create and connect to the connection socket\n");
 		return -1;
 	}
+	if(KSync::SocketOps::Set_Socket_Linger(connection_socket, -1) < 0) {
+		Error("Couldn't set socket linger\n");
+		return -1;
+	}
 
 	printf("send\n");
 
@@ -69,6 +73,8 @@ int main(int argc, char** argv) {
 	if(KSync::SocketOps::Send_Message(message, connection_socket) < 0) {
 		Warning("There was a problem sending a message to the server.\n");
 	}
+
+	usleep(1000000);
 
 	printf("shutdown\n");
 

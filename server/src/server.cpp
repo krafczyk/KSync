@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
 		if(KSync::Server::Process_New_Connections(active_sockets, connection_socket) < 0) {
 			Warning("There was an error processing new connections\n");
 		}
-		usleep(100000);
+		usleep(1*1000000);
 	}
 
 	for(size_t i=0; i< active_sockets.size(); ++i) {
@@ -106,7 +106,7 @@ int KSync::Server::Process_New_Connections(std::vector<std::pair<int,int>> activ
 	std::string message;
 	int status = KSync::SocketOps::Receive_Message(message, connection_socket);
 	if(status < 0) {
-		Warning("There was a problem receiving a message from the connection socket!\n");
+		//Warning("There was a problem receiving a message from the connection socket!\n");
 		return -1;
 	}
 

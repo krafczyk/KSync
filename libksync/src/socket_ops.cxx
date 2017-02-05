@@ -206,7 +206,7 @@ namespace KSync {
 
 		int Receive_Message(std::string& message, const int socket) {
 			char* buf = NULL;
-			if(nn_recv(socket, &buf, NN_MSG, 0) < 0) {
+			if(nn_recv(socket, &buf, NN_MSG, NN_DONTWAIT) < 0) {
 				if(nn_errno() == EAGAIN) {
 					return 1;
 				}
