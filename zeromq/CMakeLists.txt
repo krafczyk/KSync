@@ -15,8 +15,8 @@
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 include_directories(${libksync_INCLUDE_DIR})
+include_directories(${zeromq_module_INCLUDE_DIR})
+include_directories(${libzmq_INCLUDEDIR})
 
-add_library (ksync SHARED src/logging.cxx src/comm_system_interface.cxx src/utilities.cxx)
-
-install (TARGETS ksync DESTINATION lib)
-install (DIRECTORY inc/ksync DESTINATION include FILES_MATCHING PATTERN "*.h")
+add_library(ksync_zeromq_module SHARED src/zeromq_comm_system.cxx)
+install (TARGETS ksync_zeromq_module DESTINATION lib)

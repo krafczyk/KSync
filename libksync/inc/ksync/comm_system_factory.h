@@ -1,6 +1,6 @@
 /*
 KSync - Client-Server synchronization system using rsync.
-Copyright (C) 2014  Matthew Scott Krafczyk
+Copyright (C) 2015  Matthew Scott Krafczyk
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -16,23 +16,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef KSYNC_MESSAGES_HDR
-#define KSYNC_MESSAGES_HDR
+#ifndef KSYNC_COMM_SYSTEM_FAC_HDR
+#define KSYNC_COMM_SYSTEM_FAC_HDR
 
-#include <string>
-#include <vector>
+#include "ksync/comm_system_interface.h"
 
 namespace KSync {
 	namespace Comm {
-		class MessageDataInterface {
-			public:
-				typedef unsigned char Type_t;
-
-				virtual Type_t GetType() const = 0;
-
-				virtual int Pack(size_t& length, void*& buffer) const = 0;
-				virtual int UnPack(size_t length, void* buffer) = 0;
-		};
+		//int GetNanomsgCommSystem(CommSystemInterface*& comm_interface);
+		int GetZeromqCommSystem(CommSystemInterface*& comm_interface); 
 	}
 }
 
