@@ -16,6 +16,7 @@ namespace KSync {
 				~ZeroMQCommSystemSocket();
 
 				int Bind(const std::string& address);
+				int Connect(const std::string& address);
 				int Send(const std::string& message);
 				int Recv(std::string& message);
 

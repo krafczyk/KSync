@@ -29,6 +29,7 @@ namespace KSync {
 				virtual ~CommSystemSocket();
 
 				virtual int Bind(const std::string& address) = 0;
+				virtual int Connect(const std::string& address) = 0;
 				virtual int Send(const std::string& message) = 0;
 				virtual int Recv(std::string& message) = 0;
 		};

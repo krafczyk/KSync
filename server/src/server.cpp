@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
 	//	}
 	//}
 
-	printf("Using the following socket url: %s\n", connect_socket_url.c_str());
+	KPrint("Using the following socket url: %s\n", connect_socket_url.c_str());
 
 
 	//Start the connection socket
@@ -93,19 +93,25 @@ int main(int argc, char** argv) {
 
 	KSync::Comm::CommSystemInterface* comm_system = 0;
 	if (KSync::Comm::GetZeromqCommSystem(comm_system) < 0) {
-		Error("There was a problem initializing the ZeroMQ communication system!");
+		KPrint("There was a problem initializing the ZeroMQ communication system!\n");
 		return -2;
 	}
 
 	KSync::Comm::CommSystemSocket* gateway_socket = 0;
 	if (comm_system->Create_Gateway_Rep_Socket(gateway_socket) < 0) {
-		Error("There was a problem creating the gateway socket!");
+		KPrint("There was a problem creating the gateway socket!\n");
 		return -3;
+	}
+
+	if (gateway_socket->Bind(connect_socket_url) < 0) {
+		KPrint("There was a problem binding the gateway socket!\n");
+		return -4;
 	}
 
 	while(!finished) {
 		std::string message;
 		if(gateway_socket->Recv(message) == 0) {
+			KPrint("Received (%s)\n", message.c_str());
 			usleep(1*1000000);
 			if(gateway_socket->Send(message) != 0) {
 				Warning("There was a problem sending a message!!");

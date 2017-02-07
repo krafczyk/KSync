@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
-	connect_socket_url = "tcp://*:5555";
+	connect_socket_url = "tcp://localhost:5555";
 
 	//if(!connect_socket_url_defined){
 	//	if(KSync::Utilities::get_default_connection_url(connect_socket_url) < 0) {
@@ -60,20 +60,27 @@ int main(int argc, char** argv) {
 
 	KSync::Comm::CommSystemInterface* comm_system = 0;
 	if (KSync::Comm::GetZeromqCommSystem(comm_system) < 0) {
-		Error("There was a problem initializing the ZeroMQ communication system!");
+		Error("There was a problem initializing the ZeroMQ communication system!\n");
 		return -2;
 	}
 
 	KSync::Comm::CommSystemSocket* gateway_socket = 0;
 	if (comm_system->Create_Gateway_Req_Socket(gateway_socket) < 0) {
-		Error("There was a problem creating the gateway socket!");
+		Error("There was a problem creating the gateway socket!\n");
 		return -3;
+	}
+
+	if (gateway_socket->Connect(connect_socket_url) < 0) {
+		Error("There was a problem connecting to the gateway socket!\n");
+		return -4;
 	}
 
 	if(gateway_socket->Send("Test Message") == 0) {
 		std::string message;
 		if(gateway_socket->Recv(message) != 0) {
-			Warning("Problem receiving response");
+			Warning("Problem receiving response\n");
+		} else {
+			KPrint("Received (%s)\n", message.c_str());
 		}
 	}
 

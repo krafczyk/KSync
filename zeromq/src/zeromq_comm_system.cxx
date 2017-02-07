@@ -20,6 +20,14 @@ namespace KSync {
 			return 0;
 		}
 
+		int ZeroMQCommSystemSocket::Connect(const std::string& address) {
+			if (socket == 0) {
+				return -1;
+			}
+			socket->connect(address.c_str());
+			return 0;
+		}
+
 		int ZeroMQCommSystemSocket::Send(const std::string& message) {
 			if (socket == 0) {
 				return -1;
