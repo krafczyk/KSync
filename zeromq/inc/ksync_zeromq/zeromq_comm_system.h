@@ -17,8 +17,8 @@ namespace KSync {
 
 				int Bind(const std::string& address);
 				int Connect(const std::string& address);
-				int Send(const std::string& message);
-				int Recv(std::string& message);
+				int Send(const void* data, const size_t size);
+				int Recv(void*& data, size_t& size);
 
 			private:
 				zmq::socket_t* socket;

@@ -75,6 +75,8 @@ int main(int argc, char** argv) {
 		return -4;
 	}
 
+	std::string test_message = "Test Message";
+	KPrint("Test message sent length: %lu\n", test_message.size());
 	if(gateway_socket->Send("Test Message") == 0) {
 		std::string message;
 		if(gateway_socket->Recv(message) != 0) {

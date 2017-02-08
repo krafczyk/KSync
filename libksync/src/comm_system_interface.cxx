@@ -13,11 +13,5 @@ namespace KSync {
 
 		CommSystemSocket::~CommSystemSocket() {
 		}
-
-		CommSystemEndpoint::CommSystemEndpoint() {
-		}
-
-		CommSystemEndpoint::~CommSystemEndpoint() {
-		}
 	}
 }

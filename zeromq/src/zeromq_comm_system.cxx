@@ -1,3 +1,4 @@
+#include "ksync/logging.h"
 #include "ksync_zeromq/zeromq_comm_system.h"
 
 namespace KSync {
@@ -28,24 +29,26 @@ namespace KSync {
 			return 0;
 		}
 
-		int ZeroMQCommSystemSocket::Send(const std::string& message) {
+		int ZeroMQCommSystemSocket::Send(const void* data, const size_t size) {
 			if (socket == 0) {
 				return -1;
 			}
-			zmq::message_t send(message.size());
-			memcpy(send.data(), message.c_str(), message.size());
+			zmq::message_t send(size);
+			memcpy(send.data(), data, size);
 			socket->send(send);
 			return 0;
 		}
 
-		int ZeroMQCommSystemSocket::Recv(std::string& message) {
+		int ZeroMQCommSystemSocket::Recv(void*& data, size_t& size) {
 			if (socket == 0) {
 				return -1;
 			}
 			zmq::message_t recv;
 			socket->recv(&recv);
 
-			message = (char*) recv.data();
+			size = recv.size();
+			data = new void[size];
+			memcpy(data, recv.data(), size);
 			return 0;
 		}
 

@@ -78,7 +78,6 @@ int main(int argc, char** argv) {
 
 	KPrint("Using the following socket url: %s\n", connect_socket_url.c_str());
 
-
 	//Start the connection socket
 	
 	//int connection_socket = 0;

@@ -30,14 +30,8 @@ namespace KSync {
 
 				virtual int Bind(const std::string& address) = 0;
 				virtual int Connect(const std::string& address) = 0;
-				virtual int Send(const std::string& message) = 0;
-				virtual int Recv(std::string& message) = 0;
-		};
-
-		class CommSystemEndpoint {
-			public:
-				CommSystemEndpoint();
-				virtual ~CommSystemEndpoint();
+				virtual int Send(const void* data, const size_t size) = 0;
+				virtual int Recv(void*& data, size_t& size) = 0;
 		};
 
 		class CommSystemInterface {
