@@ -29,33 +29,31 @@ namespace KSync {
 			return 0;
 		}
 
-		int ZeroMQCommSystemSocket::Send(const void* data, const size_t size) {
+		int ZeroMQCommSystemSocket::Send(const CommObject* comm_obj) {
 			if (socket == 0) {
 				return -1;
 			}
-			zmq::message_t send(size);
-			memcpy(send.data(), data, size);
+			zmq::message_t send(comm_obj->size);
+			memcpy(send.data(), comm_obj->data, comm_obj->size);
 			socket->send(send);
 			return 0;
 		}
 
-		int ZeroMQCommSystemSocket::Recv(void*& data, size_t& size) {
+		int ZeroMQCommSystemSocket::Recv(CommObject*& comm_obj) {
+			if (comm_obj != 0) {
+				printf("Please pass an empty pointer\n");
+				return -2;
+			}
 			if (socket == 0) {
 				return -1;
 			}
 			zmq::message_t recv;
 			socket->recv(&recv);
 
-			size = recv.size();
-			data = new void[size];
-			memcpy(data, recv.data(), size);
+			char* data = new char[recv.size()];
+			memcpy(data, recv.data(), recv.size());
+			comm_obj = new CommObject(data, recv.size());
 			return 0;
-		}
-
-		ZeroMQCommSystemEndpoint::ZeroMQCommSystemEndpoint() {
-		}
-
-		ZeroMQCommSystemEndpoint::~ZeroMQCommSystemEndpoint() {
 		}
 
 		ZeroMQCommSystem::ZeroMQCommSystem() {

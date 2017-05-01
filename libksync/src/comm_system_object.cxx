@@ -1,10 +1,18 @@
+#include <cstring>
+
 #include "ksync/comm_system_object.h"
 
 namespace KSync {
 	namespace Comm {
-		CommObject::CommObject(void* data, size_t size) {
+		CommObject::CommObject(char* data, size_t size) {
 			this->data = data;
 			this->size = size;
+		}
+
+		CommObject::CommObject(const std::string& in) {
+			this->size = in.size();
+			this->data = new char[this->size];
+			memcpy(this->data, in.c_str(), this->size);
 		}
 
 		CommObject::~CommObject() {
@@ -15,8 +23,8 @@ namespace KSync {
 		}
 
 		void CommObject::RepackWithCRC() {
-			uint8_t crc = GenCRC8((uint8_t*) this->data, this->size);
-			uint8_t* new_data = new uint8_t[size+1];
+			char crc = GenCRC8((char*) this->data, this->size);
+			char* new_data = new char[size+1];
 			memcpy(new_data, this->data, this->size);
 			new_data[size] = crc;
 			delete this->data;
@@ -24,8 +32,8 @@ namespace KSync {
 			this->size = size+1;
 		}
 
-		uint8_t CommObject::GenCRC8(const uint8_t* data, const size_t size) {
-			uint8_t out = 0;
+		char CommObject::GenCRC8(const char* data, const size_t size) {
+			char out = 0;
 			int bits_read = 0;
 			int bit_flag;
 
@@ -65,10 +73,10 @@ namespace KSync {
 			}
 
 			// item c) reverse the bits
-			uint8_t crc = 0;
-			i = 0x80;
+			char crc = 0;
+			int i = 0x80;
 			int j = 0x01;
-			for (; i != 0; i >>= 1; j <<= 1) {
+			for (; i != 0; i >>= 1, j <<= 1) {
 				if (i & out) {
 					crc |= j;
 				}
@@ -78,7 +86,7 @@ namespace KSync {
 		}
 
 		bool CommObject::CheckCRC() {
-			uint8_t crc = GenCRC8((uint8_t*) this->data, this->size-1);
+			char crc = GenCRC8((char*) this->data, this->size-1);
 			if (this->data[this->size] == crc ) {
 				return true;
 			} else {
@@ -86,24 +94,11 @@ namespace KSync {
 			}
 		}
 
-		template<> int CommObjectTranslator(const std::string& in, CommObject*& out, const bool crc) {
-			void* data = new void[in.size()];
-			memcpy(data, in.c_str(), in.size());
-			out = new CommObject(data, in.size());
-			if (crc) {
-				out->RepackWithCRC();
-			}
-			return 0;
-		}
-
-		template<> int CommObjectTranslator(CommObject*& in, const std::string& out, const bool crc) {
-			size_t new_size = in->size;
-			if (crc) {
-				new_size--;
-			}
-			out.reserve(new_size);
-			for(size_t i=0; i < new_size; ++i) {
-				out.append((char) in->data[i]);
+		int CommObject::GetString(std::string& out) const {
+			out.clear();
+			out.reserve(this->size);
+			for(size_t i=0; i < this->size; ++i) {
+				out.push_back(this->data[i]);
 			}
 			return 0;
 		}

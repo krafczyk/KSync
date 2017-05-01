@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //#include "ksync/socket_ops.h"
 #include "ksync/comm_system_interface.h"
 #include "ksync/comm_system_factory.h"
+#include "ksync/comm_system_object.h"
 
 #include "ArgParse/ArgParse.h"
 
@@ -108,13 +109,21 @@ int main(int argc, char** argv) {
 	}
 
 	while(!finished) {
-		std::string message;
-		if(gateway_socket->Recv(message) == 0) {
-			KPrint("Received (%s)\n", message.c_str());
+		KSync::Comm::CommObject* recv_obj = 0;
+		if(gateway_socket->Recv(recv_obj) == 0) {
+			std::string message;
+			if(recv_obj->GetString(message) < 0) {
+				Warning("There was a problem decoding message!\n");
+			} else {
+				KPrint("Received (%s)\n", message.c_str());
+			}
+			delete recv_obj;
 			usleep(1*1000000);
-			if(gateway_socket->Send(message) != 0) {
+			KSync::Comm::CommObject* send_obj = new KSync::Comm::CommObject(message);
+			if(gateway_socket->Send(send_obj) != 0) {
 				Warning("There was a problem sending a message!!");
 			}
+			delete send_obj;
 		}
 		//if(KSync::Server::Process_New_Connections(active_sockets, connection_socket) < 0) {
 		//	Warning("There was an error processing new connections\n");

@@ -17,17 +17,11 @@ namespace KSync {
 
 				int Bind(const std::string& address);
 				int Connect(const std::string& address);
-				int Send(const void* data, const size_t size);
-				int Recv(void*& data, size_t& size);
+				int Send(const CommObject* comm_obj);
+				int Recv(CommObject*& comm_obj);
 
 			private:
 				zmq::socket_t* socket;
-		};
-
-		class ZeroMQCommSystemEndpoint : public CommSystemEndpoint {
-			public:
-				ZeroMQCommSystemEndpoint();
-				~ZeroMQCommSystemEndpoint();
 		};
 
 		class ZeroMQCommSystem : public CommSystemInterface {

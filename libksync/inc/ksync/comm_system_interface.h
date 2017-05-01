@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
+#include "ksync/comm_system_object.h"
+
 namespace KSync {
 	namespace Comm {
 		class CommSystemSocket {
@@ -30,8 +32,8 @@ namespace KSync {
 
 				virtual int Bind(const std::string& address) = 0;
 				virtual int Connect(const std::string& address) = 0;
-				virtual int Send(const void* data, const size_t size) = 0;
-				virtual int Recv(void*& data, size_t& size) = 0;
+				virtual int Send(const CommObject* comm_obj) = 0;
+				virtual int Recv(CommObject*& comm_obj) = 0;
 		};
 
 		class CommSystemInterface {

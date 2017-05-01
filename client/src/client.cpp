@@ -76,15 +76,22 @@ int main(int argc, char** argv) {
 	}
 
 	std::string test_message = "Test Message";
-	KPrint("Test message sent length: %lu\n", test_message.size());
-	if(gateway_socket->Send("Test Message") == 0) {
-		std::string message;
-		if(gateway_socket->Recv(message) != 0) {
+	KSync::Comm::CommObject* comm_obj = new KSync::Comm::CommObject(test_message);
+	KPrint("Test message sent length: %lu\n", comm_obj->size);
+	if(gateway_socket->Send(comm_obj) == 0) {
+		KSync::Comm::CommObject* recv_obj = 0;
+		if(gateway_socket->Recv(recv_obj) != 0) {
 			Warning("Problem receiving response\n");
 		} else {
+			std::string message;
+			if(recv_obj->GetString(message) < 0) {
+				printf("There was a problem decoding string message\n");
+			}
+			delete recv_obj;
 			KPrint("Received (%s)\n", message.c_str());
 		}
 	}
+	delete comm_obj;
 
 	delete gateway_socket;
 	delete comm_system;
