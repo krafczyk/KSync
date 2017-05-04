@@ -33,8 +33,10 @@ namespace KSync {
 			if (socket == 0) {
 				return -1;
 			}
-			zmq::message_t send(comm_obj->size);
-			memcpy(send.data(), comm_obj->data, comm_obj->size);
+			const char* data = comm_obj->GetDataPointer();
+			size_t size = comm_obj->GetDataSize();
+			zmq::message_t send(size);
+			memcpy(send.data(), data, size);
 			socket->send(send);
 			return 0;
 		}
@@ -52,7 +54,7 @@ namespace KSync {
 
 			char* data = new char[recv.size()];
 			memcpy(data, recv.data(), recv.size());
-			comm_obj = new CommObject(data, recv.size());
+			comm_obj = new CommObject(data, recv.size(), true);
 			return 0;
 		}
 

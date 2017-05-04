@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <unistd.h>
 #include <iostream>
 #include <sstream>
+#include <iostream>
 
 #include "ksync/logging.h"
 #include "ksync/client.h"
@@ -75,23 +76,34 @@ int main(int argc, char** argv) {
 		return -4;
 	}
 
-	std::string test_message = "Test Message";
-	KSync::Comm::CommObject* comm_obj = new KSync::Comm::CommObject(test_message);
-	KPrint("Test message sent length: %lu\n", comm_obj->size);
-	if(gateway_socket->Send(comm_obj) == 0) {
-		KSync::Comm::CommObject* recv_obj = 0;
-		if(gateway_socket->Recv(recv_obj) != 0) {
-			Warning("Problem receiving response\n");
-		} else {
-			std::string message;
-			if(recv_obj->GetString(message) < 0) {
-				printf("There was a problem decoding string message\n");
-			}
-			delete recv_obj;
-			KPrint("Received (%s)\n", message.c_str());
+	while (true) {
+		printf("Print message to send to the server:\n");
+		std::string message_to_send;
+		std::cin >> message_to_send;
+		if (message_to_send == "quit") {
+			printf("Detected quit message. Quitting.");
+			break;
 		}
+		printf("Sending message: (%s)\n", message_to_send.c_str());
+		KSync::Comm::CommObject* send_obj = new KSync::Comm::CommObject(message_to_send);
+		if(gateway_socket->Send(send_obj) == 0) {
+			KSync::Comm::CommObject* recv_obj = 0;
+			if(gateway_socket->Recv(recv_obj) != 0) {
+				Warning("Problem receiving response\n");
+			} else {
+				std::string message;
+				if(recv_obj->GetString(message) < 0) {
+					printf("There was a problem decoding string message\n");
+				}
+				KPrint("Received (%s)\n", message.c_str());
+				if(message_to_send != message) {
+					printf("Message received wasn't the same as that sent!\n");
+				}
+				delete recv_obj;
+			}
+		}
+		delete send_obj;
 	}
-	delete comm_obj;
 
 	delete gateway_socket;
 	delete comm_system;

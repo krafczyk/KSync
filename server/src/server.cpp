@@ -118,7 +118,8 @@ int main(int argc, char** argv) {
 				KPrint("Received (%s)\n", message.c_str());
 			}
 			delete recv_obj;
-			usleep(1*1000000);
+			//usleep(1*1000000);
+			usleep(100000);
 			KSync::Comm::CommObject* send_obj = new KSync::Comm::CommObject(message);
 			if(gateway_socket->Send(send_obj) != 0) {
 				Warning("There was a problem sending a message!!");
