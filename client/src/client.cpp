@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
 	while (true) {
 		printf("Print message to send to the server:\n");
 		std::string message_to_send;
-		std::cin >> message_to_send;
+		std::getline(std::cin, message_to_send);
 		if (message_to_send == "quit") {
 			printf("Detected quit message. Quitting.");
 			break;
