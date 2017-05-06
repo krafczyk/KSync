@@ -50,7 +50,9 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
-	connect_socket_url = "tcp://localhost:5555";
+	if (!connect_socket_url_defined) {
+		connect_socket_url = "tcp://localhost:5555";
+	}
 
 	//if(!connect_socket_url_defined){
 	//	if(KSync::Utilities::get_default_connection_url(connect_socket_url) < 0) {

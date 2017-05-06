@@ -83,6 +83,7 @@ namespace KSync {
 		}
 
 		int GetZeromqCommSystem(CommSystemInterface*& comm_interface __attribute__((unused))) {
+			Message("Starting ZeroMQ Communication Backend\n");
 			comm_interface = new ZeroMQCommSystem();
 			return 0;
 		}

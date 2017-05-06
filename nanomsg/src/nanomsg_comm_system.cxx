@@ -105,6 +105,7 @@ namespace KSync {
 		}
 
 		int GetNanomsgCommSystem(CommSystemInterface*& comm_interface __attribute__((unused))) {
+			Message("Starting Nanomsg Communication Backend\n");
 			comm_interface = new NanomsgCommSystem();
 			return 0;
 		}
