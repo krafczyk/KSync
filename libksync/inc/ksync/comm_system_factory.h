@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace KSync {
 	namespace Comm {
-		//int GetNanomsgCommSystem(CommSystemInterface*& comm_interface);
+		int GetNanomsgCommSystem(CommSystemInterface*& comm_interface);
 		int GetZeromqCommSystem(CommSystemInterface*& comm_interface); 
 	}
 }

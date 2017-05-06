@@ -34,8 +34,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 int main(int argc, char** argv) {
 	std::string connect_socket_url = "";
 	bool connect_socket_url_defined = false;
+	bool nanomsg = false;
 
 	ArgParse::ArgParser arg_parser("KSync Server - Client side of a Client-Server synchonization system using rsync.");
+	arg_parser.AddArgument("--nanomsg", "Use nanomsg comm backend. Deafult is zeromq", &nanomsg);
 	arg_parser.AddArgument("connect-socket", "Socket to use to negotiate new client connections. Default is : ipc:///ksync/<user>/ksync-connect.ipc", &connect_socket_url, ArgParse::Argument::Optional, &connect_socket_url_defined);
 
 	if(arg_parser.ParseArgs(argc, argv) < 0) {
@@ -60,9 +62,16 @@ int main(int argc, char** argv) {
 	printf("Using the following socket url: %s\n", connect_socket_url.c_str());
 
 	KSync::Comm::CommSystemInterface* comm_system = 0;
-	if (KSync::Comm::GetZeromqCommSystem(comm_system) < 0) {
-		Error("There was a problem initializing the ZeroMQ communication system!\n");
-		return -2;
+	if (!nanomsg) {
+		if (KSync::Comm::GetZeromqCommSystem(comm_system) < 0) {
+			Error("There was a problem initializing the ZeroMQ communication system!\n");
+			return -2;
+		}
+	} else {
+		if (KSync::Comm::GetNanomsgCommSystem(comm_system) < 0) {
+			Error("There was a problem initializing the Nanomsg communication system!\n");
+			return -2;
+		}
 	}
 
 	KSync::Comm::CommSystemSocket* gateway_socket = 0;
@@ -101,6 +110,8 @@ int main(int argc, char** argv) {
 				}
 				delete recv_obj;
 			}
+		} else {
+			Error("There was a problem sending the message!!\n");
 		}
 		delete send_obj;
 	}

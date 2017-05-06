@@ -21,19 +21,19 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set(libksync_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libksync/inc" CACHE INTERNAL "ksync include dir")
 set(zeromq_module_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/zeromq/inc" CACHE INTERNAL "zeromq ksync module include dir")
+set(nanomsg_module_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/nanomsg/inc" CACHE INTERNAL "nanomsg ksync module include dir")
 
 find_package(PkgConfig)
-#pkg_search_module(nanomsg REQUIRED nanomsg)
+pkg_search_module(nanomsg REQUIRED nanomsg)
 pkg_search_module(libzmq REQUIRED libzmq)
 pkg_search_module(ArgParse REQUIRED ArgParse)
 
-#include_directories(${nanomsg_INCLUDEDIR} ${ArgParse_INCLUDEDIR})
-include_directories(${ArgParse_INCLUDEDIR})
-
+include_directories(${nanomsg_INCLUDEDIR} ${ArgParse_INCLUDEDIR})
 
 add_definitions(-std=c++11 -Wall -Wextra -Werror)
 
 add_subdirectory(libksync)
+add_subdirectory(nanomsg)
 add_subdirectory(zeromq)
 add_subdirectory(server)
 add_subdirectory(client)

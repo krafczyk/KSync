@@ -52,9 +52,7 @@ namespace KSync {
 			zmq::message_t recv;
 			socket->recv(&recv);
 
-			char* data = new char[recv.size()];
-			memcpy(data, recv.data(), recv.size());
-			comm_obj = new CommObject(data, recv.size(), true);
+			comm_obj = new CommObject((char*) recv.data(), recv.size(), true);
 			return 0;
 		}
 
