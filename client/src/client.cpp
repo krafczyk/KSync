@@ -89,13 +89,13 @@ int main(int argc, char** argv) {
 		printf("Print message to send to the server:\n");
 		std::string message_to_send;
 		std::getline(std::cin, message_to_send);
-		if (message_to_send == "quit") {
-			printf("Detected quit message. Quitting.");
-			break;
-		}
 		printf("Sending message: (%s)\n", message_to_send.c_str());
 		KSync::Comm::CommObject* send_obj = new KSync::Comm::CommObject(message_to_send);
 		if(gateway_socket->Send(send_obj) == 0) {
+			if (message_to_send == "quit") {
+				printf("Detected quit message. Quitting.");
+				break;
+			}
 			KSync::Comm::CommObject* recv_obj = 0;
 			if(gateway_socket->Recv(recv_obj) != 0) {
 				Warning("Problem receiving response\n");
