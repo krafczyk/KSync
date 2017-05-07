@@ -23,14 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace KSync {
 	namespace Utilities {
-		void reset_error();
-		int check_error();
 		int get_socket_dir(std::string& dir);
 		int get_default_ipc_connection_url(std::string& connection_url);
 		int get_default_tcp_connection_url(std::string& connection_url);
 		int get_default_connection_url(std::string& connection_url);
-		//char get_random_letter();
-		//std::string get_random_string(const int num_char);
 	}
 }
 

@@ -3,23 +3,11 @@
 #include <unistd.h>
 #include <sstream>
 
-//#include <nanomsg/nn.h>
-
 #include "ksync/utilities.h"
 #include "ksync/logging.h"
 
 namespace KSync {
 	namespace Utilities {
-		void reset_error() {
-			errno = 0;
-		}
-		int check_error() {
-			//if(nn_errno() != 0) {
-			//	Warning("An error occured! %i (%s)\n", nn_errno(), nn_strerror(nn_errno()));
-			//	return nn_errno();
-			//}
-			return 0;
-		}
 		int get_socket_dir(std::string& dir) {
 			char* login_name = getlogin();
 			if(login_name == 0) {
@@ -59,13 +47,11 @@ namespace KSync {
 			return 0;
 		}
 		int get_default_tcp_connection_url(std::string& connection_url) {
-			//TODO: Implement dns resolution operator
-			//connection_url = "tcp://localhost:6060";
-			connection_url = "tcp://127.0.0.1:6060";
+			connection_url = "tcp://*:6060";
 			return 0;
 		}
 		int get_default_connection_url(std::string& connection_url) {
-			return get_default_tcp_connection_url(connection_url);
+			return get_default_ipc_connection_url(connection_url);
 		}
 	}
 }
