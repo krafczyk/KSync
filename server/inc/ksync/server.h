@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace KSync {
 	namespace Server {
-		int Process_New_Connections(std::vector<std::pair<int,int>> active_sockets, const int connection_socket);
 	}
 }
 

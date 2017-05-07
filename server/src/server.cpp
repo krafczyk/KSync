@@ -25,7 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ksync/logging.h"
 #include "ksync/messages.h"
 #include "ksync/utilities.h"
-//#include "ksync/socket_ops.h"
 #include "ksync/comm_system_interface.h"
 #include "ksync/comm_system_factory.h"
 #include "ksync/comm_system_object.h"
@@ -74,26 +73,7 @@ int main(int argc, char** argv) {
 		connect_socket_url = "tcp://*:5555";
 	}
 
-	//if(!connect_socket_url_defined){
-	//	if(KSync::Utilities::get_default_connection_url(connect_socket_url) < 0) {
-	//		Error("There was a problem getting the default connection url!\n");
-	//		return -2;
-	//	}
-	//}
-
 	KPrint("Using the following socket url: %s\n", connect_socket_url.c_str());
-
-	//Start the connection socket
-	
-	//int connection_socket = 0;
-	//int endpoint = 0;
-	//
-	//if(KSync::SocketOps::Create_And_Bind_Rep_Socket(connection_socket, endpoint, connect_socket_url) < 0) {
-	//	Error("There was a problem creating and binding the connection socket!\n");
-	//	return -2;
-	//}
-	//
-	//active_sockets.push_back(std::pair<int,int>(connection_socket,endpoint));
 
 	KSync::Comm::CommSystemInterface* comm_system = 0;
 	if (!nanomsg) {
@@ -142,33 +122,9 @@ int main(int argc, char** argv) {
 				delete send_obj;
 			}
 		}
-		//if(KSync::Server::Process_New_Connections(active_sockets, connection_socket) < 0) {
-		//	Warning("There was an error processing new connections\n");
-		//}
 	}
-
-	//for(size_t i=0; i< active_sockets.size(); ++i) {
-	//	if(KSync::SocketOps::Shutdown_Socket(active_sockets[i].first, active_sockets[i].second) < 0) {
-	//		Warning("There was a problem while trying to shutdown the server side of a socket!\n");
-	//	}
-	//}
 
 	delete gateway_socket;
 	delete comm_system;
 	return 0;
 }
-
-//int KSync::Server::Process_New_Connections(std::vector<std::pair<int,int>> active_sockets, const int connection_socket) {
-//	std::string message;
-//	int status = KSync::SocketOps::Receive_Message(message, connection_socket);
-//	if(status < 0) {
-//		//Warning("There was a problem receiving a message from the connection socket!\n");
-//		return -1;
-//	}
-//
-//	if(status == 0) {
-//		printf("Received the message: %s\n", message.c_str());
-//	}
-//	active_sockets.size();
-//	return 0;
-//}

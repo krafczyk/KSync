@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ksync/logging.h"
 #include "ksync/client.h"
 #include "ksync/messages.h"
-//#include "ksync/socket_ops.h"
 #include "ksync/utilities.h"
 #include "ksync/comm_system_interface.h"
 #include "ksync/comm_system_factory.h"
@@ -53,13 +52,6 @@ int main(int argc, char** argv) {
 	if (!connect_socket_url_defined) {
 		connect_socket_url = "tcp://localhost:5555";
 	}
-
-	//if(!connect_socket_url_defined){
-	//	if(KSync::Utilities::get_default_connection_url(connect_socket_url) < 0) {
-	//		Error("There was a problem getting the default connection url!\n");
-	//		return -2;
-	//	}
-	//}
 
 	printf("Using the following socket url: %s\n", connect_socket_url.c_str());
 
@@ -120,36 +112,6 @@ int main(int argc, char** argv) {
 
 	delete gateway_socket;
 	delete comm_system;
-
-	//int connection_socket = 0;
-	//int connection_endpoint = 0;
-	//
-	//printf("create and connect\n");
-	//
-	//errno=0;
-	//if(KSync::SocketOps::Create_And_Connect_Req_Socket(connection_socket, connection_endpoint, connect_socket_url) < 0) {
-	//	Error("Encountered an error trying to create and connect to the connection socket\n");
-	//	return -1;
-	//}
-	//if(KSync::SocketOps::Set_Socket_Linger(connection_socket, -1) < 0) {
-	//	Error("Couldn't set socket linger\n");
-	//	return -1;
-	//}
-	//	
-	//printf("send\n");
-
-	//std::string message = "test_message";
-	//if(KSync::SocketOps::Send_Message(message, connection_socket) < 0) {
-	//	Warning("There was a problem sending a message to the server.\n");
-	//}
-
-	//usleep(1000000);
-
-	//printf("shutdown\n");
-
-	//if(KSync::SocketOps::Shutdown_Socket(connection_socket, connection_endpoint) < 0) {
-	//	Warning("There was a problem shutting down the client side of the connection socket.\n");
-	//}
 
 	return 0;
 }
