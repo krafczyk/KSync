@@ -48,8 +48,6 @@ int main(int argc, char** argv) {
 	signal(SIGTERM, Cleanup);
 	signal(SIGINT, Cleanup);
 
-	std::vector<std::pair<int,int>> active_sockets;
-
 	std::string connect_socket_url = "";
 	bool connect_socket_url_defined = false;
 	bool nanomsg = false;
