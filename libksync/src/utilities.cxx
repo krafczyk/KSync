@@ -8,6 +8,14 @@
 
 namespace KSync {
 	namespace Utilities {
+		void set_up_common_arguments_and_defaults(ArgParse::ArgParser& Parser, std::string& connect_socket_url, bool& connect_socket_url_defined, bool& nanomsg) {
+			connect_socket_url = "";
+			connect_socket_url_defined = false;
+			nanomsg = false;
+
+			Parser.AddArgument("--nanomsg", "Use nanomsg comm backend. Deafult is zeromq", &nanomsg);
+			Parser.AddArgument("connect-socket", "Socket to use to negotiate new client connections. Default is : ipc:///ksync/<user>/ksync-connect.ipc", &connect_socket_url, ArgParse::Argument::Optional, &connect_socket_url_defined);
+		}
 		int get_socket_dir(std::string& dir) {
 			char* login_name = getlogin();
 			if(login_name == 0) {

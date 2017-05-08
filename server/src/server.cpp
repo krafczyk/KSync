@@ -48,13 +48,12 @@ int main(int argc, char** argv) {
 	signal(SIGTERM, Cleanup);
 	signal(SIGINT, Cleanup);
 
-	std::string connect_socket_url = "";
-	bool connect_socket_url_defined = false;
-	bool nanomsg = false;
+	std::string connect_socket_url;
+	bool connect_socket_url_defined;
+	bool nanomsg;
 
 	ArgParse::ArgParser arg_parser("KSync Server - Server side of a Client-Server synchonization system using rsync.");
-	arg_parser.AddArgument("--nanomsg", "Use nanomsg comm backend. Deafult is zeromq", &nanomsg);
-	arg_parser.AddArgument("connect-socket", "Socket to use to negotiate new client connections. Default is : ipc:///tmp/ksync-<user>/ksync-connect.ipc", &connect_socket_url, ArgParse::Argument::Optional, &connect_socket_url_defined);
+	KSync::Utilities::set_up_common_arguments_and_defaults(arg_parser, connect_socket_url, connect_socket_url_defined, nanomsg);
 
 	int status;
 	if((status = arg_parser.ParseArgs(argc, argv)) < 0) {
