@@ -49,7 +49,12 @@ int main(int argc, char** argv) {
 	}
 
 	if (!connect_socket_url_defined) {
-		connect_socket_url = "tcp://localhost:5555";
+		KSync::Utilities::get_default_ipc_connection_url(connect_socket_url);
+	} else {
+		if(connect_socket_url.substr(0, 3) != "icp") {
+			Error("Non icp sockets are not properly implemented at this time.\n");
+			return -2;
+		}
 	}
 
 	printf("Using the following socket url: %s\n", connect_socket_url.c_str());

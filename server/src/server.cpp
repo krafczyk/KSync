@@ -66,8 +66,13 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
-	if(!connect_socket_url_defined) {
-		connect_socket_url = "tcp://*:5555";
+	if (!connect_socket_url_defined) {
+		KSync::Utilities::get_default_ipc_connection_url(connect_socket_url);
+	} else {
+		if(connect_socket_url.substr(0, 3) != "icp") {
+			Error("Non icp sockets are not properly implemented at this time.\n");
+			return -2;
+		}
 	}
 
 	KPrint("Using the following socket url: %s\n", connect_socket_url.c_str());
