@@ -14,7 +14,7 @@ namespace KSync {
 			nanomsg = false;
 
 			Parser.AddArgument("--nanomsg", "Use nanomsg comm backend. Deafult is zeromq", &nanomsg);
-			Parser.AddArgument("connect-socket", "Socket to use to negotiate new client connections. Default is : ipc:///ksync/<user>/ksync-connect.ipc", &connect_socket_url, ArgParse::Argument::Optional, &connect_socket_url_defined);
+			Parser.AddArgument("connect-socket", "Socket to use to negotiate new client connections. Default is : ipc:///tmp/ksync/<user>/ksync-connect.ipc", &connect_socket_url, ArgParse::Argument::Optional, &connect_socket_url_defined);
 		}
 		int get_socket_dir(std::string& dir) {
 			char* login_name = getlogin();
@@ -24,21 +24,37 @@ namespace KSync {
 			}
 
 			std::stringstream ss;
-			ss << "/tmp/ksync-" << login_name;
+			ss << "/tmp/" << login_name;
 
 			if(access(ss.str().c_str(), F_OK) != 0) {
 				if(errno != 2) {
-					Error("An error was encountered while checking for the existence of the socket directory!\n");
+					Error("An error was encountered while checking for the existence of the user temporary directory!\n");
 					return -2;
 				}
-				//Directory doesn't exist, we better create is
+				//Directory doesn't exist, we better create it
 				
 				if(mkdir(ss.str().c_str(), 0700) != 0) {
-					Error("An error was encountered while creating the socket directory!\n");
+					Error("An error was encountered while creating the user temporary directory!\n");
 					return -3;
 				}
 			}
+
+			ss.clear();
+			ss << "/tmp/" << login_name << "/ksync";
 			
+			if(access(ss.str().c_str(), F_OK) != 0) {
+				if(errno != 2) {
+					Error("An error was encountered while checking for the existence of the ksync directory!\n");
+					return -2;
+				}
+				//Directory doesn't exist, we better create it
+				
+				if(mkdir(ss.str().c_str(), 0700) != 0) {
+					Error("An error was encountered while creating the ksync directory!\n");
+					return -3;
+				}
+			}
+
 			dir = ss.str();
 
 			return 0;
