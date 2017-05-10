@@ -107,25 +107,25 @@ int main(int argc, char** argv) {
 	while(!finished) {
 		KSync::Comm::CommObject* recv_obj = 0;
 		if(gateway_socket->Recv(recv_obj) == 0) {
-			std::string message;
-			if(recv_obj->GetString(message) < 0) {
-				Warning("There was a problem decoding message!\n");
+			if(recv_obj->GetType() != KSync::Comm::CommString::Type) {
+				Warning("Message wasn't a string!\n");
 			} else {
+				KSync::Comm::CommString message(recv_obj);
 				KPrint("Received (%s)\n", message.c_str());
+				if (message == "quit") {
+					KPrint("Detected 'quit'. Quitting.\n");
+					finished = true;
+				} else {
+					//usleep(1*1000000);
+					usleep(100000);
+					KSync::Comm::CommObject* send_obj = message.GetCommObject();
+					if(gateway_socket->Send(send_obj) != 0) {
+						Warning("There was a problem sending a message!!");
+					} 
+					delete send_obj;
+				}
 			}
 			delete recv_obj;
-			if (message == "quit") {
-				KPrint("Detected 'quit'. Quitting.\n");
-				finished = true;
-			} else {
-				//usleep(1*1000000);
-				usleep(100000);
-				KSync::Comm::CommObject* send_obj = new KSync::Comm::CommObject(message);
-				if(gateway_socket->Send(send_obj) != 0) {
-					Warning("There was a problem sending a message!!");
-				} 
-				delete send_obj;
-			}
 		}
 	}
 

@@ -22,17 +22,68 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
+#include "ksync/utilities.h"
+#include "ksync/ksync_exception.h"
+
 namespace KSync {
 	namespace Comm {
-		class MessageDataInterface {
+		class CommObject;
+		typedef uint8_t Type_t;
+		const char* GetTypeName(const Type_t type);
+		class TypeException : public KSync::Exception::BasicException {
 			public:
-				typedef unsigned char Type_t;
-
-				virtual Type_t GetType() const = 0;
-
-				virtual int Pack(size_t& length, void*& buffer) const = 0;
-				virtual int UnPack(size_t length, void* buffer) = 0;
+				TypeException(Type_t type);
 		};
+
+		class CommunicableObject {
+			public:
+				static const Type_t Type;
+
+				CommunicableObject() {};
+				CommunicableObject(CommObject* comm_obj __attribute__((unused))) {};
+				virtual CommObject* GetCommObject() = 0;
+		};
+		class CommData : public CommunicableObject {
+			public:
+				static const Type_t Type;
+
+				CommData(char* data, size_t size) {
+					this->data = data;
+					this->size = size;
+				}
+				~CommData();
+
+				CommData(CommObject* comm_obj);
+				CommObject* GetCommObject();
+			private:
+				char* data;
+				size_t size;
+		};
+		class CommString : public CommunicableObject, public std::string {
+			public:
+				static const Type_t Type;
+
+				CommString() {};
+				CommString(std::string in) : std::string(in) {};
+				CommString(CommObject* comm_obj);
+				CommObject* GetCommObject();
+		};
+		/*
+		class GatewaySocketInitializationRequest : public CommunicableObject {
+			public:
+				static const Type_t Type;
+				GatewaySocketInitializationRequest(Utilities::client_id_t id) {
+					this->ClientId = id;
+				}
+			private:
+				Utilities::client_id_t ClientId;
+		};
+		class GatewaySocketInitializationChangeId : public CommunicableObject {
+			public:
+				static const Type_t Type;
+				GatewaySocketInitializationChangeId() {};
+		};
+		*/
 	}
 }
 

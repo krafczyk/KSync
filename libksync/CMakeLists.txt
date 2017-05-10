@@ -16,7 +16,7 @@
 
 include_directories(${libksync_INCLUDE_DIR})
 
-add_library (ksync SHARED src/logging.cxx src/comm_system_interface.cxx src/comm_system_object.cxx src/utilities.cxx)
+add_library (ksync SHARED src/logging.cxx src/messages.cxx src/comm_system_interface.cxx src/comm_system_object.cxx src/utilities.cxx)
 
 install (TARGETS ksync DESTINATION lib)
 install (DIRECTORY inc/ksync DESTINATION include FILES_MATCHING PATTERN "*.h")

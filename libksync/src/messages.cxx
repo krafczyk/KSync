@@ -22,9 +22,81 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstring>
 
 #include "ksync/messages.h"
+#include "ksync/comm_system_object.h"
 #include "ksync/logging.h"
 
 namespace KSync {
-	namespace Messages {
+	namespace Comm {
+		const Type_t CommunicableObject::Type = 0;
+		const Type_t CommData::Type = 1;
+		const Type_t CommString::Type = 2;
+		//const Type_t GatewaySocketInitializationRequest::Type = 3;
+		//const Type_t GatewaySocketInitializationChangeId::Type = 4;
+
+		const char* GetTypeName(const Type_t type) {
+			if (type == CommunicableObject::Type) {
+				return "Basic CommunicableObject";
+			} else  if (type == CommData::Type) {
+				return "Data";
+			} else if (type == CommString::Type) {
+				return "String";
+			//} else if (type == GatewaySocketInitializationRequest::Type) {
+			//	return "GatewaySocketInitializationRequest";
+			//} else if (type == GatewaySocketInitializationChangeId::Type) {
+			//	return "GatewaySocketInitializationChangeId";
+			} else {
+				throw TypeException(type);
+			}
+		}
+
+		TypeException::TypeException(Type_t type) {
+			std::stringstream ss;
+			ss << "Type (" << type << ") is not a valid type!";
+			SetMessage(ss.str());
+		}
+
+		CommData::CommData(CommObject* comm_obj) {
+			if (comm_obj->GetType() != this->Type) {
+				throw TypeException(comm_obj->GetType());
+			}
+			if (comm_obj->UnPack() < 0) {
+				throw CommObject::UnPackException(comm_obj->GetType());
+			}
+			this->data = new char[comm_obj->GetDataSize()];
+			memcpy(this->data, comm_obj->GetDataPointer(), comm_obj->GetDataSize());
+			this->size = comm_obj->GetDataSize();
+		}
+
+		CommData::~CommData() {
+			if (this->data != 0) {
+				delete this->data;
+			}
+		}
+		CommObject* CommData::GetCommObject() {
+			CommObject* new_obj = new CommObject(this->data, this->size, false, this->Type);
+			return new_obj;
+		}
+
+		CommString::CommString(CommObject* comm_obj) {
+			if (comm_obj->GetType() != this->Type) {
+				throw TypeException(comm_obj->GetType());
+			}
+			if(comm_obj->UnPack() < 0) {
+				throw CommObject::UnPackException(comm_obj->GetType());
+			}
+			this->clear();
+			this->reserve(comm_obj->GetDataSize());
+			for(size_t i=0; i < comm_obj->GetDataSize(); ++i) {
+				this->push_back(comm_obj->GetDataPointer()[i]);
+			}
+		}
+
+		CommObject* CommString::GetCommObject() {
+			size_t size = this->size();
+			char* data = new char[size];
+			memcpy(data, this->c_str(), size);
+			CommObject* new_obj = new CommObject(data, size, false, this->Type);
+			return new_obj;
+		}
 	}
 }

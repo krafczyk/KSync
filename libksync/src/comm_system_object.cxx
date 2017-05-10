@@ -5,33 +5,21 @@
 
 namespace KSync {
 	namespace Comm {
-		const char* CommObject::GetTypeName(const Type_t type) {
-			if (type == TypeData) {
-				return "Data";
-			} else if (type == TypeString) {
-				return "String";
-			} else {
-				throw TypeException(type);
-			}
-		}
-
-		CommObject::TypeException::TypeException(Type_t type) {
-			std::stringstream ss;
-			ss << "Type (" << type << ") is not a valid type!";
-			SetMessage(ss.str());
-		}
-
 		CommObject::PackException::PackException(Type_t type) {
 			std::stringstream ss;
 			ss << "There was a problem packing an object of type (" << GetTypeName(type) << ")";
 			SetMessage(ss.str());
 		}
-
+		CommObject::UnPackException::UnPackException(Type_t type) {
+			std::stringstream ss;
+			ss << "There was a problem un packing an object of type (" << GetTypeName(type) << ")";
+			SetMessage(ss.str());
+		}
 		CommObject::CRCException::CRCException() {
 			SetMessage("There was a CRC miss-match");
 		}
 
-		CommObject::CommObject(const char* data, const size_t size, const bool pre_packed, const bool pack) {
+		CommObject::CommObject(const char* data, const size_t size, const bool pre_packed, const Type_t type) {
 			this->data = new char[size];
 			memcpy(this->data, data, size);
 			this->size = size;
@@ -40,21 +28,7 @@ namespace KSync {
 				this->crc = ((char*)this->data)[sizeof(this->type)];
 				this->packed = true;
 			} else {
-				this->type = TypeData;
-				if (pack) {
-					if(Pack() < 0) {
-						throw PackException(this->type);
-					}
-				}
-			}
-		}
-
-		CommObject::CommObject(const std::string& in, const bool pack) {
-			this->size = in.size();
-			this->data = new char[this->size];
-			this->type = TypeString;
-			memcpy(this->data, in.c_str(), this->size);
-			if (pack) {
+				this->type = type;
 				if(Pack() < 0) {
 					throw PackException(this->type);
 				}
@@ -152,34 +126,6 @@ namespace KSync {
 			}
 
 			return crc;
-		}
-
-		int CommObject::GetData(char*& data, size_t& size) {
-			if (this->type != TypeData) {
-				return -1;
-			}
-			if (UnPack() < 0) {
-				return -2;
-			}
-			data = new char[this->size];
-			memcpy(data, this->data, this->size);
-			size = this->size;
-			return 0;
-		}
-
-		int CommObject::GetString(std::string& out) {
-			if (this->type != TypeString) {
-				return -1;
-			}
-			if(UnPack() < 0) {
-				return -2;
-			}
-			out.clear();
-			out.reserve(this->size);
-			for(size_t i=0; i < this->size; ++i) {
-				out.push_back(this->data[i]);
-			}
-			return 0;
 		}
 	}
 }

@@ -88,10 +88,10 @@ int main(int argc, char** argv) {
 
 	while (true) {
 		printf("Print message to send to the server:\n");
-		std::string message_to_send;
+		KSync::Comm::CommString message_to_send;
 		std::getline(std::cin, message_to_send);
 		printf("Sending message: (%s)\n", message_to_send.c_str());
-		KSync::Comm::CommObject* send_obj = new KSync::Comm::CommObject(message_to_send);
+		KSync::Comm::CommObject* send_obj = message_to_send.GetCommObject();
 		if(gateway_socket->Send(send_obj) == 0) {
 			if (message_to_send == "quit") {
 				printf("Detected quit message. Quitting.");
@@ -101,13 +101,14 @@ int main(int argc, char** argv) {
 			if(gateway_socket->Recv(recv_obj) != 0) {
 				Warning("Problem receiving response\n");
 			} else {
-				std::string message;
-				if(recv_obj->GetString(message) < 0) {
+				if(recv_obj->GetType() != KSync::Comm::CommString::Type) {
 					printf("There was a problem decoding string message\n");
-				}
-				KPrint("Received (%s)\n", message.c_str());
-				if(message_to_send != message) {
-					printf("Message received wasn't the same as that sent!\n");
+				} else {
+					KSync::Comm::CommString message(recv_obj);
+					KPrint("Received (%s)\n", message.c_str());
+					if(message_to_send != message) {
+						printf("Message received wasn't the same as that sent!\n");
+					}
 				}
 				delete recv_obj;
 			}
