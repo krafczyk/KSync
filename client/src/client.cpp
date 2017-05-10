@@ -49,7 +49,10 @@ int main(int argc, char** argv) {
 	}
 
 	if (!connect_socket_url_defined) {
-		KSync::Utilities::get_default_ipc_connection_url(connect_socket_url);
+		if(KSync::Utilities::get_default_ipc_connection_url(connect_socket_url) < 0) {
+			Error("There was a problem getitng the default IPC connection URL.\n");
+			return -2;
+		}
 	} else {
 		if(connect_socket_url.substr(0, 3) != "icp") {
 			Error("Non icp sockets are not properly implemented at this time.\n");
