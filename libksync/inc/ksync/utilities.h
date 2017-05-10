@@ -29,6 +29,8 @@ namespace KSync {
 		int get_default_ipc_connection_url(std::string& connection_url);
 		int get_default_tcp_connection_url(std::string& connection_url);
 		int get_default_connection_url(std::string& connection_url);
+		typedef unsigned long client_id_t;
+		client_id_t GenerateNewClientId();
 	}
 }
 
