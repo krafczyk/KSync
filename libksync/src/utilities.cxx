@@ -41,7 +41,7 @@ namespace KSync {
 				}
 			}
 
-			ss.clear();
+			ss.str(std::string());
 			ss << "/tmp/" << login_name << "/ksync";
 			
 			if(access(ss.str().c_str(), F_OK) != 0) {
@@ -52,7 +52,7 @@ namespace KSync {
 				//Directory doesn't exist, we better create it
 				
 				if(mkdir(ss.str().c_str(), 0700) != 0) {
-					Error("An error was encountered while creating the ksync directory!\n");
+					Error("An error was encountered while creating the ksync directory (%s)!\n", ss.str().c_str());
 					return -3;
 				}
 			}
