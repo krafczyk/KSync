@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	printf("Using the following socket url: %s\n", connect_socket_url.c_str());
+	KPrint("Using the following socket url: %s\n", connect_socket_url.c_str());
 
 	KSync::Comm::CommSystemInterface* comm_system = 0;
 	if (!nanomsg) {
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
 	}
 
 	while (true) {
-		printf("Print message to send to the server:\n");
+		KPrint("Print message to send to the server:\n");
 		KSync::Comm::CommString message_to_send;
 		std::getline(std::cin, message_to_send);
 		KSync::Comm::CommObject* send_obj = 0;
@@ -101,21 +101,23 @@ int main(int argc, char** argv) {
 		}
 		if(gateway_socket->Send(send_obj) == 0) {
 			if (message_to_send == "quit") {
-				printf("Detected quit message. Quitting.");
+				KPrint("Detected quit message. Quitting.");
 				break;
 			}
 			KSync::Comm::CommObject* recv_obj = 0;
 			if(gateway_socket->Recv(recv_obj) != 0) {
 				Warning("Problem receiving response\n");
 			} else {
-				if(recv_obj->GetType() != KSync::Comm::CommString::Type) {
-					printf("There was a problem decoding string message\n");
-				} else {
+				if(recv_obj->GetType() == KSync::Comm::GatewaySocketInitializationChangeId::Type) {
+					Warning("Received a ChangeId Request!!\n");
+				} else if(recv_obj->GetType() == KSync::Comm::CommString::Type) {
 					KSync::Comm::CommString message(recv_obj);
 					KPrint("Received (%s)\n", message.c_str());
 					if(message_to_send != message) {
-						printf("Message received wasn't the same as that sent!\n");
+						KPrint("Message received wasn't the same as that sent!\n");
 					}
+				} else {
+					KPrint("Unrecognized Message!\n");
 				}
 				delete recv_obj;
 			}

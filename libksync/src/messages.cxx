@@ -30,8 +30,8 @@ namespace KSync {
 		const Type_t CommunicableObject::Type = 0;
 		const Type_t CommData::Type = 1;
 		const Type_t CommString::Type = 2;
-		//const Type_t GatewaySocketInitializationRequest::Type = 3;
-		//const Type_t GatewaySocketInitializationChangeId::Type = 4;
+		const Type_t GatewaySocketInitializationRequest::Type = 3;
+		const Type_t GatewaySocketInitializationChangeId::Type = 4;
 
 		const char* GetTypeName(const Type_t type) {
 			if (type == CommunicableObject::Type) {

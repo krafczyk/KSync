@@ -108,8 +108,13 @@ int main(int argc, char** argv) {
 		KSync::Comm::CommObject* recv_obj = 0;
 		if(gateway_socket->Recv(recv_obj) == 0) {
 			if(recv_obj->GetType() == KSync::Comm::GatewaySocketInitializationRequest::Type) {
-			} else if(recv_obj->GetType() != KSync::Comm::CommString::Type) {
-			} else {
+				KSync::Comm::GatewaySocketInitializationChangeId message;
+				KSync::Comm::CommObject* send_obj = message.GetCommObject();
+				if(gateway_socket->Send(send_obj) != 0) {
+					Warning("There was a problem sending a message!!");
+				}
+				delete send_obj;
+			} else if(recv_obj->GetType() == KSync::Comm::CommString::Type) {
 				KSync::Comm::CommString message(recv_obj);
 				KPrint("Received (%s)\n", message.c_str());
 				if (message == "quit") {
@@ -125,7 +130,7 @@ int main(int argc, char** argv) {
 					delete send_obj;
 				}
 			} else {
-				Warning("Message supported!\n");
+				Warning("Message unsupported!\n");
 			}
 			delete recv_obj;
 		}
