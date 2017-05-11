@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace KSync {
 	namespace Utilities {
-		void set_up_common_arguments_and_defaults(ArgParse::ArgParser& Parser, std::string& connect_socket_url, bool& connect_socket_url_defined, bool& nanomsg);
+		void set_up_common_arguments_and_defaults(ArgParse::ArgParser& Parser, std::string& gateway_socket_url, bool& gateway_socket_url_defined, bool& nanomsg);
 		int get_socket_dir(std::string& dir);
 		int get_default_ipc_connection_url(std::string& connection_url);
 		int get_default_tcp_connection_url(std::string& connection_url);

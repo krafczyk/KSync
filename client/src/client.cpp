@@ -31,12 +31,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ArgParse/ArgParse.h"
 
 int main(int argc, char** argv) {
-	std::string connect_socket_url;
-	bool connect_socket_url_defined;
+	std::string gateway_socket_url;
+	bool gateway_socket_url_defined;
 	bool nanomsg;
 
 	ArgParse::ArgParser arg_parser("KSync Server - Client side of a Client-Server synchonization system using rsync.");
-	KSync::Utilities::set_up_common_arguments_and_defaults(arg_parser, connect_socket_url, connect_socket_url_defined, nanomsg);
+	KSync::Utilities::set_up_common_arguments_and_defaults(arg_parser, gateway_socket_url, gateway_socket_url_defined, nanomsg);
 
 	if(arg_parser.ParseArgs(argc, argv) < 0) {
 		Error("Problem parsing arguments\n");
@@ -48,19 +48,19 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
-	if (!connect_socket_url_defined) {
-		if(KSync::Utilities::get_default_ipc_connection_url(connect_socket_url) < 0) {
+	if (!gateway_socket_url_defined) {
+		if(KSync::Utilities::get_default_ipc_connection_url(gateway_socket_url) < 0) {
 			Error("There was a problem getitng the default IPC connection URL.\n");
 			return -2;
 		}
 	} else {
-		if(connect_socket_url.substr(0, 3) != "icp") {
+		if(gateway_socket_url.substr(0, 3) != "icp") {
 			Error("Non icp sockets are not properly implemented at this time.\n");
 			return -2;
 		}
 	}
 
-	KPrint("Using the following socket url: %s\n", connect_socket_url.c_str());
+	KPrint("Using the following socket url: %s\n", gateway_socket_url.c_str());
 
 	KSync::Comm::CommSystemInterface* comm_system = 0;
 	if (!nanomsg) {
@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
 		return -3;
 	}
 
-	if (gateway_socket->Connect(connect_socket_url) < 0) {
+	if (gateway_socket->Connect(gateway_socket_url) < 0) {
 		Error("There was a problem connecting to the gateway socket!\n");
 		return -4;
 	}
