@@ -20,8 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <signal.h>
 #include <sstream>
 #include <utility>
+#include <thread>
+#include <functional>
 
-#include "ksync/server.h"
+#include "ksync/master_thread.h"
 #include "ksync/logging.h"
 #include "ksync/messages.h"
 #include "ksync/utilities.h"
@@ -48,12 +50,13 @@ int main(int argc, char** argv) {
 	signal(SIGTERM, Cleanup);
 	signal(SIGINT, Cleanup);
 
-	std::string connect_socket_url;
-	bool connect_socket_url_defined;
+	//Define and process command line arguments
+	std::string gateway_socket_url;
+	bool gateway_socket_url_defined;
 	bool nanomsg;
 
 	ArgParse::ArgParser arg_parser("KSync Server - Server side of a Client-Server synchonization system using rsync.");
-	KSync::Utilities::set_up_common_arguments_and_defaults(arg_parser, connect_socket_url, connect_socket_url_defined, nanomsg);
+	KSync::Utilities::set_up_common_arguments_and_defaults(arg_parser, gateway_socket_url, gateway_socket_url_defined, nanomsg);
 
 	int status;
 	if((status = arg_parser.ParseArgs(argc, argv)) < 0) {
@@ -66,20 +69,22 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
-	if (!connect_socket_url_defined) {
-		if(KSync::Utilities::get_default_ipc_connection_url(connect_socket_url) < 0) {
+	//Get gateway URL
+	if (!gateway_socket_url_defined) {
+		if(KSync::Utilities::get_default_ipc_connection_url(gateway_socket_url) < 0) {
 			Error("There was a problem getitng the default IPC connection URL.\n");
 			return -2;
 		}
 	} else {
-		if(connect_socket_url.substr(0, 3) != "icp") {
+		if(gateway_socket_url.substr(0, 3) != "icp") {
 			Error("Non icp sockets are not properly implemented at this time.\n");
 			return -2;
 		}
 	}
 
-	KPrint("Using the following socket url: %s\n", connect_socket_url.c_str());
+	KPrint("Using the following socket url: %s\n", gateway_socket_url.c_str());
 
+	//Initialize communication system
 	KSync::Comm::CommSystemInterface* comm_system = 0;
 	if (!nanomsg) {
 		if (KSync::Comm::GetZeromqCommSystem(comm_system) < 0) {
@@ -93,50 +98,30 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	KSync::Comm::CommSystemSocket* gateway_socket = 0;
-	if (comm_system->Create_Gateway_Rep_Socket(gateway_socket) < 0) {
-		KPrint("There was a problem creating the gateway socket!\n");
+	//Initialize Gateway Thread socket
+	KSync::Comm::CommSystemSocket* gateway_thread_socket = 0;
+	if (comm_system->Create_Pair_Socket(gateway_thread_socket) < 0) {
+		KPrint("There was a problem creating the gateway thread socket!\n");
 		return -3;
 	}
 
-	if (gateway_socket->Bind(connect_socket_url) < 0) {
-		KPrint("There was a problem binding the gateway socket!\n");
+	std::string gateway_thread_socket_url;
+	if(KSync::Utilities::get_default_gateway_thread_url(gateway_thread_socket_url) < 0) {
+		KPrint("There was a problem getting the default gateway thread socket url!\n");
 		return -4;
 	}
 
-	while(!finished) {
-		KSync::Comm::CommObject* recv_obj = 0;
-		if(gateway_socket->Recv(recv_obj) == 0) {
-			if(recv_obj->GetType() == KSync::Comm::GatewaySocketInitializationRequest::Type) {
-				KSync::Comm::GatewaySocketInitializationChangeId message;
-				KSync::Comm::CommObject* send_obj = message.GetCommObject();
-				if(gateway_socket->Send(send_obj) != 0) {
-					Warning("There was a problem sending a message!!");
-				}
-				delete send_obj;
-			} else if(recv_obj->GetType() == KSync::Comm::CommString::Type) {
-				KSync::Comm::CommString message(recv_obj);
-				KPrint("Received (%s)\n", message.c_str());
-				if (message == "quit") {
-					KPrint("Detected 'quit'. Quitting.\n");
-					finished = true;
-				} else {
-					//usleep(1*1000000);
-					usleep(100000);
-					KSync::Comm::CommObject* send_obj = message.GetCommObject();
-					if(gateway_socket->Send(send_obj) != 0) {
-						Warning("There was a problem sending a message!!");
-					} 
-					delete send_obj;
-				}
-			} else {
-				Warning("Message unsupported!\n");
-			}
-			delete recv_obj;
-		}
+	if(gateway_thread_socket->Bind(gateway_thread_socket_url) < 0) {
+		KPrint("There was a problem binding the gateway thread socket!\n");
+		return -5;
 	}
 
-	delete gateway_socket;
+	//Launch Gateway Thread
+	std::thread gateway(gateway_thread, comm_system, gateway_thread_socket_url, gateway_socket_url);
+
+	while(!finished) {
+	}
+
 	delete comm_system;
 	return 0;
 }

@@ -104,6 +104,19 @@ namespace KSync {
 			return 0;
 		}
 
+		int NanomsgCommSystem::Create_Pair_Socket(CommSystemSocket*& socket __attribute__((unused))) {
+			if (socket == 0) {
+				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
+				nanomsg_socket->socket = nn_socket (AF_SP, NN_PAIR);
+				if (nanomsg_socket->socket < 0) {
+					Error("There was a problem creating the NN_PAIR socket!\n");
+					return -1;
+				}
+				socket = (CommSystemSocket*) nanomsg_socket;
+			}
+			return 0;
+		}
+
 		int GetNanomsgCommSystem(CommSystemInterface*& comm_interface __attribute__((unused))) {
 			Message("Starting Nanomsg Communication Backend\n");
 			comm_interface = new NanomsgCommSystem();

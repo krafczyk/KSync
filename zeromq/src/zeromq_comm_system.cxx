@@ -82,6 +82,15 @@ namespace KSync {
 			return 0;
 		}
 
+		int ZeroMQCommSystem::Create_Pair_Socket(CommSystemSocket*& socket __attribute__((unused))) {
+			if (socket == 0) {
+				ZeroMQCommSystemSocket* zmq_socket = new ZeroMQCommSystemSocket();
+				zmq_socket->socket = new zmq::socket_t(*this->context, ZMQ_PAIR);
+				socket = (CommSystemSocket*) zmq_socket;
+			}
+			return 0;
+		}
+
 		int GetZeromqCommSystem(CommSystemInterface*& comm_interface __attribute__((unused))) {
 			Message("Starting ZeroMQ Communication Backend\n");
 			comm_interface = new ZeroMQCommSystem();

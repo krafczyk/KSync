@@ -76,6 +76,10 @@ namespace KSync {
 			connection_url = "tcp://*:6060";
 			return 0;
 		}
+		int get_default_gateway_thread_url(std::string& connection_url) {
+			connection_url = "inproc://gateway_thread";
+			return 0;
+		}
 		int get_default_connection_url(std::string& connection_url) {
 			return get_default_ipc_connection_url(connection_url);
 		}

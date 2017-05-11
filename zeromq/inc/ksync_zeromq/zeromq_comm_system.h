@@ -31,6 +31,7 @@ namespace KSync {
 
 				int Create_Gateway_Req_Socket(CommSystemSocket*& socket);
 				int Create_Gateway_Rep_Socket(CommSystemSocket*& socket);
+				int Create_Pair_Socket(CommSystemSocket*& socket);
 
 			private:
 				zmq::context_t* context;

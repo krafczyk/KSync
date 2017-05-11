@@ -16,8 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef KSYNC_SERVER_SERVER_HDR
-#define KSYNC_SERVER_SERVER_HDR
+#ifndef KSYNC_SERVER_MASTER_THREAD_HDR
+#define KSYNC_SERVER_MASTER_THREAD_HDR
 
 #include <vector>
 #include <utility>
