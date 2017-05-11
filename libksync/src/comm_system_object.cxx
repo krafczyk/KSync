@@ -34,6 +34,8 @@ namespace KSync {
 					throw CommObjectConstructorException();
 				}
 				this->type = type;
+				this->data = 0;
+				this->size = 0;
 				if(Pack() < 0) {
 					throw PackException(this->type);
 				}
@@ -57,7 +59,7 @@ namespace KSync {
 
 		CommObject::~CommObject() {
 			if (data != 0) {
-				delete data;
+				delete[] data;
 			}
 			size = 0;
 		}
