@@ -90,8 +90,15 @@ int main(int argc, char** argv) {
 		printf("Print message to send to the server:\n");
 		KSync::Comm::CommString message_to_send;
 		std::getline(std::cin, message_to_send);
-		printf("Sending message: (%s)\n", message_to_send.c_str());
-		KSync::Comm::CommObject* send_obj = message_to_send.GetCommObject();
+		KSync::Comm::CommObject* send_obj = 0;
+		if(message_to_send == "request") {
+			KPrint("Sending request\n");
+			KSync::Comm::GatewaySocketInitializationRequest request(KSync::Utilities::GenerateNewClientId());
+			send_obj = request.GetCommObject();
+		} else {
+			KPrint("Sending message: (%s)\n", message_to_send.c_str());
+			send_obj = message_to_send.GetCommObject();
+		}
 		if(gateway_socket->Send(send_obj) == 0) {
 			if (message_to_send == "quit") {
 				printf("Detected quit message. Quitting.");

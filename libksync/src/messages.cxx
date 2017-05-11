@@ -40,10 +40,10 @@ namespace KSync {
 				return "Data";
 			} else if (type == CommString::Type) {
 				return "String";
-			//} else if (type == GatewaySocketInitializationRequest::Type) {
-			//	return "GatewaySocketInitializationRequest";
-			//} else if (type == GatewaySocketInitializationChangeId::Type) {
-			//	return "GatewaySocketInitializationChangeId";
+			} else if (type == GatewaySocketInitializationRequest::Type) {
+				return "GatewaySocketInitializationRequest";
+			} else if (type == GatewaySocketInitializationChangeId::Type) {
+				return "GatewaySocketInitializationChangeId";
 			} else {
 				throw TypeException(type);
 			}
@@ -96,6 +96,40 @@ namespace KSync {
 			char* data = new char[size];
 			memcpy(data, this->c_str(), size);
 			CommObject* new_obj = new CommObject(data, size, false, this->Type);
+			delete[] data;
+			return new_obj;
+		}
+
+		GatewaySocketInitializationRequest::GatewaySocketInitializationRequest(CommObject* comm_obj) {
+			if (comm_obj->GetType() != this->Type) {
+				throw TypeException(comm_obj->GetType());
+			}
+			if(comm_obj->UnPack() < 0) {
+				throw CommObject::UnPackException(comm_obj->GetType());
+			}
+			this->ClientId = ((Utilities::client_id_t*) comm_obj->GetDataPointer())[0];
+		}
+
+		CommObject* GatewaySocketInitializationRequest::GetCommObject() {
+			char* new_data = new char[sizeof(Utilities::client_id_t)];
+			((Utilities::client_id_t*) new_data)[0] = this->ClientId;
+			size_t size = sizeof(Utilities::client_id_t);
+			CommObject* new_obj = new CommObject(new_data, size, false, this->Type);
+			delete[] new_data;
+			return new_obj;
+		}
+
+		GatewaySocketInitializationChangeId::GatewaySocketInitializationChangeId(CommObject* comm_obj) {
+			if (comm_obj->GetType() != this->Type) {
+				throw TypeException(comm_obj->GetType());
+			}
+			if(comm_obj->UnPack() < 0) {
+				throw CommObject::UnPackException(comm_obj->GetType());
+			}
+		}
+
+		CommObject* GatewaySocketInitializationChangeId::GetCommObject() {
+			CommObject* new_obj = new CommObject(0, 0, false, this->Type);
 			return new_obj;
 		}
 	}

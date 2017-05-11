@@ -23,6 +23,10 @@ namespace KSync {
 					public:
 						CRCException();
 				};
+				class CommObjectConstructorException : public KSync::Exception::BasicException {
+					public:
+						CommObjectConstructorException();
+				};
 
 				CommObject(const char* data, const size_t size, const bool pre_packed, const Comm::Type_t type = Comm::CommunicableObject::Type);
 				~CommObject();

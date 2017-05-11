@@ -1,6 +1,7 @@
 #include <cstring>
 #include <sstream>
 
+#include "ksync/logging.h"
 #include "ksync/comm_system_object.h"
 
 namespace KSync {
@@ -18,21 +19,40 @@ namespace KSync {
 		CommObject::CRCException::CRCException() {
 			SetMessage("There was a CRC miss-match");
 		}
+		CommObject::CommObjectConstructorException::CommObjectConstructorException() {
+			SetMessage("There was a problem constructing the comm object!");
+		}
 
 		CommObject::CommObject(const char* data, const size_t size, const bool pre_packed, const Type_t type) {
-			this->data = new char[size];
-			memcpy(this->data, data, size);
-			this->size = size;
-			if (pre_packed) {
-				this->type = ((Type_t*)this->data)[0];
-				this->crc = ((char*)this->data)[sizeof(this->type)];
-				this->packed = true;
-			} else {
+			if(data == 0) {
+				if (size != 0) {
+					Error("Can't use size != 0 with a null data pointer!!\n");
+					throw CommObjectConstructorException();
+				}
+				if (pre_packed) {
+					Error("Can't say an object is pre-packed if using a null data input\n");
+					throw CommObjectConstructorException();
+				}
 				this->type = type;
 				if(Pack() < 0) {
 					throw PackException(this->type);
 				}
+			} else {
+				this->data = new char[size];
+				memcpy(this->data, data, size);
+				this->size = size;
+				if (pre_packed) {
+					this->type = ((Type_t*)this->data)[0];
+					this->crc = ((char*)this->data)[sizeof(this->type)];
+					this->packed = true;
+				} else {
+					this->type = type;
+					if(Pack() < 0) {
+						throw PackException(this->type);
+					}
+				}
 			}
+
 		}
 
 		CommObject::~CommObject() {
@@ -44,15 +64,24 @@ namespace KSync {
 
 		int CommObject::Pack() {
 			size_t num_extra_bytes = sizeof(this->type)+sizeof(this->crc);
-			this->crc = GenCRC8(this->data, this->size);
 			char* new_data = new char[num_extra_bytes+this->size];
-			new_data[0] = this->type;
-			new_data[sizeof(this->type)] = this->crc;
-			memcpy(new_data+num_extra_bytes, this->data, this->size);
-			delete this->data;
-			this->data = new_data;
-			this->size += num_extra_bytes;
-			this->packed = true;
+			if (this->data == 0) {
+				this->crc = 0;
+				new_data[0] = this->type;
+				new_data[sizeof(this->type)] = this->crc;
+				this->data = new_data;
+				this->size += num_extra_bytes;
+				this->packed = true;
+			} else {
+				this->crc = GenCRC8(this->data, this->size);
+				new_data[0] = this->type;
+				new_data[sizeof(this->type)] = this->crc;
+				memcpy(new_data+num_extra_bytes, this->data, this->size);
+				delete this->data;
+				this->data = new_data;
+				this->size += num_extra_bytes;
+				this->packed = true;
+			}
 			return 0;
 		}
 
@@ -61,15 +90,23 @@ namespace KSync {
 				return 0;
 			}
 			size_t num_extra_bytes = sizeof(this->type)+sizeof(this->crc);
-			char new_crc = GenCRC8(this->data+num_extra_bytes, this->size-num_extra_bytes);
-			if (new_crc != this->crc) {
-				return -1;
+			if (this->size == num_extra_bytes) {
+				if (this->crc != 0) {
+					return -1;
+				}
+				delete this->data;
+				this->data = 0;
+			} else {
+				char new_crc = GenCRC8(this->data+num_extra_bytes, this->size-num_extra_bytes);
+				if (new_crc != this->crc) {
+					return -1;
+				}
+				size_t new_size = this->size-num_extra_bytes;
+				char* new_data = new char[this->size-num_extra_bytes];
+				memcpy(new_data, this->data+num_extra_bytes, new_size);
+				delete this->data;
+				this->data = new_data;
 			}
-			size_t new_size = this->size-num_extra_bytes;
-			char* new_data = new char[this->size-num_extra_bytes];
-			memcpy(new_data, this->data+num_extra_bytes, new_size);
-			delete this->data;
-			this->data = new_data;
 			this->size -= num_extra_bytes;
 			this->packed = false;
 			return 0;

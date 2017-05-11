@@ -107,8 +107,8 @@ int main(int argc, char** argv) {
 	while(!finished) {
 		KSync::Comm::CommObject* recv_obj = 0;
 		if(gateway_socket->Recv(recv_obj) == 0) {
-			if(recv_obj->GetType() != KSync::Comm::CommString::Type) {
-				Warning("Message wasn't a string!\n");
+			if(recv_obj->GetType() == KSync::Comm::GatewaySocketInitializationRequest::Type) {
+			} else if(recv_obj->GetType() != KSync::Comm::CommString::Type) {
 			} else {
 				KSync::Comm::CommString message(recv_obj);
 				KPrint("Received (%s)\n", message.c_str());
@@ -124,6 +124,8 @@ int main(int argc, char** argv) {
 					} 
 					delete send_obj;
 				}
+			} else {
+				Warning("Message supported!\n");
 			}
 			delete recv_obj;
 		}

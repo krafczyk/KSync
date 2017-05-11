@@ -43,6 +43,7 @@ namespace KSync {
 				CommunicableObject(CommObject* comm_obj __attribute__((unused))) {};
 				virtual CommObject* GetCommObject() = 0;
 		};
+
 		class CommData : public CommunicableObject {
 			public:
 				static const Type_t Type;
@@ -59,6 +60,7 @@ namespace KSync {
 				char* data;
 				size_t size;
 		};
+
 		class CommString : public CommunicableObject, public std::string {
 			public:
 				static const Type_t Type;
@@ -68,22 +70,26 @@ namespace KSync {
 				CommString(CommObject* comm_obj);
 				CommObject* GetCommObject();
 		};
-		/*
+
 		class GatewaySocketInitializationRequest : public CommunicableObject {
 			public:
 				static const Type_t Type;
 				GatewaySocketInitializationRequest(Utilities::client_id_t id) {
 					this->ClientId = id;
 				}
+				GatewaySocketInitializationRequest(CommObject* comm_obj);
+				CommObject* GetCommObject();
 			private:
 				Utilities::client_id_t ClientId;
 		};
+
 		class GatewaySocketInitializationChangeId : public CommunicableObject {
 			public:
 				static const Type_t Type;
 				GatewaySocketInitializationChangeId() {};
+				GatewaySocketInitializationChangeId(CommObject* comm_obj);
+				CommObject* GetCommObject();
 		};
-		*/
 	}
 }
 
