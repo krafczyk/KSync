@@ -14,7 +14,7 @@
 #You should have received a copy of the GNU General Public License
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-add_executable(ksync_server src/server.cpp)
+add_executable(ksync_server src/master_thread.cpp)
 include_directories(inc ${libksync_INCLUDE_DIR})
 target_link_libraries(ksync_server ksync)
 target_link_libraries(ksync_server ksync_zeromq_module)
