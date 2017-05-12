@@ -14,7 +14,8 @@
 #You should have received a copy of the GNU General Public License
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-add_executable(ksync_server src/master_thread.cpp)
+add_executable(ksync_server src/master_thread.cpp src/gateway_thread.cpp)
+add_definitions(-pthread)
 include_directories(inc ${libksync_INCLUDE_DIR})
 target_link_libraries(ksync_server ksync)
 target_link_libraries(ksync_server ksync_zeromq_module)
@@ -22,5 +23,6 @@ target_link_libraries(ksync_server ksync_nanomsg_module)
 target_link_libraries(ksync_server ${ArgParse_LDFLAGS})
 target_link_libraries(ksync_server ${libzmq_LDFLAGS})
 target_link_libraries(ksync_server ${nanomsg_LDFLAGS})
+target_link_libraries(ksync_server -lpthread)
 
 install (TARGETS ksync_server DESTINATION bin)

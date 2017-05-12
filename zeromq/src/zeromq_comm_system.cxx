@@ -31,29 +31,49 @@ namespace KSync {
 
 		int ZeroMQCommSystemSocket::Send(const CommObject* comm_obj) {
 			if (socket == 0) {
-				return -1;
+				return Other;
 			}
 			const char* data = comm_obj->GetDataPointer();
 			size_t size = comm_obj->GetDataSize();
 			zmq::message_t send(size);
 			memcpy(send.data(), data, size);
-			socket->send(send);
-			return 0;
+			int status = socket->send(send);
+			if(status == -1) {
+				int err = zmq_errno();
+				if(err == EAGAIN) {
+					Warning("Send timed out!!\n");
+					return Timeout;
+				} else {
+					Error("Problem sending data!! %i (%s)\n", err, zmq_strerror(err));
+					return Other;
+				}
+			}
+			return Success;
 		}
 
 		int ZeroMQCommSystemSocket::Recv(CommObject*& comm_obj) {
 			if (comm_obj != 0) {
 				printf("Please pass an empty pointer\n");
-				return -2;
+				return Other;
 			}
 			if (socket == 0) {
-				return -1;
+				return Other;
 			}
 			zmq::message_t recv;
-			socket->recv(&recv);
+			int status = socket->recv(&recv);
+			if(status == -1) {
+				int err = zmq_errno();
+				if(err == EAGAIN) {
+					Warning("Recv timed out!!\n");
+					return Timeout;
+				} else {
+					Error("Problem sending data!! %i (%s)\n", err, zmq_strerror(err));
+					return Other;
+				}
+			}
 
 			comm_obj = new CommObject((char*) recv.data(), recv.size(), true);
-			return 0;
+			return Success;
 		}
 
 		int ZeroMQCommSystemSocket::SetSendTimeout(int timeout) {

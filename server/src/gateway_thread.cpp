@@ -11,6 +11,7 @@ namespace KSync {
 				return;
 			}
 
+			//Setup our end of the gateway thread socket
 			KSync::Comm::CommSystemSocket* gateway_thread_socket = 0;
 			if(comm_system->Create_Pair_Socket(gateway_thread_socket) < 0) {
 				KPrint("There was a problem creating the gateway thread pair socket!\n");
@@ -66,33 +67,43 @@ namespace KSync {
 
 			bool finished = false;
 
+			int status = 0;
 			//Start gateway loop!
 			while(!finished) {
 				//Listen for 
 				KSync::Comm::CommObject* recv_obj = 0;
-				if(gateway_socket->Recv(recv_obj) == 0) {
+				status = gateway_socket->Recv(recv_obj);
+				if(status == KSync::Comm::CommSystemSocket::Other) {
+					Error("There was a problem receiving connection requests!\n");
+					return;
+				} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
+					Warning("Checking for connection request timed out!\n");
+				} else {
 					if(recv_obj->GetType() == KSync::Comm::GatewaySocketInitializationRequest::Type) {
 						KSync::Comm::GatewaySocketInitializationChangeId message;
 						KSync::Comm::CommObject* send_obj = message.GetCommObject();
-						if(gateway_socket->Send(send_obj) != 0) {
-							Warning("There was a problem sending a message!!");
+						status = gateway_socket->Send(send_obj);
+						if(status == KSync::Comm::CommSystemSocket::Other) {
+							Error("There was a problem sending the response!!\n");
+							return;
+						} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
+							Error("Sending response timedout!\n");
+							return;
 						}
 						delete send_obj;
 					} else if(recv_obj->GetType() == KSync::Comm::CommString::Type) {
 						KSync::Comm::CommString message(recv_obj);
 						KPrint("Received (%s)\n", message.c_str());
-						if (message == "quit") {
-							KPrint("Detected 'quit'. Quitting.\n");
-							finished = true;
-						} else {
-							//usleep(1*1000000);
-							usleep(100000);
-							KSync::Comm::CommObject* send_obj = message.GetCommObject();
-							if(gateway_socket->Send(send_obj) != 0) {
-								Warning("There was a problem sending a message!!");
-							} 
-							delete send_obj;
+						KSync::Comm::CommObject* send_obj = message.GetCommObject();
+						status = gateway_socket->Send(send_obj); 
+						if(status == KSync::Comm::CommSystemSocket::Other) {
+							Error("There was a problem sending a message!!\n");
+							return;
+						} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
+							Warning("Sending message timedout!\n");
+							return;
 						}
+						delete send_obj;
 					} else {
 						Warning("Message unsupported!\n");
 					}

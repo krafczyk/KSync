@@ -34,23 +34,35 @@ namespace KSync {
 		int NanomsgCommSystemSocket::Send(const CommObject* comm_obj) {
 			if (this->socket < 0) {
 				Error("Can't send to a socket which isn't ready!\n");
-				return -1;
+				return Other;
 			}
-			if(nn_send(this->socket, (const void*) comm_obj->GetDataPointer(), (int) comm_obj->GetDataSize(), 0) != (int) comm_obj->GetDataSize()) {
-				Error("There was a problem sending the message. Sent bytes did not match message size.\n");
-				return -2;
+			int sent_bytes = nn_send(this->socket, (const void*) comm_obj->GetDataPointer(), (int) comm_obj->GetDataSize(), 0);
+			if(sent_bytes != (int) comm_obj->GetDataSize()) {
+				if(sent_bytes == -1) {
+					int err = nn_errno();
+					if(err == EAGAIN) {
+						Warning("Timeout reached.\n");
+						return Timeout;
+					} else {
+						Error("Error received! %i (%s)\n", err, nn_strerror(err));
+						return Other;
+					}
+				} else {
+					Error("Wrong number of bytes sent!\n");
+					return Other;
+				}
 			}
-			return 0;
+			return Success;
 		}
 
 		int NanomsgCommSystemSocket::Recv(CommObject*& comm_obj) {
 			if (comm_obj != 0) {
 				Error("Please pass a null pointer\n");
-				return -2;
+				return Other;
 			}
 			if (this->socket < 0) {
 				Error("Can't receive from a socket which isn't ready!\n");
-				return -1;
+				return Other;
 			}
 			char* buf = 0;
 			int bytes = nn_recv(this->socket, &buf, NN_MSG, 0);
@@ -58,18 +70,24 @@ namespace KSync {
 				if(buf != 0) {
 					if(nn_freemsg(buf) != 0) {
 						Error("There was a problem freeing the message!\n");
-						return -1;
+						return Other;
 					}
 				}
-				Error("There was a problem receiving the message!\n");
-				return -2;
+				int err = nn_errno();
+				if(err == EAGAIN) {
+					Warning("Timeout reached.\n");
+					return Timeout;
+				} else {
+					Error("There was a problem receiving the message! %i (%s)\n", err, nn_strerror(err));
+					return Other;
+				}
 			}
 			comm_obj = new CommObject(buf, bytes, true);
 			if(nn_freemsg(buf) != 0) {
 				Error("There was a problem freeing the message!\n");
-				return -3;
+				return Other;
 			}
-			return 0;
+			return Success;
 		}
 
 		int NanomsgCommSystemSocket::SetSendTimeout(int timeout) {

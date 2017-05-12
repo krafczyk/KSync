@@ -86,6 +86,8 @@ int main(int argc, char** argv) {
 		return -4;
 	}
 
+	int status = 0;
+
 	while (true) {
 		KPrint("Print message to send to the server:\n");
 		KSync::Comm::CommString message_to_send;
@@ -99,14 +101,19 @@ int main(int argc, char** argv) {
 			KPrint("Sending message: (%s)\n", message_to_send.c_str());
 			send_obj = message_to_send.GetCommObject();
 		}
-		if(gateway_socket->Send(send_obj) == 0) {
-			if (message_to_send == "quit") {
-				KPrint("Detected quit message. Quitting.");
-				break;
-			}
+
+		status = gateway_socket->Send(send_obj);
+		if(status == KSync::Comm::CommSystemSocket::Other) {
+			Error("There was a problem sending the message!!\n");
+		} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
+			Warning("Sending the message timed out!\n");
+		} else {
 			KSync::Comm::CommObject* recv_obj = 0;
-			if(gateway_socket->Recv(recv_obj) != 0) {
-				Warning("Problem receiving response\n");
+			status = gateway_socket->Recv(recv_obj);
+			if(status == KSync::Comm::CommSystemSocket::Other) {
+				Error("Problem receiving response\n");
+			} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
+				Warning("Receiving response timed out!\n");
 			} else {
 				if(recv_obj->GetType() == KSync::Comm::GatewaySocketInitializationChangeId::Type) {
 					Warning("Received a ChangeId Request!!\n");
@@ -114,15 +121,13 @@ int main(int argc, char** argv) {
 					KSync::Comm::CommString message(recv_obj);
 					KPrint("Received (%s)\n", message.c_str());
 					if(message_to_send != message) {
-						KPrint("Message received wasn't the same as that sent!\n");
+						Error("Message received wasn't the same as that sent!\n");
 					}
 				} else {
-					KPrint("Unrecognized Message!\n");
+					Error("Unrecognized Message!\n");
 				}
 				delete recv_obj;
 			}
-		} else {
-			Error("There was a problem sending the message!!\n");
 		}
 		delete send_obj;
 	}

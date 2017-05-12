@@ -126,26 +126,60 @@ int main(int argc, char** argv) {
 
 	//Acknowledge connection
 	KSync::Comm::CommObject* herald_obj = 0;
-	if(gateway_thread_socket->Recv(herald_obj) < 0) {
-		KPrint("Didn't receive connect herald!\n");
+	status = gateway_thread_socket->Recv(herald_obj);
+	if(status == KSync::Comm::CommSystemSocket::Other) {
+		Error("Didn't receive connect herald!\n");
 		return -6;
+	} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
+		Error("Herald retreive timed out!!!\n");
+		return -7;
 	} else {
 		if(herald_obj->GetType() == KSync::Comm::SocketConnectHerald::Type) {
 			KSync::Comm::SocketConnectAcknowledge ack;
 			KSync::Comm::CommObject* ack_obj = ack.GetCommObject();
-			if(gateway_thread_socket->Send(ack_obj) < 0) {
-				KPrint("Couldn't send Acknowledgement!\n");
+			status = gateway_thread_socket->Send(ack_obj);
+			if(status == KSync::Comm::CommSystemSocket::Other) {
+				Error("Couldn't send Acknowledgement!\n");
 				return -7;
+			} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
+				Error("Retreival of Ack timed out!!\n");
+				return -8;
 			}
 			delete ack_obj;
 		} else {
-			KPrint("Didn't get a herald type!!\n");
+			Error("Didn't get a herald type!!\n");
 			return -8;
 		}
 	}
 	delete herald_obj;
 
 	while(!finished) {
+		//Check gateway thread
+		KSync::Comm::CommObject* recv_obj = 0;
+		status = gateway_thread_socket->Recv(recv_obj);
+		if(status == KSync::Comm::CommSystemSocket::Other) {
+			Error("There was a problem checking the gateway thread socket!\n");
+			return -9;
+		} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
+			Warning("Receiving info from gateway thread timed out\n");
+		} else {
+			// Handle connection request!!
+			if(recv_obj->GetType() == KSync::Comm::GatewaySocketInitializationRequest::Type) {
+				KSync::Comm::GatewaySocketInitializationChangeId response;
+				KSync::Comm::CommObject* resp_obj = response.GetCommObject();
+				status = gateway_thread_socket->Send(resp_obj);
+				if(status == KSync::Comm::CommSystemSocket::Other) {
+					Error("There was a problem sending a response to the gateway thread socket!\n");
+					return -11;
+				} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
+					Error("Sending response timedout!!\n");
+					return -12;
+				}
+			} else {
+				Error("Unsupported message from gateway thread!\n");
+				return -11;
+			}
+		}
 	}
 
 	delete comm_system;

@@ -30,6 +30,10 @@ namespace KSync {
 				CommSystemSocket();
 				virtual ~CommSystemSocket();
 
+				static const int Success = 0;
+				static const int Timeout = 1;
+				static const int Other = -1;
+
 				virtual int Bind(const std::string& address) = 0;
 				virtual int Connect(const std::string& address) = 0;
 				virtual int Send(const CommObject* comm_obj) = 0;
