@@ -33,6 +33,12 @@ import os
 import ycm_core
 import subprocess
 
+def get_package_spack_installed_directory(package_name):
+    try:
+        output = subprocess.check_output(['python', os.environ['WORKSPACE_DIR'] + '/spack/bin/spack', 'location', '-i', package_name])
+    except subprocess.CalledProcessError:
+        return ""
+    return str(output, 'utf-8').strip()
 
 # These are the compilation flags that will be used in case there's no
 # compilation database set (by default, one is not set).
@@ -54,13 +60,19 @@ flags = [
 '-x',
 'c++',
 '-I',
-'/home/matthew/Software/ksync/ksync/server/inc',
+(os.environ['WORKSPACE_DIR'] + '/ksync/server/inc'),
 '-I',
-'/home/matthew/Software/ksync/ksync/client/inc',
+(os.environ['WORKSPACE_DIR'] + '/ksync/client/inc'),
 '-I',
-'/home/matthew/Software/ksync/ksync/libksync/inc',
+(os.environ['WORKSPACE_DIR'] + '/ksync/libksync/inc'),
 '-I',
-'/home/matthew/Sources/nanomsg/nanomsg-install/include'
+(os.environ['WORKSPACE_DIR'] + '/ksync/nanomsg/inc'),
+'-I',
+(os.environ['WORKSPACE_DIR'] + '/ksync/zeromq/inc'),
+'-I',
+(get_package_spack_installed_directory('nanomsg') + '/include'),
+'-I',
+(get_package_spack_installed_directory('zeromq') + '/include'),
 ]
 
 # Set this to the absolute path to the folder (NOT the file!) containing the
