@@ -58,10 +58,12 @@ namespace KSync {
 
 		int ZeroMQCommSystemSocket::SetSendTimeout(int timeout) {
 			//socket->setsockopt
+			socket->setsockopt(ZMQ_SNDTIMEO, &timeout, sizeof(timeout));
 			return 0;
 		}
 
 		int ZeroMQCommSystemSocket::SetRecvTimeout(int timeout) {
+			socket->setsockopt(ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
 			return 0;
 		}
 
