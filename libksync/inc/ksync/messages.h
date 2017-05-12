@@ -44,6 +44,15 @@ namespace KSync {
 				virtual CommObject* GetCommObject() = 0;
 		};
 
+		class SimpleCommunicableObject {
+			public:
+				static const Type_t Type;
+
+				SimpleCommunicableObject() {};
+				SimpleCommunicableObject(CommObject* comm_obj);
+				CommObject* GetCommObject();
+		};
+
 		class CommData : public CommunicableObject {
 			public:
 				static const Type_t Type;
@@ -83,12 +92,22 @@ namespace KSync {
 				Utilities::client_id_t ClientId;
 		};
 
-		class GatewaySocketInitializationChangeId : public CommunicableObject {
+		class GatewaySocketInitializationChangeId : public SimpleCommunicableObject {
 			public:
 				static const Type_t Type;
 				GatewaySocketInitializationChangeId() {};
-				GatewaySocketInitializationChangeId(CommObject* comm_obj);
-				CommObject* GetCommObject();
+		};
+
+		class SocketConnectHerald : public SimpleCommunicableObject {
+			public:
+				static const Type_t Type;
+				SocketConnectHerald() {};
+		};
+
+		class SocketConnectAcknowledge : public SimpleCommunicableObject {
+			public:
+				static const Type_t Type;
+				SocketConnectAcknowledge() {};
 		};
 	}
 }

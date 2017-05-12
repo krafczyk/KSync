@@ -28,15 +28,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace KSync {
 	namespace Comm {
 		const Type_t CommunicableObject::Type = 0;
-		const Type_t CommData::Type = 1;
-		const Type_t CommString::Type = 2;
-		const Type_t GatewaySocketInitializationRequest::Type = 3;
-		const Type_t GatewaySocketInitializationChangeId::Type = 4;
+		const Type_t SimpleCommunicableObject::Type = 1;
+		const Type_t CommData::Type = 2;
+		const Type_t CommString::Type = 3;
+		const Type_t GatewaySocketInitializationRequest::Type = 4;
+		const Type_t GatewaySocketInitializationChangeId::Type = 5;
+		const Type_t SocketConnectHerald::Type = 6;
+		const Type_t SocketConnectAcknowledge::Type = 7;
 
 		const char* GetTypeName(const Type_t type) {
 			if (type == CommunicableObject::Type) {
 				return "Basic CommunicableObject";
-			} else  if (type == CommData::Type) {
+			} else if (type == SimpleCommunicableObject::Type) {
+				return "Simple CommunicableObject";
+			} else if (type == CommData::Type) {
 				return "Data";
 			} else if (type == CommString::Type) {
 				return "String";
@@ -44,6 +49,10 @@ namespace KSync {
 				return "GatewaySocketInitializationRequest";
 			} else if (type == GatewaySocketInitializationChangeId::Type) {
 				return "GatewaySocketInitializationChangeId";
+			} else if (type == SocketConnectHerald::Type) {
+				return "SocketConnectHerald";
+			} else if (type == SocketConnectAcknowledge::Type) {
+				return "SocketConnectAcknowledge";
 			} else {
 				throw TypeException(type);
 			}
@@ -53,6 +62,20 @@ namespace KSync {
 			std::stringstream ss;
 			ss << "Type (" << type << ") is not a valid type!";
 			SetMessage(ss.str());
+		}
+
+		SimpleCommunicableObject::SimpleCommunicableObject(CommObject* comm_obj) {
+			if (comm_obj->GetType() != this->Type) {
+				throw TypeException(comm_obj->GetType());
+			}
+			if(comm_obj->UnPack() < 0) {
+				throw CommObject::UnPackException(comm_obj->GetType());
+			}
+		}
+
+		CommObject* SimpleCommunicableObject::GetCommObject() {
+			CommObject* new_obj = new CommObject(0, 0, false, this->Type);
+			return new_obj;
 		}
 
 		CommData::CommData(CommObject* comm_obj) {
@@ -116,20 +139,6 @@ namespace KSync {
 			size_t size = sizeof(Utilities::client_id_t);
 			CommObject* new_obj = new CommObject(new_data, size, false, this->Type);
 			delete[] new_data;
-			return new_obj;
-		}
-
-		GatewaySocketInitializationChangeId::GatewaySocketInitializationChangeId(CommObject* comm_obj) {
-			if (comm_obj->GetType() != this->Type) {
-				throw TypeException(comm_obj->GetType());
-			}
-			if(comm_obj->UnPack() < 0) {
-				throw CommObject::UnPackException(comm_obj->GetType());
-			}
-		}
-
-		CommObject* GatewaySocketInitializationChangeId::GetCommObject() {
-			CommObject* new_obj = new CommObject(0, 0, false, this->Type);
 			return new_obj;
 		}
 	}

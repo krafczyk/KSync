@@ -34,6 +34,8 @@ namespace KSync {
 				virtual int Connect(const std::string& address) = 0;
 				virtual int Send(const CommObject* comm_obj) = 0;
 				virtual int Recv(CommObject*& comm_obj) = 0;
+				virtual int SetSendTimeout(int timeout) = 0;
+				virtual int SetRecvTimeout(int timeout) = 0;
 		};
 
 		class CommSystemInterface {

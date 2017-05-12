@@ -56,6 +56,15 @@ namespace KSync {
 			return 0;
 		}
 
+		int ZeroMQCommSystemSocket::SetSendTimeout(int timeout) {
+			//socket->setsockopt
+			return 0;
+		}
+
+		int ZeroMQCommSystemSocket::SetRecvTimeout(int timeout) {
+			return 0;
+		}
+
 		ZeroMQCommSystem::ZeroMQCommSystem() {
 			context = new zmq::context_t(1);
 		}

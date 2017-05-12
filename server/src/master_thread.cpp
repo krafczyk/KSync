@@ -21,7 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <utility>
 #include <thread>
-#include <functional>
 
 #include "ksync/master_thread.h"
 #include "ksync/logging.h"
@@ -30,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ksync/comm_system_interface.h"
 #include "ksync/comm_system_factory.h"
 #include "ksync/comm_system_object.h"
+#include "ksync/gateway_thread.h"
 
 #include "ArgParse/ArgParse.h"
 
@@ -117,7 +117,28 @@ int main(int argc, char** argv) {
 	}
 
 	//Launch Gateway Thread
-	std::thread gateway(gateway_thread, comm_system, gateway_thread_socket_url, gateway_socket_url);
+	std::thread gateway(KSync::Server::gateway_thread, comm_system, gateway_thread_socket_url, gateway_socket_url);
+
+	//Acknowledge connection
+	KSync::Comm::CommObject* herald_obj = 0;
+	if(gateway_thread_socket->Recv(herald_obj) < 0) {
+		KPrint("Didn't receive connect herald!\n");
+		return -6;
+	} else {
+		if(herald_obj->GetType() == KSync::Comm::SocketConnectHerald::Type) {
+			KSync::Comm::SocketConnectAcknowledge ack;
+			KSync::Comm::CommObject* ack_obj = ack.GetCommObject();
+			if(gateway_thread_socket->Send(ack_obj) < 0) {
+				KPrint("Couldn't send Acknowledgement!\n");
+				return -7;
+			}
+			delete ack_obj;
+		} else {
+			KPrint("Didn't get a herald type!!\n");
+			return -8;
+		}
+	}
+	delete herald_obj;
 
 	while(!finished) {
 	}

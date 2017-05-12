@@ -3,6 +3,7 @@
 
 #include "nanomsg/nn.h"
 #include "nanomsg/reqrep.h"
+#include "nanomsg/pair.h"
 
 namespace KSync {
 	namespace Comm {
@@ -67,6 +68,22 @@ namespace KSync {
 			if(nn_freemsg(buf) != 0) {
 				Error("There was a problem freeing the message!\n");
 				return -3;
+			}
+			return 0;
+		}
+
+		int NanomsgCommSystemSocket::SetSendTimeout(int timeout) {
+			if(nn_setsockopt(this->socket, NN_SOL_SOCKET, NN_SNDTIMEO, &timeout, sizeof(timeout)) != 0) {
+				Error("Failed to set the send timeout socket option!\n");
+				return -1;
+			}
+			return 0;
+		}
+
+		int NanomsgCommSystemSocket::SetRecvTimeout(int timeout) {
+			if(nn_setsockopt(this->socket, NN_SOL_SOCKET, NN_RCVTIMEO, &timeout, sizeof(timeout)) != 0) {
+				Error("Failed to set the receive timeout socket option!\n");
+				return -1;
 			}
 			return 0;
 		}

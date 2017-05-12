@@ -19,6 +19,8 @@ namespace KSync {
 				int Connect(const std::string& address);
 				int Send(const CommObject* comm_obj);
 				int Recv(CommObject*& comm_obj);
+				int SetSendTimeout(int timeout);
+				int SetRecvTimeout(int timeout);
 
 			private:
 				zmq::socket_t* socket;
