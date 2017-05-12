@@ -17,6 +17,11 @@ namespace KSync {
 				return;
 			}
 
+			if(gateway_thread_socket->SetRecvTimeout(1000) < 0) {
+				KPrint("There was a problem setting the recv timeout!\n");
+				return;
+			}
+
 			if(gateway_thread_socket->Connect(gateway_thread_socket_url) < 0) {
 				KPrint("There was a problem connectng to the gateway thread pair socket!\n");
 				return;
@@ -46,6 +51,11 @@ namespace KSync {
 			KSync::Comm::CommSystemSocket* gateway_socket = 0;
 			if (comm_system->Create_Gateway_Rep_Socket(gateway_socket) < 0) {
 				KPrint("There was a problem creating the gateway socket!\n");
+				return;
+			}
+
+			if(gateway_socket->SetRecvTimeout(1000) < 0) {
+				KPrint("There was a problem setting the recv timeout!\n");
 				return;
 			}
 

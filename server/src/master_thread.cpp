@@ -105,6 +105,11 @@ int main(int argc, char** argv) {
 		return -3;
 	}
 
+	if (gateway_thread_socket->SetRecvTimeout(1000) < 0) {
+		KPrint("There was a problem setting the recv timeout!\n");
+		return -3;
+	}
+
 	std::string gateway_thread_socket_url;
 	if(KSync::Utilities::get_default_gateway_thread_url(gateway_thread_socket_url) < 0) {
 		KPrint("There was a problem getting the default gateway thread socket url!\n");
