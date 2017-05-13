@@ -81,6 +81,11 @@ int main(int argc, char** argv) {
 		return -3;
 	}
 
+	if(gateway_socket->SetRecvTimeout(20000) < 0) {
+		Error("There was a problem setting the receive timeout!\n");
+		return -4;
+	}
+
 	if (gateway_socket->Connect(gateway_socket_url) < 0) {
 		Error("There was a problem connecting to the gateway socket!\n");
 		return -4;

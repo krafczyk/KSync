@@ -32,6 +32,7 @@ namespace KSync {
 
 				static const int Success = 0;
 				static const int Timeout = 1;
+				static const int EmptyMessage = 2;
 				static const int Other = -1;
 
 				virtual int Bind(const std::string& address) = 0;

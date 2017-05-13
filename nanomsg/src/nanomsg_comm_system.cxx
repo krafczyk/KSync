@@ -40,7 +40,7 @@ namespace KSync {
 			if(sent_bytes != (int) comm_obj->GetDataSize()) {
 				if(sent_bytes == -1) {
 					int err = nn_errno();
-					if(err == EAGAIN) {
+					if(err == ETIMEDOUT) {
 						Warning("Timeout reached.\n");
 						return Timeout;
 					} else {
@@ -74,13 +74,17 @@ namespace KSync {
 					}
 				}
 				int err = nn_errno();
-				if(err == EAGAIN) {
+				if(err == ETIMEDOUT) {
 					Warning("Timeout reached.\n");
 					return Timeout;
 				} else {
 					Error("There was a problem receiving the message! %i (%s)\n", err, nn_strerror(err));
 					return Other;
 				}
+			}
+			if(bytes == 0) {
+				Error("EmptyMessage!!\n");
+				return EmptyMessage;
 			}
 			comm_obj = new CommObject(buf, bytes, true);
 			if(nn_freemsg(buf) != 0) {

@@ -54,6 +54,7 @@ namespace KSync {
 			} else if (type == SocketConnectAcknowledge::Type) {
 				return "SocketConnectAcknowledge";
 			} else {
+				Error("Here (%i)\n", type);
 				throw TypeException(type);
 			}
 		}
@@ -65,7 +66,8 @@ namespace KSync {
 		}
 
 		SimpleCommunicableObject::SimpleCommunicableObject(CommObject* comm_obj) {
-			if (comm_obj->GetType() != this->Type) {
+			if (comm_obj->GetType() != this->GetType()) {
+				Error("Here\n");
 				throw TypeException(comm_obj->GetType());
 			}
 			if(comm_obj->UnPack() < 0) {
@@ -74,12 +76,13 @@ namespace KSync {
 		}
 
 		CommObject* SimpleCommunicableObject::GetCommObject() {
-			CommObject* new_obj = new CommObject(0, 0, false, this->Type);
+			CommObject* new_obj = new CommObject(0, 0, false, this->GetType());
 			return new_obj;
 		}
 
 		CommData::CommData(CommObject* comm_obj) {
-			if (comm_obj->GetType() != this->Type) {
+			if (comm_obj->GetType() != this->GetType()) {
+				Error("Here\n");
 				throw TypeException(comm_obj->GetType());
 			}
 			if (comm_obj->UnPack() < 0) {
@@ -96,12 +99,13 @@ namespace KSync {
 			}
 		}
 		CommObject* CommData::GetCommObject() {
-			CommObject* new_obj = new CommObject(this->data, this->size, false, this->Type);
+			CommObject* new_obj = new CommObject(this->data, this->size, false, this->GetType());
 			return new_obj;
 		}
 
 		CommString::CommString(CommObject* comm_obj) {
-			if (comm_obj->GetType() != this->Type) {
+			if (comm_obj->GetType() != this->GetType()) {
+				Error("Here\n");
 				throw TypeException(comm_obj->GetType());
 			}
 			if(comm_obj->UnPack() < 0) {
@@ -118,13 +122,14 @@ namespace KSync {
 			size_t size = this->size();
 			char* data = new char[size];
 			memcpy(data, this->c_str(), size);
-			CommObject* new_obj = new CommObject(data, size, false, this->Type);
+			CommObject* new_obj = new CommObject(data, size, false, this->GetType());
 			delete[] data;
 			return new_obj;
 		}
 
 		GatewaySocketInitializationRequest::GatewaySocketInitializationRequest(CommObject* comm_obj) {
-			if (comm_obj->GetType() != this->Type) {
+			if (comm_obj->GetType() != this->GetType()) {
+				Error("Here\n");
 				throw TypeException(comm_obj->GetType());
 			}
 			if(comm_obj->UnPack() < 0) {
@@ -137,7 +142,7 @@ namespace KSync {
 			char* new_data = new char[sizeof(Utilities::client_id_t)];
 			((Utilities::client_id_t*) new_data)[0] = this->ClientId;
 			size_t size = sizeof(Utilities::client_id_t);
-			CommObject* new_obj = new CommObject(new_data, size, false, this->Type);
+			CommObject* new_obj = new CommObject(new_data, size, false, this->GetType());
 			delete[] new_data;
 			return new_obj;
 		}

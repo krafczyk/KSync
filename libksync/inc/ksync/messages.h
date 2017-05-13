@@ -42,6 +42,9 @@ namespace KSync {
 				CommunicableObject() {};
 				CommunicableObject(CommObject* comm_obj __attribute__((unused))) {};
 				virtual CommObject* GetCommObject() = 0;
+				virtual Type_t GetType() {
+					return this->Type;
+				}
 		};
 
 		class SimpleCommunicableObject {
@@ -51,6 +54,9 @@ namespace KSync {
 				SimpleCommunicableObject() {};
 				SimpleCommunicableObject(CommObject* comm_obj);
 				CommObject* GetCommObject();
+				virtual Type_t GetType() {
+					return this->Type;
+				}
 		};
 
 		class CommData : public CommunicableObject {
@@ -65,6 +71,9 @@ namespace KSync {
 
 				CommData(CommObject* comm_obj);
 				CommObject* GetCommObject();
+				virtual Type_t GetType() {
+					return this->Type;
+				}
 			private:
 				char* data;
 				size_t size;
@@ -78,6 +87,9 @@ namespace KSync {
 				CommString(std::string in) : std::string(in) {};
 				CommString(CommObject* comm_obj);
 				CommObject* GetCommObject();
+				virtual Type_t GetType() {
+					return this->Type;
+				}
 		};
 
 		class GatewaySocketInitializationRequest : public CommunicableObject {
@@ -88,6 +100,9 @@ namespace KSync {
 				}
 				GatewaySocketInitializationRequest(CommObject* comm_obj);
 				CommObject* GetCommObject();
+				virtual Type_t GetType() {
+					return this->Type;
+				}
 			private:
 				Utilities::client_id_t ClientId;
 		};
@@ -96,18 +111,27 @@ namespace KSync {
 			public:
 				static const Type_t Type;
 				GatewaySocketInitializationChangeId() {};
+				virtual Type_t GetType() {
+					return this->Type;
+				}
 		};
 
 		class SocketConnectHerald : public SimpleCommunicableObject {
 			public:
 				static const Type_t Type;
 				SocketConnectHerald() {};
+				virtual Type_t GetType() {
+					return this->Type;
+				}
 		};
 
 		class SocketConnectAcknowledge : public SimpleCommunicableObject {
 			public:
 				static const Type_t Type;
 				SocketConnectAcknowledge() {};
+				virtual Type_t GetType() {
+					return this->Type;
+				}
 		};
 	}
 }

@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
 		return -3;
 	}
 
-	if (gateway_thread_socket->SetRecvTimeout(1000) < 0) {
+	if (gateway_thread_socket->SetRecvTimeout(10000) < 0) {
 		KPrint("There was a problem setting the recv timeout!\n");
 		return -3;
 	}
@@ -125,6 +125,7 @@ int main(int argc, char** argv) {
 	std::thread gateway(KSync::Server::gateway_thread, comm_system, gateway_thread_socket_url, gateway_socket_url);
 
 	//Acknowledge connection
+	Debug("1\n");
 	KSync::Comm::CommObject* herald_obj = 0;
 	status = gateway_thread_socket->Recv(herald_obj);
 	if(status == KSync::Comm::CommSystemSocket::Other) {
@@ -134,6 +135,7 @@ int main(int argc, char** argv) {
 		Error("Herald retreive timed out!!!\n");
 		return -7;
 	} else {
+		Debug("2\n");
 		if(herald_obj->GetType() == KSync::Comm::SocketConnectHerald::Type) {
 			KSync::Comm::SocketConnectAcknowledge ack;
 			KSync::Comm::CommObject* ack_obj = ack.GetCommObject();
@@ -147,26 +149,33 @@ int main(int argc, char** argv) {
 			}
 			delete ack_obj;
 		} else {
-			Error("Didn't get a herald type!!\n");
+			Error("Didn't get a herald type (%i)!!\n", herald_obj->GetType());
 			return -8;
 		}
 	}
 	delete herald_obj;
+	Debug("3\n");
 
 	while(!finished) {
+		Debug("4\n");
 		//Check gateway thread
 		KSync::Comm::CommObject* recv_obj = 0;
 		status = gateway_thread_socket->Recv(recv_obj);
+		Debug("5\n");
 		if(status == KSync::Comm::CommSystemSocket::Other) {
 			Error("There was a problem checking the gateway thread socket!\n");
 			return -9;
 		} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
 			Warning("Receiving info from gateway thread timed out\n");
+		} else if (status == KSync::Comm::CommSystemSocket::EmptyMessage) {
+			Warning("Received EmptyMessage!\n");
 		} else {
 			// Handle connection request!!
 			if(recv_obj->GetType() == KSync::Comm::GatewaySocketInitializationRequest::Type) {
 				KSync::Comm::GatewaySocketInitializationChangeId response;
+				Debug("6\n");
 				KSync::Comm::CommObject* resp_obj = response.GetCommObject();
+				Debug("7\n");
 				status = gateway_thread_socket->Send(resp_obj);
 				if(status == KSync::Comm::CommSystemSocket::Other) {
 					Error("There was a problem sending a response to the gateway thread socket!\n");
@@ -176,7 +185,9 @@ int main(int argc, char** argv) {
 					return -12;
 				}
 			} else {
-				Error("Unsupported message from gateway thread!\n");
+				Debug("6\n");
+				Error("Unsupported message from gateway thread! (%i) (%s)\n", recv_obj->GetType(), KSync::Comm::GetTypeName(recv_obj->GetType()));
+				Debug("7\n");
 				return -11;
 			}
 		}

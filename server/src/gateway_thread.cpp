@@ -18,7 +18,7 @@ namespace KSync {
 				return;
 			}
 
-			if(gateway_thread_socket->SetRecvTimeout(1000) < 0) {
+			if(gateway_thread_socket->SetRecvTimeout(10000) < 0) {
 				KPrint("There was a problem setting the recv timeout!\n");
 				return;
 			}
@@ -28,6 +28,7 @@ namespace KSync {
 				return;
 			}
 
+			Debug("1\n");
 			//Herald our existence
 			KSync::Comm::SocketConnectHerald herald;
 			KSync::Comm::CommObject* herald_obj = herald.GetCommObject();
@@ -36,6 +37,7 @@ namespace KSync {
 				return;
 			}
 
+			Debug("2\n");
 			//Check for acknowledgement
 			KSync::Comm::CommObject* ack_obj = 0;
 			if(gateway_thread_socket->Recv(ack_obj) < 0) {
@@ -47,6 +49,7 @@ namespace KSync {
 					return;
 				}
 			}
+			Debug("3\n");
 
 			//Set up gateway socket
 			KSync::Comm::CommSystemSocket* gateway_socket = 0;
@@ -55,7 +58,7 @@ namespace KSync {
 				return;
 			}
 
-			if(gateway_socket->SetRecvTimeout(1000) < 0) {
+			if(gateway_socket->SetRecvTimeout(10000) < 0) {
 				KPrint("There was a problem setting the recv timeout!\n");
 				return;
 			}
@@ -67,17 +70,22 @@ namespace KSync {
 
 			bool finished = false;
 
+			Debug("4\n");
 			int status = 0;
 			//Start gateway loop!
 			while(!finished) {
+				Debug("5\n");
 				//Listen for 
 				KSync::Comm::CommObject* recv_obj = 0;
 				status = gateway_socket->Recv(recv_obj);
+				Debug("6\n");
 				if(status == KSync::Comm::CommSystemSocket::Other) {
 					Error("There was a problem receiving connection requests!\n");
 					return;
 				} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
 					Warning("Checking for connection request timed out!\n");
+				} else if (status == KSync::Comm::CommSystemSocket::EmptyMessage) {
+					Warning("Got an empty message?\n");
 				} else {
 					if(recv_obj->GetType() == KSync::Comm::GatewaySocketInitializationRequest::Type) {
 						KSync::Comm::GatewaySocketInitializationChangeId message;
@@ -105,7 +113,9 @@ namespace KSync {
 						}
 						delete send_obj;
 					} else {
-						Warning("Message unsupported!\n");
+						Debug("7\n");
+						Warning("Message unsupported! (%i) (%s)\n", recv_obj->GetType(), KSync::Comm::GetTypeName(recv_obj->GetType()));
+						Debug("8\n");
 					}
 					delete recv_obj;
 				}

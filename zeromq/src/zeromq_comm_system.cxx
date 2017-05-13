@@ -71,7 +71,10 @@ namespace KSync {
 					return Other;
 				}
 			}
-
+			if(recv.size() == 0) {
+				Warning("Empty Message!\n");
+				return EmptyMessage;
+			}
 			comm_obj = new CommObject((char*) recv.data(), recv.size(), true);
 			return Success;
 		}
