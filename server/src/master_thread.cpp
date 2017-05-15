@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
 		return -3;
 	}
 
-	if (gateway_thread_socket->SetRecvTimeout(10000) < 0) {
+	if (gateway_thread_socket->SetRecvTimeout(1000) < 0) {
 		KPrint("There was a problem setting the recv timeout!\n");
 		return -3;
 	}
