@@ -67,7 +67,7 @@ namespace KSync {
 					Warning("Recv timed out!!\n");
 					return Timeout;
 				} else {
-					Error("Problem sending data!! %i (%s)\n", err, zmq_strerror(err));
+					Error("Problem receiving data!! %i (%s)\n", err, zmq_strerror(err));
 					return Other;
 				}
 			}

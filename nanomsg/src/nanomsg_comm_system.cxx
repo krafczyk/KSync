@@ -41,10 +41,9 @@ namespace KSync {
 				if(sent_bytes == -1) {
 					int err = nn_errno();
 					if(err == ETIMEDOUT) {
-						Warning("Timeout reached.\n");
 						return Timeout;
 					} else {
-						Error("Error received! %i (%s)\n", err, nn_strerror(err));
+						Error("Problem sending data!! %i (%s)\n", err, nn_strerror(err));
 						return Other;
 					}
 				} else {
@@ -69,26 +68,24 @@ namespace KSync {
 			if(bytes < 0) {
 				if(buf != 0) {
 					if(nn_freemsg(buf) != 0) {
-						Error("There was a problem freeing the message!\n");
+						Error("Problem freeing message!\n");
 						return Other;
 					}
 				}
 				int err = nn_errno();
 				if(err == ETIMEDOUT) {
-					Warning("Timeout reached.\n");
 					return Timeout;
 				} else {
-					Error("There was a problem receiving the message! %i (%s)\n", err, nn_strerror(err));
+					Error("Problem receiving data!! %i (%s)\n", err, nn_strerror(err));
 					return Other;
 				}
 			}
 			if(bytes == 0) {
-				Error("EmptyMessage!!\n");
 				return EmptyMessage;
 			}
 			comm_obj = new CommObject(buf, bytes, true);
 			if(nn_freemsg(buf) != 0) {
-				Error("There was a problem freeing the message!\n");
+				Error("Problem freeing message!\n");
 				return Other;
 			}
 			return Success;
