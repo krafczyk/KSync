@@ -13,5 +13,15 @@ namespace KSync {
 
 		CommSystemSocket::~CommSystemSocket() {
 		}
+
+		int CommSystemSocket::ForceRecv(CommObject*& comm_obj) {
+			int status;
+			while(true) {
+				status = this->Recv(comm_obj);
+				if ((status == Other)||(status == Success)) {
+					return status;
+				}
+			}
+		}
 	}
 }

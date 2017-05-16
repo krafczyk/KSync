@@ -80,18 +80,31 @@ namespace KSync {
 				} else if (status == KSync::Comm::CommSystemSocket::EmptyMessage) {
 				} else {
 					if(recv_obj->GetType() == KSync::Comm::GatewaySocketInitializationRequest::Type) {
-						KPrint("Received init request\n");
-						KSync::Comm::GatewaySocketInitializationChangeId message;
-						KSync::Comm::CommObject* send_obj = message.GetCommObject();
-						status = gateway_socket->Send(send_obj);
+						KPrint("Received init request, Passing on..\n");
+						status = gateway_thread_socket->Send(recv_obj);
 						if(status == KSync::Comm::CommSystemSocket::Other) {
-							Error("There was a problem sending the response!!\n");
+							Error("There was a problem passing on the init request!\n");
 							return;
 						} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
-							Error("Sending response timedout!\n");
+							Error("Sending timed out!!!\n");
 							return;
+						} else {
+							KSync::Comm::CommObject* resp_obj = 0;
+							status = gateway_thread_socket->ForceRecv(resp_obj);
+							if (status == KSync::Comm::CommSystemSocket::Other) {
+								Error("There was a problem getting the response!!\n");
+								return;
+							} else {
+								status = gateway_socket->Send(resp_obj);
+								if (status == KSync::Comm::CommSystemSocket::Other) {
+									Error("There was a problem passing on the response!\n");
+									return;
+								} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
+									Error("There was a timeout when sending on the response!\n");
+									return;
+								}
+							}
 						}
-						delete send_obj;
 					} else if(recv_obj->GetType() == KSync::Comm::CommString::Type) {
 						KSync::Comm::CommString message(recv_obj);
 						KPrint("Received (%s)\n", message.c_str());
@@ -108,8 +121,8 @@ namespace KSync {
 					} else {
 						Warning("Message unsupported! (%i) (%s)\n", recv_obj->GetType(), KSync::Comm::GetTypeName(recv_obj->GetType()));
 					}
-					delete recv_obj;
 				}
+				delete recv_obj;
 			}
 
 			delete gateway_socket;

@@ -165,6 +165,7 @@ int main(int argc, char** argv) {
 		} else {
 			// Handle connection request!!
 			if(recv_obj->GetType() == KSync::Comm::GatewaySocketInitializationRequest::Type) {
+				KPrint("Received a connection request!\n");
 				KSync::Comm::GatewaySocketInitializationChangeId response;
 				KSync::Comm::CommObject* resp_obj = response.GetCommObject();
 				status = gateway_thread_socket->Send(resp_obj);
