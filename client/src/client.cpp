@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
 			return -2;
 		} else {
 			std::shared_ptr<KSync::Comm::CommObject> recv_obj;
-			status = client_socket->Recv(recv_obj);
+			status = client_socket->ForceRecv(recv_obj);
 			if(status == KSync::Comm::CommSystemSocket::Other) {
 				Error("There was a problem receiving a response!\n");
 				return -3;
