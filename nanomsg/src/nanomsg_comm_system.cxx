@@ -31,7 +31,7 @@ namespace KSync {
 			return 0;
 		}
 
-		int NanomsgCommSystemSocket::Send(const CommObject* comm_obj) {
+		int NanomsgCommSystemSocket::Send(const std::shared_ptr<CommObject> comm_obj) {
 			if (this->socket < 0) {
 				Error("Can't send to a socket which isn't ready!\n");
 				return Other;
@@ -54,8 +54,8 @@ namespace KSync {
 			return Success;
 		}
 
-		int NanomsgCommSystemSocket::Recv(CommObject*& comm_obj) {
-			if (comm_obj != 0) {
+		int NanomsgCommSystemSocket::Recv(std::shared_ptr<CommObject>& comm_obj) {
+			if (comm_obj) {
 				Error("Please pass a null pointer\n");
 				return Other;
 			}
@@ -83,7 +83,7 @@ namespace KSync {
 			if(bytes == 0) {
 				return EmptyMessage;
 			}
-			comm_obj = new CommObject(buf, bytes, true);
+			comm_obj.reset(new CommObject(buf, bytes, true));
 			if(nn_freemsg(buf) != 0) {
 				Error("Problem freeing message!\n");
 				return Other;

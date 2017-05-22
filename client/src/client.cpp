@@ -48,6 +48,7 @@ int main(int argc, char** argv) {
 		return 0;
 	}
 
+	//Get Default gateway socket url
 	if (!gateway_socket_url_defined) {
 		if(KSync::Utilities::get_default_ipc_connection_url(gateway_socket_url) < 0) {
 			Error("There was a problem getitng the default IPC connection URL.\n");
@@ -62,6 +63,7 @@ int main(int argc, char** argv) {
 
 	KPrint("Using the following socket url: %s\n", gateway_socket_url.c_str());
 
+	//Initialize Comm System
 	KSync::Comm::CommSystemInterface* comm_system = 0;
 	if (!nanomsg) {
 		if (KSync::Comm::GetZeromqCommSystem(comm_system) < 0) {
@@ -75,6 +77,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	//Connect to gateway socket
 	KSync::Comm::CommSystemSocket* gateway_socket = 0;
 	if (comm_system->Create_Gateway_Req_Socket(gateway_socket) < 0) {
 		Error("There was a problem creating the gateway socket!\n");
@@ -91,50 +94,84 @@ int main(int argc, char** argv) {
 		return -4;
 	}
 
+	KSync::Comm::CommSystemSocket* client_socket = 0;
 	int status = 0;
-
-	while (true) {
-		KPrint("Print message to send to the server:\n");
-		KSync::Comm::CommString message_to_send;
-		std::getline(std::cin, message_to_send);
-		KSync::Comm::CommObject* send_obj = 0;
-		if(message_to_send == "request") {
-			KPrint("Sending request\n");
-			KSync::Comm::GatewaySocketInitializationRequest request(KSync::Utilities::GenerateNewClientId());
-			send_obj = request.GetCommObject();
-		} else {
-			KPrint("Sending message: (%s)\n", message_to_send.c_str());
-			send_obj = message_to_send.GetCommObject();
-		}
-
-		status = gateway_socket->Send(send_obj);
+	//Request client socket connection
+	while (client_socket == 0) {
+		KSync::Comm::GatewaySocketInitializationRequest request(KSync::Utilities::GenerateNewClientId());
+		std::shared_ptr<KSync::Comm::CommObject> request_obj = request.GetCommObject();
+		status = gateway_socket->Send(request_obj);
 		if(status == KSync::Comm::CommSystemSocket::Other) {
 			Error("There was a problem sending the message!!\n");
 		} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
 			Warning("Sending the message timed out!\n");
 		} else {
-			KSync::Comm::CommObject* recv_obj = 0;
+			std::shared_ptr<KSync::Comm::CommObject> recv_obj;
 			status = gateway_socket->Recv(recv_obj);
 			if(status == KSync::Comm::CommSystemSocket::Other) {
 				Error("Problem receiving response\n");
 			} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
 				Warning("Receiving response timed out!\n");
 			} else {
-				if(recv_obj->GetType() == KSync::Comm::GatewaySocketInitializationChangeId::Type) {
-					Warning("Received a ChangeId Request!!\n");
-				} else if(recv_obj->GetType() == KSync::Comm::CommString::Type) {
-					KSync::Comm::CommString message(recv_obj);
-					KPrint("Received (%s)\n", message.c_str());
-					if(message_to_send != message) {
-						Error("Message received wasn't the same as that sent!\n");
+				if(recv_obj->GetType() == KSync::Comm::ClientSocketCreation::Type) {
+					std::shared_ptr<KSync::Comm::ClientSocketCreation> creation_response;
+					KSync::Comm::CommCreator(creation_response, recv_obj);
+					if(comm_system->Create_Pair_Socket(client_socket) < 0) {
+						Error("There was a problem creating the pair socket!\n");
+						return -1;
 					}
+					if(client_socket->SetRecvTimeout(1000) < 0) {
+						Error("There was a problem setting the client socket timeout!\n");
+						return -2;
+					}
+					if(client_socket->Connect(*creation_response) < 0) {
+						Error("Couldn't connect to the new client socket address!!\n");
+						return -3;
+					}
+				} else if(recv_obj->GetType() == KSync::Comm::GatewaySocketInitializationChangeId::Type) {
+					Warning("Received a ChangeId Request!!\n");
 				} else {
 					Error("Unrecognized Message!\n");
 				}
-				delete recv_obj;
 			}
 		}
-		delete send_obj;
+	}
+
+	//Close gateway socket connection
+	delete gateway_socket;
+
+	while (true) {
+		KPrint("Print message to send to the server:\n");
+		KSync::Comm::CommString message_to_send;
+		std::getline(std::cin, message_to_send);
+		std::shared_ptr<KSync::Comm::CommObject> send_obj;
+		KPrint("Sending message: (%s)\n", message_to_send.c_str());
+		send_obj = message_to_send.GetCommObject();
+		status = client_socket->Send(send_obj);
+		if(status == KSync::Comm::CommSystemSocket::Other) {
+			Error("There was a problem sending the string to the server!\n");
+			return -1;
+		} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
+			Error("Sending the message timed out!!\n");
+			return -2;
+		} else {
+			std::shared_ptr<KSync::Comm::CommObject> recv_obj;
+			status = client_socket->Recv(recv_obj);
+			if(status == KSync::Comm::CommSystemSocket::Other) {
+				Error("There was a problem receiving a response!\n");
+				return -3;
+			} else if ((status == KSync::Comm::CommSystemSocket::Timeout)||(status == KSync::Comm::CommSystemSocket::EmptyMessage)) {
+			} else {
+				if(recv_obj->GetType() == KSync::Comm::CommString::Type) {
+					std::shared_ptr<KSync::Comm::CommString> received_string;
+					KSync::Comm::CommCreator(received_string, recv_obj);
+					KPrint("Received(%s)\n", received_string->c_str());
+					if (*received_string != message_to_send) {
+						Error("Received message was different!\n");
+					}
+				}
+			}
+		}
 	}
 
 	delete gateway_socket;

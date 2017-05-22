@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <sstream>
 #include <map>
+#include <limits>
 
 #include <cstring>
 
@@ -27,14 +28,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace KSync {
 	namespace Comm {
+		const Type_t YieldType = std::numeric_limits<Type_t>::max();
 		const Type_t CommunicableObject::Type = 0;
 		const Type_t SimpleCommunicableObject::Type = 1;
 		const Type_t CommData::Type = 2;
 		const Type_t CommString::Type = 3;
 		const Type_t GatewaySocketInitializationRequest::Type = 4;
 		const Type_t GatewaySocketInitializationChangeId::Type = 5;
-		const Type_t SocketConnectHerald::Type = 6;
-		const Type_t SocketConnectAcknowledge::Type = 7;
+		const Type_t ClientSocketCreation::Type = 6;
+		const Type_t SocketConnectHerald::Type = 7;
+		const Type_t SocketConnectAcknowledge::Type = 8;
+		const Type_t ServerShuttingDown::Type = 9;
 
 		const char* GetTypeName(const Type_t type) {
 			if (type == CommunicableObject::Type) {
@@ -65,29 +69,29 @@ namespace KSync {
 			SetMessage(ss.str());
 		}
 
-		SimpleCommunicableObject::SimpleCommunicableObject(CommObject* comm_obj) {
-			if (comm_obj->GetType() != this->GetType()) {
-				Error("Here\n");
-				throw TypeException(comm_obj->GetType());
+		void CheckTypeCompatibility(const Type_t typea, const Type_t typeb) {
+			if(typea != typeb) {
+				Error("Typea: %lu Typeb: %lu\n", typea, typeb);
+				throw TypeException(typea);
 			}
+		}
+
+		template<class T> void CommCreator(std::shared_ptr<T>& message, const std::shared_ptr<CommObject> comm_obj) {
+			CheckTypeCompatibility(comm_obj->GetType(), T::Type);
+			message.reset(new T(comm_obj.get()));
+		}
+
+		CommunicableObject::CommunicableObject(CommObject* comm_obj) {
 			if(comm_obj->UnPack() < 0) {
 				throw CommObject::UnPackException(comm_obj->GetType());
 			}
 		}
 
-		CommObject* SimpleCommunicableObject::GetCommObject() {
-			CommObject* new_obj = new CommObject(0, 0, false, this->GetType());
-			return new_obj;
+		std::shared_ptr<CommObject> SimpleCommunicableObject::GetCommObject() {
+			return std::shared_ptr<CommObject>(new CommObject(0, 0, false, this->GetType()));
 		}
 
-		CommData::CommData(CommObject* comm_obj) {
-			if (comm_obj->GetType() != this->GetType()) {
-				Error("Here\n");
-				throw TypeException(comm_obj->GetType());
-			}
-			if (comm_obj->UnPack() < 0) {
-				throw CommObject::UnPackException(comm_obj->GetType());
-			}
+		CommData::CommData(CommObject* comm_obj) : CommunicableObject(comm_obj){
 			this->data = new char[comm_obj->GetDataSize()];
 			memcpy(this->data, comm_obj->GetDataPointer(), comm_obj->GetDataSize());
 			this->size = comm_obj->GetDataSize();
@@ -98,19 +102,11 @@ namespace KSync {
 				delete this->data;
 			}
 		}
-		CommObject* CommData::GetCommObject() {
-			CommObject* new_obj = new CommObject(this->data, this->size, false, this->GetType());
-			return new_obj;
+		std::shared_ptr<CommObject> CommData::GetCommObject() {
+			return std::shared_ptr<CommObject>(new CommObject(this->data, this->size, false, this->GetType()));
 		}
 
-		CommString::CommString(CommObject* comm_obj) {
-			if (comm_obj->GetType() != this->GetType()) {
-				Error("Here\n");
-				throw TypeException(comm_obj->GetType());
-			}
-			if(comm_obj->UnPack() < 0) {
-				throw CommObject::UnPackException(comm_obj->GetType());
-			}
+		CommString::CommString(CommObject* comm_obj) : CommunicableObject(comm_obj) {
 			this->clear();
 			this->reserve(comm_obj->GetDataSize());
 			for(size_t i=0; i < comm_obj->GetDataSize(); ++i) {
@@ -118,33 +114,36 @@ namespace KSync {
 			}
 		}
 
-		CommObject* CommString::GetCommObject() {
+		std::shared_ptr<CommObject> CommString::GetCommObject() {
 			size_t size = this->size();
 			char* data = new char[size];
 			memcpy(data, this->c_str(), size);
-			CommObject* new_obj = new CommObject(data, size, false, this->GetType());
+			std::shared_ptr<CommObject> new_obj(new CommObject(data, size, false, this->GetType()));
 			delete[] data;
 			return new_obj;
 		}
 
-		GatewaySocketInitializationRequest::GatewaySocketInitializationRequest(CommObject* comm_obj) {
-			if (comm_obj->GetType() != this->GetType()) {
-				Error("Here\n");
-				throw TypeException(comm_obj->GetType());
-			}
-			if(comm_obj->UnPack() < 0) {
-				throw CommObject::UnPackException(comm_obj->GetType());
-			}
+		GatewaySocketInitializationRequest::GatewaySocketInitializationRequest(CommObject* comm_obj) : CommunicableObject(comm_obj) {
 			this->ClientId = ((Utilities::client_id_t*) comm_obj->GetDataPointer())[0];
 		}
 
-		CommObject* GatewaySocketInitializationRequest::GetCommObject() {
+		std::shared_ptr<CommObject> GatewaySocketInitializationRequest::GetCommObject() {
 			char* new_data = new char[sizeof(Utilities::client_id_t)];
 			((Utilities::client_id_t*) new_data)[0] = this->ClientId;
 			size_t size = sizeof(Utilities::client_id_t);
-			CommObject* new_obj = new CommObject(new_data, size, false, this->GetType());
+			std::shared_ptr<CommObject> new_obj(new CommObject(new_data, size, false, this->GetType()));
 			delete[] new_data;
 			return new_obj;
 		}
+
+		template void CommCreator(std::shared_ptr<SimpleCommunicableObject>& message, const std::shared_ptr<CommObject> comm_obj);
+		template void CommCreator(std::shared_ptr<CommData>& message, const std::shared_ptr<CommObject> comm_obj);
+		template void CommCreator(std::shared_ptr<CommString>& message, const std::shared_ptr<CommObject> comm_obj);
+		template void CommCreator(std::shared_ptr<GatewaySocketInitializationRequest>& message, const std::shared_ptr<CommObject> comm_obj);
+		template void CommCreator(std::shared_ptr<GatewaySocketInitializationChangeId>& message, const std::shared_ptr<CommObject> comm_obj);
+		template void CommCreator(std::shared_ptr<ClientSocketCreation>& message, const std::shared_ptr<CommObject> comm_obj);
+		template void CommCreator(std::shared_ptr<SocketConnectHerald>& message, const std::shared_ptr<CommObject> comm_obj);
+		template void CommCreator(std::shared_ptr<SocketConnectAcknowledge>& message, const std::shared_ptr<CommObject> comm_obj);
+		template void CommCreator(std::shared_ptr<ServerShuttingDown>& message, const std::shared_ptr<CommObject> comm_obj);
 	}
 }

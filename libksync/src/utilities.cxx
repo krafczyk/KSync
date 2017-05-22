@@ -89,5 +89,17 @@ namespace KSync {
 			std::uniform_int_distribution<client_id_t> dis(std::numeric_limits<client_id_t>::min(), std::numeric_limits<client_id_t>::max());
 			return dis(gen);
 		}
+
+		int get_client_socket_url(std::string& socket_url, const client_id_t client_id) {
+			std::string socket_dir;
+			if(KSync::Utilities::get_socket_dir(socket_dir) < 0 ) {
+				Error("There was a problem getting the default socket directory!\n");
+				return -2;
+			}
+			std::stringstream ss;
+			ss << "ipc://" << socket_dir << "/ksync-" << client_id << ".ipc";
+			socket_url = ss.str();
+			return 0;
+		}
 	}
 }

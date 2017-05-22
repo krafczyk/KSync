@@ -32,6 +32,7 @@ namespace KSync {
 		int get_default_connection_url(std::string& connection_url);
 		typedef unsigned long client_id_t;
 		client_id_t GenerateNewClientId();
+		int get_client_socket_url(std::string& dir, const client_id_t client_id);
 	}
 }
 

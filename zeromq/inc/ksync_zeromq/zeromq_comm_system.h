@@ -17,8 +17,8 @@ namespace KSync {
 
 				int Bind(const std::string& address);
 				int Connect(const std::string& address);
-				int Send(const CommObject* comm_obj);
-				int Recv(CommObject*& comm_obj);
+				int Send(const std::shared_ptr<CommObject> comm_obj);
+				int Recv(std::shared_ptr<CommObject>& comm_obj);
 				int SetSendTimeout(int timeout);
 				int SetRecvTimeout(int timeout);
 

@@ -29,7 +29,7 @@ namespace KSync {
 			return 0;
 		}
 
-		int ZeroMQCommSystemSocket::Send(const CommObject* comm_obj) {
+		int ZeroMQCommSystemSocket::Send(const std::shared_ptr<CommObject> comm_obj) {
 			if (socket == 0) {
 				return Other;
 			}
@@ -51,8 +51,8 @@ namespace KSync {
 			return Success;
 		}
 
-		int ZeroMQCommSystemSocket::Recv(CommObject*& comm_obj) {
-			if (comm_obj != 0) {
+		int ZeroMQCommSystemSocket::Recv(std::shared_ptr<CommObject>& comm_obj) {
+			if (comm_obj) {
 				printf("Please pass an empty pointer\n");
 				return Other;
 			}
@@ -74,7 +74,7 @@ namespace KSync {
 			if(recv.size() == 0) {
 				return EmptyMessage;
 			}
-			comm_obj = new CommObject((char*) recv.data(), recv.size(), true);
+			comm_obj.reset(new CommObject((char*) recv.data(), recv.size(), true));
 			return Success;
 		}
 

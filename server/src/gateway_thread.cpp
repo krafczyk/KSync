@@ -30,14 +30,14 @@ namespace KSync {
 
 			//Herald our existence
 			KSync::Comm::SocketConnectHerald herald;
-			KSync::Comm::CommObject* herald_obj = herald.GetCommObject();
+			std::shared_ptr<KSync::Comm::CommObject> herald_obj = herald.GetCommObject();
 			if(gateway_thread_socket->Send(herald_obj) < 0) {
 				KPrint("There was a problem sending the herald message!\n");
 				return;
 			}
 
 			//Check for acknowledgement
-			KSync::Comm::CommObject* ack_obj = 0;
+			std::shared_ptr<KSync::Comm::CommObject> ack_obj;
 			if(gateway_thread_socket->Recv(ack_obj) < 0) {
 				KPrint("Didn't receive the Acknowledge message!\n");
 				return;
@@ -71,7 +71,7 @@ namespace KSync {
 			//Start gateway loop!
 			while(!finished) {
 				//Listen for 
-				KSync::Comm::CommObject* recv_obj = 0;
+				std::shared_ptr<KSync::Comm::CommObject> recv_obj;
 				status = gateway_socket->Recv(recv_obj);
 				if(status == KSync::Comm::CommSystemSocket::Other) {
 					Error("There was a problem receiving connection requests!\n");
@@ -89,7 +89,7 @@ namespace KSync {
 							Error("Sending timed out!!!\n");
 							return;
 						} else {
-							KSync::Comm::CommObject* resp_obj = 0;
+							std::shared_ptr<KSync::Comm::CommObject> resp_obj;
 							status = gateway_thread_socket->ForceRecv(resp_obj);
 							if (status == KSync::Comm::CommSystemSocket::Other) {
 								Error("There was a problem getting the response!!\n");
@@ -106,9 +106,10 @@ namespace KSync {
 							}
 						}
 					} else if(recv_obj->GetType() == KSync::Comm::CommString::Type) {
-						KSync::Comm::CommString message(recv_obj);
-						KPrint("Received (%s)\n", message.c_str());
-						KSync::Comm::CommObject* send_obj = message.GetCommObject();
+						std::shared_ptr<KSync::Comm::CommString> message;
+						KSync::Comm::CommCreator(message, recv_obj);
+						KPrint("Received (%s)\n", message->c_str());
+						std::shared_ptr<KSync::Comm::CommObject> send_obj = message->GetCommObject();
 						status = gateway_socket->Send(send_obj); 
 						if(status == KSync::Comm::CommSystemSocket::Other) {
 							Error("There was a problem sending a message!!\n");
@@ -117,14 +118,11 @@ namespace KSync {
 							Warning("Sending message timedout!\n");
 							return;
 						}
-						delete send_obj;
 					} else {
 						Warning("Message unsupported! (%i) (%s)\n", recv_obj->GetType(), KSync::Comm::GetTypeName(recv_obj->GetType()));
 					}
 				}
-				delete recv_obj;
 			}
-
 			delete gateway_socket;
 		}
 	}

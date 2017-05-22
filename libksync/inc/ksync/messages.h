@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "ksync/utilities.h"
 #include "ksync/ksync_exception.h"
@@ -29,32 +30,37 @@ namespace KSync {
 	namespace Comm {
 		class CommObject;
 		typedef uint8_t Type_t;
+		extern const Type_t YieldType;
 		const char* GetTypeName(const Type_t type);
 		class TypeException : public KSync::Exception::BasicException {
 			public:
 				TypeException(Type_t type);
 		};
 
+		void CheckTypeCompatibility(const Type_t typea, const Type_t typeb);
+
+		template<class T> void CommCreator(std::shared_ptr<T>& message, const std::shared_ptr<CommObject> comm_obj);
+
 		class CommunicableObject {
 			public:
 				static const Type_t Type;
 
 				CommunicableObject() {};
-				CommunicableObject(CommObject* comm_obj __attribute__((unused))) {};
-				virtual CommObject* GetCommObject() = 0;
-				virtual Type_t GetType() {
+				CommunicableObject(CommObject* comm_obj);
+				virtual std::shared_ptr<CommObject> GetCommObject() = 0;
+				virtual Type_t GetType() const {
 					return this->Type;
 				}
 		};
 
-		class SimpleCommunicableObject {
+		class SimpleCommunicableObject : public CommunicableObject {
 			public:
 				static const Type_t Type;
 
 				SimpleCommunicableObject() {};
-				SimpleCommunicableObject(CommObject* comm_obj);
-				CommObject* GetCommObject();
-				virtual Type_t GetType() {
+				SimpleCommunicableObject(CommObject* comm_obj) : CommunicableObject(comm_obj) {};
+				virtual std::shared_ptr<CommObject> GetCommObject();
+				virtual Type_t GetType() const {
 					return this->Type;
 				}
 		};
@@ -70,8 +76,8 @@ namespace KSync {
 				~CommData();
 
 				CommData(CommObject* comm_obj);
-				CommObject* GetCommObject();
-				virtual Type_t GetType() {
+				std::shared_ptr<CommObject> GetCommObject();
+				virtual Type_t GetType() const {
 					return this->Type;
 				}
 			private:
@@ -86,8 +92,8 @@ namespace KSync {
 				CommString() {};
 				CommString(std::string in) : std::string(in) {};
 				CommString(CommObject* comm_obj);
-				CommObject* GetCommObject();
-				virtual Type_t GetType() {
+				std::shared_ptr<CommObject> GetCommObject();
+				virtual Type_t GetType() const {
 					return this->Type;
 				}
 		};
@@ -99,9 +105,12 @@ namespace KSync {
 					this->ClientId = id;
 				}
 				GatewaySocketInitializationRequest(CommObject* comm_obj);
-				CommObject* GetCommObject();
-				virtual Type_t GetType() {
+				std::shared_ptr<CommObject> GetCommObject();
+				virtual Type_t GetType() const {
 					return this->Type;
+				}
+				Utilities::client_id_t GetClientId() const {
+					return this->ClientId;
 				}
 			private:
 				Utilities::client_id_t ClientId;
@@ -111,7 +120,18 @@ namespace KSync {
 			public:
 				static const Type_t Type;
 				GatewaySocketInitializationChangeId() {};
-				virtual Type_t GetType() {
+				GatewaySocketInitializationChangeId(CommObject* comm_obj) : SimpleCommunicableObject(comm_obj) {};
+				virtual Type_t GetType() const {
+					return this->Type;
+				}
+		};
+
+		class ClientSocketCreation : public CommString {
+			public:
+				static const Type_t Type;
+				ClientSocketCreation(std::string& string) : CommString(string) {};
+				ClientSocketCreation(CommObject* comm_obj) : CommString(comm_obj) {};
+				virtual Type_t GetType() const {
 					return this->Type;
 				}
 		};
@@ -120,7 +140,8 @@ namespace KSync {
 			public:
 				static const Type_t Type;
 				SocketConnectHerald() {};
-				virtual Type_t GetType() {
+				SocketConnectHerald(CommObject* comm_obj) : SimpleCommunicableObject(comm_obj) {};
+				virtual Type_t GetType() const {
 					return this->Type;
 				}
 		};
@@ -129,7 +150,18 @@ namespace KSync {
 			public:
 				static const Type_t Type;
 				SocketConnectAcknowledge() {};
-				virtual Type_t GetType() {
+				SocketConnectAcknowledge(CommObject* comm_obj) : SimpleCommunicableObject(comm_obj) {};
+				virtual Type_t GetType() const {
+					return this->Type;
+				}
+		};
+
+		class ServerShuttingDown : public SimpleCommunicableObject {
+			public:
+				static const Type_t Type;
+				ServerShuttingDown() {};
+				ServerShuttingDown(CommObject* comm_obj) : SimpleCommunicableObject(comm_obj) {};
+				virtual Type_t GetType() const {
 					return this->Type;
 				}
 		};
