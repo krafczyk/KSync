@@ -76,12 +76,12 @@ namespace KSync {
 			}
 		}
 
-		template<class T> void CommCreator(std::shared_ptr<T>& message, const std::shared_ptr<CommObject> comm_obj) {
+		template<class T> void CommCreator(std::shared_ptr<T>& message, const std::shared_ptr<CommObject>& comm_obj) {
 			CheckTypeCompatibility(comm_obj->GetType(), T::Type);
-			message.reset(new T(comm_obj.get()));
+			message.reset(new T(comm_obj));
 		}
 
-		CommunicableObject::CommunicableObject(CommObject* comm_obj) {
+		CommunicableObject::CommunicableObject(const std::shared_ptr<CommObject>& comm_obj) {
 			if(comm_obj->UnPack() < 0) {
 				throw CommObject::UnPackException(comm_obj->GetType());
 			}
@@ -91,7 +91,7 @@ namespace KSync {
 			return std::shared_ptr<CommObject>(new CommObject(0, 0, false, this->GetType()));
 		}
 
-		CommData::CommData(CommObject* comm_obj) : CommunicableObject(comm_obj){
+		CommData::CommData(const std::shared_ptr<CommObject>& comm_obj) : CommunicableObject(comm_obj){
 			this->data = new char[comm_obj->GetDataSize()];
 			memcpy(this->data, comm_obj->GetDataPointer(), comm_obj->GetDataSize());
 			this->size = comm_obj->GetDataSize();
@@ -106,7 +106,7 @@ namespace KSync {
 			return std::shared_ptr<CommObject>(new CommObject(this->data, this->size, false, this->GetType()));
 		}
 
-		CommString::CommString(CommObject* comm_obj) : CommunicableObject(comm_obj) {
+		CommString::CommString(const std::shared_ptr<CommObject>& comm_obj) : CommunicableObject(comm_obj) {
 			this->clear();
 			this->reserve(comm_obj->GetDataSize());
 			for(size_t i=0; i < comm_obj->GetDataSize(); ++i) {
@@ -123,7 +123,7 @@ namespace KSync {
 			return new_obj;
 		}
 
-		GatewaySocketInitializationRequest::GatewaySocketInitializationRequest(CommObject* comm_obj) : CommunicableObject(comm_obj) {
+		GatewaySocketInitializationRequest::GatewaySocketInitializationRequest(const std::shared_ptr<CommObject>& comm_obj) : CommunicableObject(comm_obj) {
 			this->ClientId = ((Utilities::client_id_t*) comm_obj->GetDataPointer())[0];
 		}
 
@@ -136,14 +136,31 @@ namespace KSync {
 			return new_obj;
 		}
 
-		template void CommCreator(std::shared_ptr<SimpleCommunicableObject>& message, const std::shared_ptr<CommObject> comm_obj);
-		template void CommCreator(std::shared_ptr<CommData>& message, const std::shared_ptr<CommObject> comm_obj);
-		template void CommCreator(std::shared_ptr<CommString>& message, const std::shared_ptr<CommObject> comm_obj);
-		template void CommCreator(std::shared_ptr<GatewaySocketInitializationRequest>& message, const std::shared_ptr<CommObject> comm_obj);
-		template void CommCreator(std::shared_ptr<GatewaySocketInitializationChangeId>& message, const std::shared_ptr<CommObject> comm_obj);
-		template void CommCreator(std::shared_ptr<ClientSocketCreation>& message, const std::shared_ptr<CommObject> comm_obj);
-		template void CommCreator(std::shared_ptr<SocketConnectHerald>& message, const std::shared_ptr<CommObject> comm_obj);
-		template void CommCreator(std::shared_ptr<SocketConnectAcknowledge>& message, const std::shared_ptr<CommObject> comm_obj);
-		template void CommCreator(std::shared_ptr<ServerShuttingDown>& message, const std::shared_ptr<CommObject> comm_obj);
+		ClientSocketCreation::ClientSocketCreation(const std::shared_ptr<CommObject>& comm_obj) : CommunicableObject(comm_obj) {
+			this->broadcast_url.assign(comm_obj->GetDataPointer()+sizeof(size_t), ((size_t*) comm_obj->GetDataPointer())[0]);
+			this->client_url.assign(comm_obj->GetDataPointer()+(2*sizeof(size_t))+this->broadcast_url.size(), ((size_t*) (comm_obj->GetDataPointer()+sizeof(size_t)+this->broadcast_url.size()))[0]);
+		}
+
+		std::shared_ptr<CommObject> ClientSocketCreation::GetCommObject() {
+			size_t new_data_size = sizeof(size_t)+this->broadcast_url.size()+sizeof(size_t)+this->client_url.size();
+			char* new_data = new char[new_data_size];
+			((size_t*) new_data)[0] = this->broadcast_url.size();
+			memcpy(new_data+sizeof(size_t),this->broadcast_url.data(), this->broadcast_url.size());
+			((size_t*) (new_data+sizeof(size_t)+this->broadcast_url.size()))[0] = this->client_url.size();
+			memcpy(new_data+(2*sizeof(size_t))+this->broadcast_url.size(), this->client_url.data(), this->client_url.size());
+			std::shared_ptr<CommObject> new_obj(new CommObject(new_data, new_data_size, false, this->GetType()));
+			delete[] new_data;
+			return new_obj;
+		}
+
+		template void CommCreator(std::shared_ptr<SimpleCommunicableObject>& message, const std::shared_ptr<CommObject>& comm_obj);
+		template void CommCreator(std::shared_ptr<CommData>& message, const std::shared_ptr<CommObject>& comm_obj);
+		template void CommCreator(std::shared_ptr<CommString>& message, const std::shared_ptr<CommObject>& comm_obj);
+		template void CommCreator(std::shared_ptr<GatewaySocketInitializationRequest>& message, const std::shared_ptr<CommObject>& comm_obj);
+		template void CommCreator(std::shared_ptr<GatewaySocketInitializationChangeId>& message, const std::shared_ptr<CommObject>& comm_obj);
+		template void CommCreator(std::shared_ptr<ClientSocketCreation>& message, const std::shared_ptr<CommObject>& comm_obj);
+		template void CommCreator(std::shared_ptr<SocketConnectHerald>& message, const std::shared_ptr<CommObject>& comm_obj);
+		template void CommCreator(std::shared_ptr<SocketConnectAcknowledge>& message, const std::shared_ptr<CommObject>& comm_obj);
+		template void CommCreator(std::shared_ptr<ServerShuttingDown>& message, const std::shared_ptr<CommObject>& comm_obj);
 	}
 }

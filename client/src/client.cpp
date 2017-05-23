@@ -95,6 +95,7 @@ int main(int argc, char** argv) {
 	}
 
 	std::shared_ptr<KSync::Comm::CommSystemSocket> client_socket;
+	std::shared_ptr<KSync::Comm::CommSystemSocket> broadcast_socket;
 	int status = 0;
 	//Request client socket connection
 	while (!client_socket) {
@@ -116,6 +117,7 @@ int main(int argc, char** argv) {
 				if(recv_obj->GetType() == KSync::Comm::ClientSocketCreation::Type) {
 					std::shared_ptr<KSync::Comm::ClientSocketCreation> creation_response;
 					KSync::Comm::CommCreator(creation_response, recv_obj);
+					//Start and connect to client socket
 					if(comm_system->Create_Pair_Socket(client_socket) < 0) {
 						Error("There was a problem creating the pair socket!\n");
 						return -1;
@@ -124,9 +126,19 @@ int main(int argc, char** argv) {
 						Error("There was a problem setting the client socket timeout!\n");
 						return -2;
 					}
-					if(client_socket->Connect(*creation_response) < 0) {
+					if(client_socket->Connect(creation_response->GetClientUrl()) < 0) {
 						Error("Couldn't connect to the new client socket address!!\n");
 						return -3;
+					}
+
+					//Start and connect to broadcast socket
+					if(comm_system->Create_Sub_Socket(broadcast_socket) < 0) {
+						Error("There was a problem creating the broadcast socket!\n");
+						return -4;
+					}
+					if(broadcast_socket->Connect(creation_response->GetBroadcastUrl()) < 0) {
+						Error("There was a problem connecting to the broadcast socket!\n");
+						return -5;
 					}
 				} else if(recv_obj->GetType() == KSync::Comm::GatewaySocketInitializationChangeId::Type) {
 					Warning("Received a ChangeId Request!!\n");

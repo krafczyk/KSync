@@ -39,14 +39,14 @@ namespace KSync {
 
 		void CheckTypeCompatibility(const Type_t typea, const Type_t typeb);
 
-		template<class T> void CommCreator(std::shared_ptr<T>& message, const std::shared_ptr<CommObject> comm_obj);
+		template<class T> void CommCreator(std::shared_ptr<T>& message, const std::shared_ptr<CommObject>& comm_obj);
 
 		class CommunicableObject {
 			public:
 				static const Type_t Type;
 
 				CommunicableObject() {};
-				CommunicableObject(CommObject* comm_obj);
+				CommunicableObject(const std::shared_ptr<CommObject>& comm_obj);
 				virtual std::shared_ptr<CommObject> GetCommObject() = 0;
 				virtual Type_t GetType() const {
 					return this->Type;
@@ -58,7 +58,7 @@ namespace KSync {
 				static const Type_t Type;
 
 				SimpleCommunicableObject() {};
-				SimpleCommunicableObject(CommObject* comm_obj) : CommunicableObject(comm_obj) {};
+				SimpleCommunicableObject(const std::shared_ptr<CommObject>& comm_obj) : CommunicableObject(comm_obj) {};
 				virtual std::shared_ptr<CommObject> GetCommObject();
 				virtual Type_t GetType() const {
 					return this->Type;
@@ -75,7 +75,7 @@ namespace KSync {
 				}
 				~CommData();
 
-				CommData(CommObject* comm_obj);
+				CommData(const std::shared_ptr<CommObject>& comm_obj);
 				std::shared_ptr<CommObject> GetCommObject();
 				virtual Type_t GetType() const {
 					return this->Type;
@@ -90,8 +90,8 @@ namespace KSync {
 				static const Type_t Type;
 
 				CommString() {};
-				CommString(std::string in) : std::string(in) {};
-				CommString(CommObject* comm_obj);
+				CommString(const std::string& in) : std::string(in) {};
+				CommString(const std::shared_ptr<CommObject>& comm_obj);
 				std::shared_ptr<CommObject> GetCommObject();
 				virtual Type_t GetType() const {
 					return this->Type;
@@ -104,7 +104,7 @@ namespace KSync {
 				GatewaySocketInitializationRequest(Utilities::client_id_t id) {
 					this->ClientId = id;
 				}
-				GatewaySocketInitializationRequest(CommObject* comm_obj);
+				GatewaySocketInitializationRequest(const std::shared_ptr<CommObject>& comm_obj);
 				std::shared_ptr<CommObject> GetCommObject();
 				virtual Type_t GetType() const {
 					return this->Type;
@@ -120,27 +120,43 @@ namespace KSync {
 			public:
 				static const Type_t Type;
 				GatewaySocketInitializationChangeId() {};
-				GatewaySocketInitializationChangeId(CommObject* comm_obj) : SimpleCommunicableObject(comm_obj) {};
+				GatewaySocketInitializationChangeId(const std::shared_ptr<CommObject>& comm_obj) : SimpleCommunicableObject(comm_obj) {};
 				virtual Type_t GetType() const {
 					return this->Type;
 				}
 		};
 
-		class ClientSocketCreation : public CommString {
+		class ClientSocketCreation : public CommunicableObject {
 			public:
 				static const Type_t Type;
-				ClientSocketCreation(std::string& string) : CommString(string) {};
-				ClientSocketCreation(CommObject* comm_obj) : CommString(comm_obj) {};
+				ClientSocketCreation() {};
+				ClientSocketCreation(const std::shared_ptr<CommObject>& comm_obj);
+				std::shared_ptr<CommObject> GetCommObject();
 				virtual Type_t GetType() const {
 					return this->Type;
 				}
+				const std::string& GetBroadcastUrl() {
+					return this->broadcast_url;
+				}
+				void SetBroadcastUrl(const std::string& in) {
+					this->broadcast_url = in;
+				}
+				const std::string& GetClientUrl() {
+					return this->client_url;
+				}
+				void SetClientUrl(const std::string& in) {
+					this->client_url = in;
+				}
+			private:
+				std::string broadcast_url;
+				std::string client_url;
 		};
 
 		class SocketConnectHerald : public SimpleCommunicableObject {
 			public:
 				static const Type_t Type;
 				SocketConnectHerald() {};
-				SocketConnectHerald(CommObject* comm_obj) : SimpleCommunicableObject(comm_obj) {};
+				SocketConnectHerald(const std::shared_ptr<CommObject>& comm_obj) : SimpleCommunicableObject(comm_obj) {};
 				virtual Type_t GetType() const {
 					return this->Type;
 				}
@@ -150,7 +166,7 @@ namespace KSync {
 			public:
 				static const Type_t Type;
 				SocketConnectAcknowledge() {};
-				SocketConnectAcknowledge(CommObject* comm_obj) : SimpleCommunicableObject(comm_obj) {};
+				SocketConnectAcknowledge(const std::shared_ptr<CommObject>& comm_obj) : SimpleCommunicableObject(comm_obj) {};
 				virtual Type_t GetType() const {
 					return this->Type;
 				}
@@ -160,7 +176,7 @@ namespace KSync {
 			public:
 				static const Type_t Type;
 				ServerShuttingDown() {};
-				ServerShuttingDown(CommObject* comm_obj) : SimpleCommunicableObject(comm_obj) {};
+				ServerShuttingDown(const std::shared_ptr<CommObject>& comm_obj) : SimpleCommunicableObject(comm_obj) {};
 				virtual Type_t GetType() const {
 					return this->Type;
 				}

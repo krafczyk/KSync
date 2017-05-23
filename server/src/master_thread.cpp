@@ -215,7 +215,9 @@ int main(int argc, char** argv) {
 
 					client_sockets[request->GetClientId()] = client_socket;
 
-					KSync::Comm::ClientSocketCreation socket_message(new_socket_url);
+					KSync::Comm::ClientSocketCreation socket_message;
+					socket_message.SetClientUrl(new_socket_url);
+					socket_message.SetBroadcastUrl(broadcast_url);
 					std::shared_ptr<KSync::Comm::CommObject> socket_message_obj = socket_message.GetCommObject();
 					KPrint("Sending new client socket address!\n");
 					status = gateway_thread_socket->Send(socket_message_obj);
