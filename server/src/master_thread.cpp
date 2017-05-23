@@ -122,6 +122,24 @@ int main(int argc, char** argv) {
 		return -5;
 	}
 
+	//Initialize Broadcast socket
+	std::shared_ptr<KSync::Comm::CommSystemSocket> broadcast_socket;
+	if (comm_system->Create_Pub_Socket(broadcast_socket) < 0) {
+		KPrint("There was a problem creating the broadcast socket!\n");
+		return -3;
+	}
+
+	std::string broadcast_url;
+	if(KSync::Utilities::get_default_broadcast_url(broadcast_url) < 0) {
+		KPrint("There was a problem getting the default broadcast socket url!\n");
+		return -4;
+	}
+
+	if(broadcast_socket->Bind(broadcast_url) < 0) {
+		KPrint("There was a problem binding the broadcast socket!\n");
+		return -5;
+	}
+
 	//Launch Gateway Thread
 	std::thread gateway(KSync::Server::gateway_thread, comm_system, gateway_thread_socket_url, gateway_socket_url);
 
