@@ -4,6 +4,7 @@
 #include "nanomsg/nn.h"
 #include "nanomsg/reqrep.h"
 #include "nanomsg/pair.h"
+#include "nanomsg/pubsub.h"
 
 namespace KSync {
 	namespace Comm {
@@ -116,41 +117,77 @@ namespace KSync {
 		int NanomsgCommSystem::Create_Gateway_Req_Socket(CommSystemSocket*& socket __attribute__((unused))) {
 			if (socket == 0) {
 				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
-				nanomsg_socket->socket = nn_socket (AF_SP, NN_REQ);
+				nanomsg_socket->socket = nn_socket(AF_SP, NN_REQ);
 				if (nanomsg_socket->socket < 0) {
 					delete nanomsg_socket;
 					Error("There was a problem creating the NN_REQ socket!\n");
 					return -1;
 				}
 				socket = (CommSystemSocket*) nanomsg_socket;
+				return 0;
+			} else {
+				return -1;
 			}
-			return 0;
 		}
 
 		int NanomsgCommSystem::Create_Gateway_Rep_Socket(CommSystemSocket*& socket __attribute__((unused))) {
 			if (socket == 0) {
 				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
-				nanomsg_socket->socket = nn_socket (AF_SP, NN_REP);
+				nanomsg_socket->socket = nn_socket(AF_SP, NN_REP);
 				if (nanomsg_socket->socket < 0) {
 					Error("There was a problem creating the NN_REP socket!\n");
 					return -1;
 				}
 				socket = (CommSystemSocket*) nanomsg_socket;
+				return 0;
+			} else {
+				return -1;
 			}
-			return 0;
 		}
 
 		int NanomsgCommSystem::Create_Pair_Socket(CommSystemSocket*& socket __attribute__((unused))) {
 			if (socket == 0) {
 				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
-				nanomsg_socket->socket = nn_socket (AF_SP, NN_PAIR);
+				nanomsg_socket->socket = nn_socket(AF_SP, NN_PAIR);
 				if (nanomsg_socket->socket < 0) {
 					Error("There was a problem creating the NN_PAIR socket!\n");
 					return -1;
 				}
 				socket = (CommSystemSocket*) nanomsg_socket;
+				return 0;
+			} else {
+				return -1;
 			}
-			return 0;
+		}
+
+		int NanomsgCommSystem::Create_Pub_Socket(CommSystemSocket*& socket) {
+			if (socket == 0) {
+				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
+				nanomsg_socket->socket = nn_socket(AF_SP, NN_PUB);
+				if (nanomsg_socket->socket < 0) {
+					Error("There was a problem creating the NN_PUB socket!\n");
+					return -1;
+				}
+				socket = (CommSystemSocket*) nanomsg_socket;
+				return 0;
+			} else {
+				return -1;
+			}
+		}
+
+		int NanomsgCommSystem::Create_Sub_Socket(CommSystemSocket*& socket) {
+			if (socket == 0) {
+				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
+				nanomsg_socket->socket = nn_socket(AF_SP, NN_SUB);
+				if(nanomsg_socket->socket < 0) {
+					Error("There was a problem creating the NN_SUB socket!\n");
+					return -1;
+				}
+				socket = (CommSystemSocket*) nanomsg_socket;
+				return 0;
+			} else {
+				return -1;
+			}
 		}
 
 		int GetNanomsgCommSystem(CommSystemInterface*& comm_interface __attribute__((unused))) {

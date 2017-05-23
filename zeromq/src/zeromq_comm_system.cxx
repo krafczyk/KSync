@@ -101,8 +101,10 @@ namespace KSync {
 				ZeroMQCommSystemSocket* zmq_socket = new ZeroMQCommSystemSocket();
 				zmq_socket->socket = new zmq::socket_t(*this->context, ZMQ_REQ);
 				socket = (CommSystemSocket*) zmq_socket;
+				return 0;
+			} else {
+				return -1;
 			}
-			return 0;
 		}
 
 		int ZeroMQCommSystem::Create_Gateway_Rep_Socket(CommSystemSocket*& socket __attribute__((unused))) {
@@ -110,8 +112,10 @@ namespace KSync {
 				ZeroMQCommSystemSocket* zmq_socket = new ZeroMQCommSystemSocket();
 				zmq_socket->socket = new zmq::socket_t(*this->context, ZMQ_REP);
 				socket = (CommSystemSocket*) zmq_socket;
+				return 0;
+			} else {
+				return -1;
 			}
-			return 0;
 		}
 
 		int ZeroMQCommSystem::Create_Pair_Socket(CommSystemSocket*& socket __attribute__((unused))) {
@@ -119,8 +123,32 @@ namespace KSync {
 				ZeroMQCommSystemSocket* zmq_socket = new ZeroMQCommSystemSocket();
 				zmq_socket->socket = new zmq::socket_t(*this->context, ZMQ_PAIR);
 				socket = (CommSystemSocket*) zmq_socket;
+				return 0;
+			} else {
+				return -1;
 			}
-			return 0;
+		}
+
+		int ZeroMQCommSystem::Create_Pub_Socket(CommSystemSocket*& socket) {
+			if (socket == 0) {
+				ZeroMQCommSystemSocket* zmq_socket = new ZeroMQCommSystemSocket();
+				zmq_socket->socket = new zmq::socket_t(*this->context, ZMQ_PUB);
+				socket = (CommSystemSocket*) zmq_socket;
+				return 0;
+			} else {
+				return -1;
+			}
+		}
+
+		int ZeroMQCommSystem::Create_Sub_Socket(CommSystemSocket*& socket) {
+			if (socket == 0) {
+				ZeroMQCommSystemSocket* zmq_socket = new ZeroMQCommSystemSocket();
+				zmq_socket->socket = new zmq::socket_t(*this->context, ZMQ_SUB);
+				socket = (CommSystemSocket*) zmq_socket;
+				return 0;
+			} else {
+				return -1;
+			}
 		}
 
 		int GetZeromqCommSystem(CommSystemInterface*& comm_interface __attribute__((unused))) {

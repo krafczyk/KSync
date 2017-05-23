@@ -35,6 +35,8 @@ namespace KSync {
 				int Create_Gateway_Req_Socket(CommSystemSocket*& socket);
 				int Create_Gateway_Rep_Socket(CommSystemSocket*& socket);
 				int Create_Pair_Socket(CommSystemSocket*& socket);
+				int Create_Pub_Socket(CommSystemSocket*& socket);
+				int Create_Sub_Socket(CommSystemSocket*& socket);
 		};
 	}
 }

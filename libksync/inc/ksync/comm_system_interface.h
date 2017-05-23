@@ -52,6 +52,8 @@ namespace KSync {
 				virtual int Create_Gateway_Req_Socket(CommSystemSocket*& socket) = 0;
 				virtual int Create_Gateway_Rep_Socket(CommSystemSocket*& socket) = 0;
 				virtual int Create_Pair_Socket(CommSystemSocket*& socket) = 0;
+				virtual int Create_Pub_Socket(CommSystemSocket*& socket) = 0;
+				virtual int Create_Sub_Socket(CommSystemSocket*& socket) = 0;
 		};
 	}
 }
