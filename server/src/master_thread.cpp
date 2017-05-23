@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
 	KPrint("Using the following socket url: %s\n", gateway_socket_url.c_str());
 
 	//Initialize communication system
-	KSync::Comm::CommSystemInterface* comm_system = 0;
+	std::shared_ptr<KSync::Comm::CommSystemInterface> comm_system;
 	if (!nanomsg) {
 		if (KSync::Comm::GetZeromqCommSystem(comm_system) < 0) {
 			KPrint("There was a problem initializing the ZeroMQ communication system!\n");
@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
 	}
 
 	//Initialize Gateway Thread socket
-	KSync::Comm::CommSystemSocket* gateway_thread_socket = 0;
+	std::shared_ptr<KSync::Comm::CommSystemSocket> gateway_thread_socket;
 	if (comm_system->Create_Pair_Socket(gateway_thread_socket) < 0) {
 		KPrint("There was a problem creating the gateway thread socket!\n");
 		return -3;
@@ -152,7 +152,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	std::map<KSync::Utilities::client_id_t, KSync::Comm::CommSystemSocket*> client_sockets;
+	std::map<KSync::Utilities::client_id_t, std::shared_ptr<KSync::Comm::CommSystemSocket>> client_sockets;
 
 	while(!finished) {
 		//Check gateway thread
@@ -179,7 +179,7 @@ int main(int argc, char** argv) {
 						return -10;
 					}
 
-					KSync::Comm::CommSystemSocket* client_socket = 0;
+					std::shared_ptr<KSync::Comm::CommSystemSocket> client_socket;
 					if (comm_system->Create_Pair_Socket(client_socket) < 0) {
 						Error("There was a problem creating the gateway thread socket!\n");
 						return -10;
@@ -232,7 +232,7 @@ int main(int argc, char** argv) {
 		for(auto client_socket_it = client_sockets.begin(); client_socket_it != client_sockets.end(); ++client_socket_it) {
 			//Check for incoming messages
 			recv_obj = 0;
-			KSync::Comm::CommSystemSocket* client_socket = client_socket_it->second;
+			std::shared_ptr<KSync::Comm::CommSystemSocket> client_socket = client_socket_it->second;
 			status = client_socket->Recv(recv_obj);
 			if(status == KSync::Comm::CommSystemSocket::Other) {
 				Error("There was a problem receiving a message from a client socket!\n");
@@ -255,7 +255,5 @@ int main(int argc, char** argv) {
 	}
 
 	// Shutting down
-
-	delete comm_system;
 	return 0;
 }

@@ -5,14 +5,14 @@
 
 namespace KSync {
 	namespace Server {
-		void gateway_thread(KSync::Comm::CommSystemInterface* comm_system, const std::string& gateway_thread_socket_url, const std::string& gateway_socket_url) {
+		void gateway_thread(std::shared_ptr<KSync::Comm::CommSystemInterface> comm_system, const std::string& gateway_thread_socket_url, const std::string& gateway_socket_url) {
 			if(comm_system == nullptr) {
 				Error("The Gateway thread was given a null comm_system!!\n");
 				return;
 			}
 
 			//Setup our end of the gateway thread socket
-			KSync::Comm::CommSystemSocket* gateway_thread_socket = 0;
+			std::shared_ptr<KSync::Comm::CommSystemSocket> gateway_thread_socket;
 			if(comm_system->Create_Pair_Socket(gateway_thread_socket) < 0) {
 				KPrint("There was a problem creating the gateway thread pair socket!\n");
 				return;
@@ -49,7 +49,7 @@ namespace KSync {
 			}
 
 			//Set up gateway socket
-			KSync::Comm::CommSystemSocket* gateway_socket = 0;
+			std::shared_ptr<KSync::Comm::CommSystemSocket> gateway_socket;
 			if (comm_system->Create_Gateway_Rep_Socket(gateway_socket) < 0) {
 				KPrint("There was a problem creating the gateway socket!\n");
 				return;
@@ -123,7 +123,6 @@ namespace KSync {
 					}
 				}
 			}
-			delete gateway_socket;
 		}
 	}
 }

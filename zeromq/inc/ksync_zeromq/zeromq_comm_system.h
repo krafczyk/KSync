@@ -31,11 +31,11 @@ namespace KSync {
 				ZeroMQCommSystem();
 				~ZeroMQCommSystem();
 
-				int Create_Gateway_Req_Socket(CommSystemSocket*& socket);
-				int Create_Gateway_Rep_Socket(CommSystemSocket*& socket);
-				int Create_Pair_Socket(CommSystemSocket*& socket);
-				int Create_Pub_Socket(CommSystemSocket*& socket);
-				int Create_Sub_Socket(CommSystemSocket*& socket);
+				int Create_Gateway_Req_Socket(std::shared_ptr<CommSystemSocket>& socket);
+				int Create_Gateway_Rep_Socket(std::shared_ptr<CommSystemSocket>& socket);
+				int Create_Pair_Socket(std::shared_ptr<CommSystemSocket>& socket);
+				int Create_Pub_Socket(std::shared_ptr<CommSystemSocket>& socket);
+				int Create_Sub_Socket(std::shared_ptr<CommSystemSocket>& socket);
 
 			private:
 				zmq::context_t* context;

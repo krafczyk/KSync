@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
 	KPrint("Using the following socket url: %s\n", gateway_socket_url.c_str());
 
 	//Initialize Comm System
-	KSync::Comm::CommSystemInterface* comm_system = 0;
+	std::shared_ptr<KSync::Comm::CommSystemInterface> comm_system;
 	if (!nanomsg) {
 		if (KSync::Comm::GetZeromqCommSystem(comm_system) < 0) {
 			Error("There was a problem initializing the ZeroMQ communication system!\n");
@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
 	}
 
 	//Connect to gateway socket
-	KSync::Comm::CommSystemSocket* gateway_socket = 0;
+	std::shared_ptr<KSync::Comm::CommSystemSocket> gateway_socket;
 	if (comm_system->Create_Gateway_Req_Socket(gateway_socket) < 0) {
 		Error("There was a problem creating the gateway socket!\n");
 		return -3;
@@ -94,10 +94,10 @@ int main(int argc, char** argv) {
 		return -4;
 	}
 
-	KSync::Comm::CommSystemSocket* client_socket = 0;
+	std::shared_ptr<KSync::Comm::CommSystemSocket> client_socket;
 	int status = 0;
 	//Request client socket connection
-	while (client_socket == 0) {
+	while (!client_socket) {
 		KSync::Comm::GatewaySocketInitializationRequest request(KSync::Utilities::GenerateNewClientId());
 		std::shared_ptr<KSync::Comm::CommObject> request_obj = request.GetCommObject();
 		status = gateway_socket->Send(request_obj);
@@ -138,7 +138,7 @@ int main(int argc, char** argv) {
 	}
 
 	//Close gateway socket connection
-	delete gateway_socket;
+	gateway_socket.reset();
 
 	while (true) {
 		KPrint("Print message to send to the server:\n");
@@ -173,9 +173,5 @@ int main(int argc, char** argv) {
 			}
 		}
 	}
-
-	delete gateway_socket;
-	delete comm_system;
-
 	return 0;
 }

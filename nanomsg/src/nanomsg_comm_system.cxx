@@ -114,8 +114,8 @@ namespace KSync {
 		NanomsgCommSystem::~NanomsgCommSystem() {
 		}
 
-		int NanomsgCommSystem::Create_Gateway_Req_Socket(CommSystemSocket*& socket __attribute__((unused))) {
-			if (socket == 0) {
+		int NanomsgCommSystem::Create_Gateway_Req_Socket(std::shared_ptr<CommSystemSocket>& socket) {
+			if (!socket) {
 				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
 				nanomsg_socket->socket = nn_socket(AF_SP, NN_REQ);
 				if (nanomsg_socket->socket < 0) {
@@ -123,76 +123,76 @@ namespace KSync {
 					Error("There was a problem creating the NN_REQ socket!\n");
 					return -1;
 				}
-				socket = (CommSystemSocket*) nanomsg_socket;
+				socket.reset((CommSystemSocket*) nanomsg_socket);
 				return 0;
 			} else {
 				return -1;
 			}
 		}
 
-		int NanomsgCommSystem::Create_Gateway_Rep_Socket(CommSystemSocket*& socket __attribute__((unused))) {
-			if (socket == 0) {
+		int NanomsgCommSystem::Create_Gateway_Rep_Socket(std::shared_ptr<CommSystemSocket>& socket) {
+			if (!socket) {
 				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
 				nanomsg_socket->socket = nn_socket(AF_SP, NN_REP);
 				if (nanomsg_socket->socket < 0) {
 					Error("There was a problem creating the NN_REP socket!\n");
 					return -1;
 				}
-				socket = (CommSystemSocket*) nanomsg_socket;
+				socket.reset((CommSystemSocket*) nanomsg_socket);
 				return 0;
 			} else {
 				return -1;
 			}
 		}
 
-		int NanomsgCommSystem::Create_Pair_Socket(CommSystemSocket*& socket __attribute__((unused))) {
-			if (socket == 0) {
+		int NanomsgCommSystem::Create_Pair_Socket(std::shared_ptr<CommSystemSocket>& socket) {
+			if (!socket) {
 				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
 				nanomsg_socket->socket = nn_socket(AF_SP, NN_PAIR);
 				if (nanomsg_socket->socket < 0) {
 					Error("There was a problem creating the NN_PAIR socket!\n");
 					return -1;
 				}
-				socket = (CommSystemSocket*) nanomsg_socket;
+				socket.reset((CommSystemSocket*) nanomsg_socket);
 				return 0;
 			} else {
 				return -1;
 			}
 		}
 
-		int NanomsgCommSystem::Create_Pub_Socket(CommSystemSocket*& socket) {
-			if (socket == 0) {
+		int NanomsgCommSystem::Create_Pub_Socket(std::shared_ptr<CommSystemSocket>& socket) {
+			if (!socket) {
 				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
 				nanomsg_socket->socket = nn_socket(AF_SP, NN_PUB);
 				if (nanomsg_socket->socket < 0) {
 					Error("There was a problem creating the NN_PUB socket!\n");
 					return -1;
 				}
-				socket = (CommSystemSocket*) nanomsg_socket;
+				socket.reset((CommSystemSocket*) nanomsg_socket);
 				return 0;
 			} else {
 				return -1;
 			}
 		}
 
-		int NanomsgCommSystem::Create_Sub_Socket(CommSystemSocket*& socket) {
-			if (socket == 0) {
+		int NanomsgCommSystem::Create_Sub_Socket(std::shared_ptr<CommSystemSocket>& socket) {
+			if (!socket) {
 				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
 				nanomsg_socket->socket = nn_socket(AF_SP, NN_SUB);
 				if(nanomsg_socket->socket < 0) {
 					Error("There was a problem creating the NN_SUB socket!\n");
 					return -1;
 				}
-				socket = (CommSystemSocket*) nanomsg_socket;
+				socket.reset((CommSystemSocket*) nanomsg_socket);
 				return 0;
 			} else {
 				return -1;
 			}
 		}
 
-		int GetNanomsgCommSystem(CommSystemInterface*& comm_interface __attribute__((unused))) {
+		int GetNanomsgCommSystem(std::shared_ptr<CommSystemInterface>& comm_interface __attribute__((unused))) {
 			Message("Starting Nanomsg Communication Backend\n");
-			comm_interface = new NanomsgCommSystem();
+			comm_interface.reset(new NanomsgCommSystem());
 			return 0;
 		}
 	}

@@ -96,64 +96,64 @@ namespace KSync {
 			delete context;
 		}
 
-		int ZeroMQCommSystem::Create_Gateway_Req_Socket(CommSystemSocket*& socket __attribute__((unused))) {
-			if (socket == 0) {
+		int ZeroMQCommSystem::Create_Gateway_Req_Socket(std::shared_ptr<CommSystemSocket>& socket) {
+			if (!socket) {
 				ZeroMQCommSystemSocket* zmq_socket = new ZeroMQCommSystemSocket();
 				zmq_socket->socket = new zmq::socket_t(*this->context, ZMQ_REQ);
-				socket = (CommSystemSocket*) zmq_socket;
+				socket.reset((CommSystemSocket*) zmq_socket);
 				return 0;
 			} else {
 				return -1;
 			}
 		}
 
-		int ZeroMQCommSystem::Create_Gateway_Rep_Socket(CommSystemSocket*& socket __attribute__((unused))) {
-			if (socket == 0) {
+		int ZeroMQCommSystem::Create_Gateway_Rep_Socket(std::shared_ptr<CommSystemSocket>& socket) {
+			if (!socket) {
 				ZeroMQCommSystemSocket* zmq_socket = new ZeroMQCommSystemSocket();
 				zmq_socket->socket = new zmq::socket_t(*this->context, ZMQ_REP);
-				socket = (CommSystemSocket*) zmq_socket;
+				socket.reset((CommSystemSocket*) zmq_socket);
 				return 0;
 			} else {
 				return -1;
 			}
 		}
 
-		int ZeroMQCommSystem::Create_Pair_Socket(CommSystemSocket*& socket __attribute__((unused))) {
-			if (socket == 0) {
+		int ZeroMQCommSystem::Create_Pair_Socket(std::shared_ptr<CommSystemSocket>& socket) {
+			if (!socket) {
 				ZeroMQCommSystemSocket* zmq_socket = new ZeroMQCommSystemSocket();
 				zmq_socket->socket = new zmq::socket_t(*this->context, ZMQ_PAIR);
-				socket = (CommSystemSocket*) zmq_socket;
+				socket.reset((CommSystemSocket*) zmq_socket);
 				return 0;
 			} else {
 				return -1;
 			}
 		}
 
-		int ZeroMQCommSystem::Create_Pub_Socket(CommSystemSocket*& socket) {
-			if (socket == 0) {
+		int ZeroMQCommSystem::Create_Pub_Socket(std::shared_ptr<CommSystemSocket>& socket) {
+			if (!socket) {
 				ZeroMQCommSystemSocket* zmq_socket = new ZeroMQCommSystemSocket();
 				zmq_socket->socket = new zmq::socket_t(*this->context, ZMQ_PUB);
-				socket = (CommSystemSocket*) zmq_socket;
+				socket.reset((CommSystemSocket*) zmq_socket);
 				return 0;
 			} else {
 				return -1;
 			}
 		}
 
-		int ZeroMQCommSystem::Create_Sub_Socket(CommSystemSocket*& socket) {
-			if (socket == 0) {
+		int ZeroMQCommSystem::Create_Sub_Socket(std::shared_ptr<CommSystemSocket>& socket) {
+			if (!socket) {
 				ZeroMQCommSystemSocket* zmq_socket = new ZeroMQCommSystemSocket();
 				zmq_socket->socket = new zmq::socket_t(*this->context, ZMQ_SUB);
-				socket = (CommSystemSocket*) zmq_socket;
+				socket.reset((CommSystemSocket*) zmq_socket);
 				return 0;
 			} else {
 				return -1;
 			}
 		}
 
-		int GetZeromqCommSystem(CommSystemInterface*& comm_interface __attribute__((unused))) {
+		int GetZeromqCommSystem(std::shared_ptr<CommSystemInterface>& comm_interface __attribute__((unused))) {
 			Message("Starting ZeroMQ Communication Backend\n");
-			comm_interface = new ZeroMQCommSystem();
+			comm_interface.reset(new ZeroMQCommSystem());
 			return 0;
 		}
 	}
