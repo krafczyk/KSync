@@ -38,7 +38,9 @@ namespace KSync {
 		const Type_t ClientSocketCreation::Type = 6;
 		const Type_t SocketConnectHerald::Type = 7;
 		const Type_t SocketConnectAcknowledge::Type = 8;
-		const Type_t ServerShuttingDown::Type = 9;
+		const Type_t ShutdownRequest::Type = 9;
+		const Type_t ShutdownAck::Type = 10;
+		const Type_t ServerShuttingDown::Type = 11;
 
 		const char* GetTypeName(const Type_t type) {
 			if (type == CommunicableObject::Type) {
@@ -57,6 +59,12 @@ namespace KSync {
 				return "SocketConnectHerald";
 			} else if (type == SocketConnectAcknowledge::Type) {
 				return "SocketConnectAcknowledge";
+			} else if (type == ShutdownRequest::Type) {
+				return "ShutdownRequest";
+			} else if (type == ShutdownAck::Type) {
+				return "ShutdownAck";
+			} else if (type == ServerShuttingDown::Type) {
+				return "ServerShuttingDown";
 			} else {
 				Error("Here (%i)\n", type);
 				throw TypeException(type);
@@ -161,6 +169,8 @@ namespace KSync {
 		template void CommCreator(std::shared_ptr<ClientSocketCreation>& message, const std::shared_ptr<CommObject>& comm_obj);
 		template void CommCreator(std::shared_ptr<SocketConnectHerald>& message, const std::shared_ptr<CommObject>& comm_obj);
 		template void CommCreator(std::shared_ptr<SocketConnectAcknowledge>& message, const std::shared_ptr<CommObject>& comm_obj);
+		template void CommCreator(std::shared_ptr<ShutdownRequest>& message, const std::shared_ptr<CommObject>& comm_obj);
+		template void CommCreator(std::shared_ptr<ShutdownAck>& message, const std::shared_ptr<CommObject>& comm_obj);
 		template void CommCreator(std::shared_ptr<ServerShuttingDown>& message, const std::shared_ptr<CommObject>& comm_obj);
 	}
 }

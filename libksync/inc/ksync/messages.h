@@ -172,6 +172,26 @@ namespace KSync {
 				}
 		};
 
+		class ShutdownRequest : public SimpleCommunicableObject {
+			public:
+				static const Type_t Type;
+				ShutdownRequest() {};
+				ShutdownRequest(const std::shared_ptr<CommObject>& comm_obj) : SimpleCommunicableObject(comm_obj) {};
+				virtual Type_t GetType() const {
+					return this->Type;
+				}
+		};
+
+		class ShutdownAck : public SimpleCommunicableObject {
+			public:
+				static const Type_t Type;
+				ShutdownAck() {};
+				ShutdownAck(const std::shared_ptr<CommObject>& comm_obj) : SimpleCommunicableObject(comm_obj) {};
+				virtual Type_t GetType() const {
+					return this->Type;
+				}
+		};
+
 		class ServerShuttingDown : public SimpleCommunicableObject {
 			public:
 				static const Type_t Type;
