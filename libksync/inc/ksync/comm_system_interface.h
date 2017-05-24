@@ -44,7 +44,7 @@ namespace KSync {
 				virtual int ForceRecv(std::shared_ptr<CommObject>& comm_obj);
 				virtual int SetSendTimeout(int timeout) = 0;
 				virtual int SetRecvTimeout(int timeout) = 0;
-			private:
+			protected:
 				bool bind;
 				std::string url;
 		};

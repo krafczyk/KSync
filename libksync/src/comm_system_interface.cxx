@@ -1,3 +1,4 @@
+#include "ksync/logging.h"
 #include "ksync/comm_system_interface.h"
 
 namespace KSync {
@@ -12,6 +13,13 @@ namespace KSync {
 		}
 
 		CommSystemSocket::~CommSystemSocket() {
+			if(this->bind) {
+				if(this->url.substr(0,6) == "ipc://") {
+					if(remove(this->url.substr(6).c_str()) < 0) {
+						Error("There was a problem deleting the IPC file\n");
+					}
+				}
+			}
 		}
 
 		int CommSystemSocket::Bind(const std::string& address) {
