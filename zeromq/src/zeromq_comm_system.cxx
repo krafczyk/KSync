@@ -144,6 +144,7 @@ namespace KSync {
 			if (!socket) {
 				ZeroMQCommSystemSocket* zmq_socket = new ZeroMQCommSystemSocket();
 				zmq_socket->socket = new zmq::socket_t(*this->context, ZMQ_SUB);
+				zmq_socket->socket->setsockopt(ZMQ_SUBSCRIBE, 0, 0);
 				socket.reset((CommSystemSocket*) zmq_socket);
 				return 0;
 			} else {

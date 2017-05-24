@@ -183,10 +183,14 @@ namespace KSync {
 					Error("There was a problem creating the NN_SUB socket!\n");
 					return -1;
 				}
+				if(nn_setsockopt(nanomsg_socket->socket, NN_SUB, NN_SUB_SUBSCRIBE, 0, 0) < 0) {
+					Error("There was a problem subscribing the subscriber socket!!\n");
+					return -2;
+				}
 				socket.reset((CommSystemSocket*) nanomsg_socket);
 				return 0;
 			} else {
-				return -1;
+				return -3;
 			}
 		}
 
