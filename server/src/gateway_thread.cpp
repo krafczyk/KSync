@@ -70,7 +70,7 @@ namespace KSync {
 			int status = 0;
 			//Start gateway loop!
 			while(!finished) {
-				//Listen for 
+				//Listen for new connections 
 				std::shared_ptr<KSync::Comm::CommObject> recv_obj;
 				status = gateway_socket->Recv(recv_obj);
 				if(status == KSync::Comm::CommSystemSocket::Other) {
@@ -120,6 +120,18 @@ namespace KSync {
 						}
 					} else {
 						Warning("Message unsupported! (%i) (%s)\n", recv_obj->GetType(), KSync::Comm::GetTypeName(recv_obj->GetType()));
+					}
+				}
+
+				// Check for messages from the master!
+				std::shared_ptr<KSync::Comm::CommObject> master_obj;
+				status = gateway_thread_socket->Recv(master_obj);
+				if(status == KSync::Comm::CommSystemSocket::Other) {
+					Error("There was a problem checking the master thread!\n");
+				} else if ((status == KSync::Comm::CommSystemSocket::Timeout)||(status == KSync::Comm::CommSystemSocket::EmptyMessage)) {
+				} else {
+					if (master_obj->GetType() == KSync::Comm::ServerShuttingDown::Type) {
+						finished = true;
 					}
 				}
 			}

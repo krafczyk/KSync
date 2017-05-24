@@ -20,6 +20,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <sstream>
 #include <iostream>
+#include <chrono>
+#include <thread>
+#include <atomic>
+#include <future>
 
 #include "ksync/logging.h"
 #include "ksync/client.h"
@@ -136,6 +140,10 @@ int main(int argc, char** argv) {
 						Error("There was a problem creating the broadcast socket!\n");
 						return -4;
 					}
+					if(broadcast_socket->SetRecvTimeout(1000) < 0) {
+						Error("Couldn't set the timeout of the broadcast socket!\n");
+						return -5;
+					}
 					if(broadcast_socket->Connect(creation_response->GetBroadcastUrl()) < 0) {
 						Error("There was a problem connecting to the broadcast socket!\n");
 						return -5;
@@ -152,37 +160,138 @@ int main(int argc, char** argv) {
 	//Close gateway socket connection
 	gateway_socket.reset();
 
-	while (true) {
-		KPrint("Print message to send to the server:\n");
-		KSync::Comm::CommString message_to_send;
-		std::getline(std::cin, message_to_send);
-		std::shared_ptr<KSync::Comm::CommObject> send_obj;
-		KPrint("Sending message: (%s)\n", message_to_send.c_str());
-		send_obj = message_to_send.GetCommObject();
-		status = client_socket->Send(send_obj);
-		if(status == KSync::Comm::CommSystemSocket::Other) {
-			Error("There was a problem sending the string to the server!\n");
-			return -1;
-		} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
-			Error("Sending the message timed out!!\n");
-			return -2;
-		} else {
-			std::shared_ptr<KSync::Comm::CommObject> recv_obj;
-			status = client_socket->ForceRecv(recv_obj);
-			if(status == KSync::Comm::CommSystemSocket::Other) {
-				Error("There was a problem receiving a response!\n");
-				return -3;
-			} else if ((status == KSync::Comm::CommSystemSocket::Timeout)||(status == KSync::Comm::CommSystemSocket::EmptyMessage)) {
-			} else {
-				if(recv_obj->GetType() == KSync::Comm::CommString::Type) {
-					std::shared_ptr<KSync::Comm::CommString> received_string;
-					KSync::Comm::CommCreator(received_string, recv_obj);
-					KPrint("Received(%s)\n", received_string->c_str());
-					if (*received_string != message_to_send) {
-						Error("Received message was different!\n");
+	std::shared_ptr<std::thread> io_thread;
+	std::shared_ptr<std::promise<std::string>> io_result;
+	std::future<std::string> io_future;
+	bool finished = false;
+	while (!finished) {
+		//restart thread if it's stopped
+		if(!io_thread) {
+			//Flush and clear cin buffer and item string
+			if(std::cin.rdbuf()->in_avail() > 0) {
+				std::cin.ignore(std::cin.rdbuf()->in_avail());
+			}
+			std::cin.clear();
+			//Restart IO thread
+			//Reset finished bool
+			io_result.reset(new std::promise<std::string>);
+			io_future = io_result->get_future();
+			io_thread.reset(new std::thread([&io_result] {
+				std::string item;
+				KPrint("Print message to send to the server:\n");
+				std::getline(std::cin, item);
+				if(item == "quit") {
+					std::string item2;
+					int action_selection_state = 2;
+					while (action_selection_state == 2) {
+						KPrint("Are you sure you want to quit? (Y/n)\n");
+						item2.clear();
+						std::getline(std::cin, item2);
+						if ((item2 == "y")||(item2 == "Y")) {
+							action_selection_state = 0;
+						} else if ((item2 == "n") || (item2 == "N")) {
+							action_selection_state = 1;
+						} else {
+							KPrint("Please choose either Y or n.\n");
+						}
 					}
 				}
+				io_result->set_value(item);
+			}));
+		}
+
+		//Test if result is ready
+		if(io_result) {
+			std::future_status fut_stat;
+			try {
+				fut_stat = io_future.wait_for(std::chrono::milliseconds(0));
+			} catch (std::future_error e) {
+				KPrint("There was a futures error!!! (%s)\n", e.what());
+				return -100;
 			}
+			if((fut_stat== std::future_status::ready)&&(!finished)) {
+				//Result is ready
+				KSync::Comm::CommString message_to_send = io_future.get();
+				if (message_to_send == "quit") {
+					KSync::Comm::ShutdownRequest shutdown_req;
+					std::shared_ptr<KSync::Comm::CommObject> shutdown_obj = shutdown_req.GetCommObject();
+					status = client_socket->Send(shutdown_obj);
+					if(status == KSync::Comm::CommSystemSocket::Other) {
+						Error("There was an error sending the shutdown request!\n");
+					} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
+						Error("There was a timeout sending the shutdown request!\n");
+					} else {
+						std::shared_ptr<KSync::Comm::CommObject> rep_obj;
+						status = client_socket->ForceRecv(rep_obj);
+						if(status == KSync::Comm::CommSystemSocket::Other) {
+							Error("There was a problem getting a response to the shutdown request!\n");
+						} else {
+							if(rep_obj->GetType() != KSync::Comm::ShutdownAck::Type) {
+								Error("Shutdown Acknowledgement not received!\n");
+								break;
+							}
+						}
+					}
+				} else {
+					std::shared_ptr<KSync::Comm::CommObject> send_obj;
+					KPrint("Sending message: (%s)\n", message_to_send.c_str());
+					send_obj = message_to_send.GetCommObject();
+					status = client_socket->Send(send_obj);
+					if(status == KSync::Comm::CommSystemSocket::Other) {
+						Error("There was a problem sending the string to the server!\n");
+						return -1;
+					} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
+						Error("Sending the message timed out!!\n");
+						return -2;
+					} else {
+						std::shared_ptr<KSync::Comm::CommObject> recv_obj;
+						status = client_socket->ForceRecv(recv_obj);
+						if(status == KSync::Comm::CommSystemSocket::Other) {
+							Error("There was a problem receiving a response!\n");
+							return -3;
+						} else if ((status == KSync::Comm::CommSystemSocket::Timeout)||(status == KSync::Comm::CommSystemSocket::EmptyMessage)) {
+						} else {
+							if(recv_obj->GetType() == KSync::Comm::CommString::Type) {
+								std::shared_ptr<KSync::Comm::CommString> received_string;
+								KSync::Comm::CommCreator(received_string, recv_obj);
+								KPrint("Received(%s)\n", received_string->c_str());
+								if (*received_string != message_to_send) {
+									Error("Received message was different!\n");
+								}
+							}
+						}
+					}
+				}
+				//Cleanup IO thread stuff
+				if(io_thread) {
+					if(io_thread->joinable()) {
+						io_thread->join();
+					}
+					io_thread.reset();
+				}
+			}
+		}
+
+		//Test broadcast socket
+		std::shared_ptr<KSync::Comm::CommObject> broad_obj;
+		status = broadcast_socket->Recv(broad_obj);
+		if(status == KSync::Comm::CommSystemSocket::Other) {
+			Error("There was a problem reading from the broadcast socket!\n");
+		} else if ((status == KSync::Comm::CommSystemSocket::Timeout)||(status == KSync::Comm::CommSystemSocket::EmptyMessage)) {
+		} else {
+			if(broad_obj->GetType() == KSync::Comm::ServerShuttingDown::Type) {
+				KPrint("Server shutdown detected, Shutting down.\n");
+				finished = true;
+			} else {
+				Error("Other message types unsupported here!\n");
+			}
+		}
+	}
+
+	//Join io_thread;
+	if(io_thread) {
+		if(io_thread->joinable()) {
+			io_thread->join();
 		}
 	}
 	return 0;

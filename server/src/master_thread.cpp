@@ -269,11 +269,41 @@ int main(int argc, char** argv) {
 					} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
 						Warning("Sending a message on a client socket timed out!\n");
 					}
+				} else if (recv_obj->GetType() == KSync::Comm::ShutdownRequest::Type) {
+					finished = true;
+					KSync::Comm::ShutdownAck shutdown_ack;
+					std::shared_ptr<KSync::Comm::CommObject> shutdown_obj = shutdown_ack.GetCommObject();
+					status = client_socket->Send(shutdown_obj);
+					if(status == KSync::Comm::CommSystemSocket::Other) {
+						Error("There was a problem sending the shutdown ack\n");
+					} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
+						Error("There was a timeout sending the shutdown ack\n");
+					}
 				}
 			}
 		}
 	}
 
 	// Shutting down
+	// Broadcast shutdown message
+	KSync::Comm::ServerShuttingDown shutdown_message;
+	std::shared_ptr<KSync::Comm::CommObject> shutdown_obj = shutdown_message.GetCommObject();
+	status = broadcast_socket->Send(shutdown_obj);
+	if(status == KSync::Comm::CommSystemSocket::Other) {
+		Error("There was a problem sending the shutdown message!\n");
+	} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
+		Error("There was a timeout sending the shutdown message!\n");
+	} else {
+		KPrint("Shutdown sent!\n");
+	}
+	// Shutdown gateway thread
+	status = gateway_thread_socket->Send(shutdown_obj);
+	if(status == KSync::Comm::CommSystemSocket::Other) {
+		Error("There was a problem closing down the gateway thread!\n");
+	} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
+		Error("There was a timeout closing down the gateway thread!\n");
+	}
+	//Join gateway thread
+	gateway.join();
 	return 0;
 }
