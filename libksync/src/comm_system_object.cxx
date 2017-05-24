@@ -79,7 +79,7 @@ namespace KSync {
 				new_data[0] = this->type;
 				new_data[sizeof(this->type)] = this->crc;
 				memcpy(new_data+num_extra_bytes, this->data, this->size);
-				delete this->data;
+				delete[] this->data;
 				this->data = new_data;
 				this->size += num_extra_bytes;
 				this->packed = true;
@@ -96,7 +96,7 @@ namespace KSync {
 				if (this->crc != 0) {
 					return -1;
 				}
-				delete this->data;
+				delete[] this->data;
 				this->data = 0;
 			} else {
 				char new_crc = GenCRC8(this->data+num_extra_bytes, this->size-num_extra_bytes);
@@ -106,7 +106,7 @@ namespace KSync {
 				size_t new_size = this->size-num_extra_bytes;
 				char* new_data = new char[this->size-num_extra_bytes];
 				memcpy(new_data, this->data+num_extra_bytes, new_size);
-				delete this->data;
+				delete[] this->data;
 				this->data = new_data;
 			}
 			this->size -= num_extra_bytes;
