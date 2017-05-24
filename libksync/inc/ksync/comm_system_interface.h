@@ -35,13 +35,18 @@ namespace KSync {
 				static const int EmptyMessage = 2;
 				static const int Other = -1;
 
-				virtual int Bind(const std::string& address) = 0;
-				virtual int Connect(const std::string& address) = 0;
+				int Bind(const std::string& address);
+				virtual int BindImp(const std::string& address) = 0;
+				int Connect(const std::string& address);
+				virtual int ConnectImp(const std::string& address) = 0;
 				virtual int Send(const std::shared_ptr<CommObject> comm_obj) = 0;
 				virtual int Recv(std::shared_ptr<CommObject>& comm_obj) = 0;
 				virtual int ForceRecv(std::shared_ptr<CommObject>& comm_obj);
 				virtual int SetSendTimeout(int timeout) = 0;
 				virtual int SetRecvTimeout(int timeout) = 0;
+			private:
+				bool bind;
+				std::string url;
 		};
 
 		class CommSystemInterface {

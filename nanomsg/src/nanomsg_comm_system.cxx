@@ -16,7 +16,7 @@ namespace KSync {
 			nn_shutdown(this->socket, 0);
 		}
 
-		int NanomsgCommSystemSocket::Bind(const std::string& address) {
+		int NanomsgCommSystemSocket::BindImp(const std::string& address) {
 			if(nn_bind(this->socket, address.c_str()) < 0) {
 				Error("There was a problem binding to the address (%s)\n", address.c_str());
 				return -1;
@@ -24,7 +24,7 @@ namespace KSync {
 			return 0;
 		}
 
-		int NanomsgCommSystemSocket::Connect(const std::string& address) {
+		int NanomsgCommSystemSocket::ConnectImp(const std::string& address) {
 			if(nn_connect(this->socket, address.c_str()) < 0) {
 				Error("There was a problem connecting to the address (%s)\n", address.c_str());
 				return -1;

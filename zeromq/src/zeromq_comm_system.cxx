@@ -13,7 +13,7 @@ namespace KSync {
 			}
 		}
 
-		int ZeroMQCommSystemSocket::Bind(const std::string& address) {
+		int ZeroMQCommSystemSocket::BindImp(const std::string& address) {
 			if (socket == 0) {
 				return -1;
 			}
@@ -21,7 +21,7 @@ namespace KSync {
 			return 0;
 		}
 
-		int ZeroMQCommSystemSocket::Connect(const std::string& address) {
+		int ZeroMQCommSystemSocket::ConnectImp(const std::string& address) {
 			if (socket == 0) {
 				return -1;
 			}

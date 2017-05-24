@@ -15,8 +15,8 @@ namespace KSync {
 				ZeroMQCommSystemSocket();
 				~ZeroMQCommSystemSocket();
 
-				int Bind(const std::string& address);
-				int Connect(const std::string& address);
+				int BindImp(const std::string& address);
+				int ConnectImp(const std::string& address);
 				int Send(const std::shared_ptr<CommObject> comm_obj);
 				int Recv(std::shared_ptr<CommObject>& comm_obj);
 				int SetSendTimeout(int timeout);
