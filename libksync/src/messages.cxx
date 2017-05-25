@@ -41,6 +41,8 @@ namespace KSync {
 		const Type_t ShutdownRequest::Type = 9;
 		const Type_t ShutdownAck::Type = 10;
 		const Type_t ServerShuttingDown::Type = 11;
+		const Type_t ExecuteCommand::Type = 12;
+		const Type_t CommandOutput::Type = 13;
 
 		const char* GetTypeName(const Type_t type) {
 			if (type == CommunicableObject::Type) {
@@ -186,6 +188,10 @@ namespace KSync {
 			this->resize(2);
 		}
 
+		CommandOutput::CommandOutput() {
+			this->resize(2);
+		}
+
 		template void CommCreator(std::shared_ptr<SimpleCommunicableObject>& message, const std::shared_ptr<CommObject>& comm_obj);
 		template void CommCreator(std::shared_ptr<CommData>& message, const std::shared_ptr<CommObject>& comm_obj);
 		template void CommCreator(std::shared_ptr<CommString>& message, const std::shared_ptr<CommObject>& comm_obj);
@@ -197,5 +203,7 @@ namespace KSync {
 		template void CommCreator(std::shared_ptr<ShutdownRequest>& message, const std::shared_ptr<CommObject>& comm_obj);
 		template void CommCreator(std::shared_ptr<ShutdownAck>& message, const std::shared_ptr<CommObject>& comm_obj);
 		template void CommCreator(std::shared_ptr<ServerShuttingDown>& message, const std::shared_ptr<CommObject>& comm_obj);
+		template void CommCreator(std::shared_ptr<ExecuteCommand>& message, const std::shared_ptr<CommObject>& comm_obj);
+		template void CommCreator(std::shared_ptr<CommandOutput>& message, const std::shared_ptr<CommObject>& comm_obj);
 	}
 }

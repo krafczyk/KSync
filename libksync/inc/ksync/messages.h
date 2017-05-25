@@ -206,6 +206,39 @@ namespace KSync {
 					return this->Type;
 				}
 		};
+
+		class ExecuteCommand : public CommString {
+			public:
+				static const Type_t Type;
+				ExecuteCommand() {};
+				ExecuteCommand(const std::string& in) : CommString(in) {};
+				ExecuteCommand(const std::shared_ptr<CommObject>& comm_obj) : CommString(comm_obj) {};
+				virtual Type_t GetType() const {
+					return this->Type;
+				}
+		};
+
+		class CommandOutput : public CommStringArray {
+			public:
+				static const Type_t Type;
+				CommandOutput();
+				CommandOutput(const std::shared_ptr<CommObject>& comm_obj) : CommStringArray(comm_obj) {};
+				virtual Type_t GetType() const {
+					return this->Type;
+				}
+				const std::string& GetStdout() const {
+					return (*this)[0];
+				}
+				void SetStdout(const std::string& in) {
+					(*this)[0] = in;
+				}
+				const std::string& GetStderr() const {
+					return (*this)[1];
+				}
+				void SetStderr(const std::string& in) {
+					(*this)[1] = in;
+				}
+		};
 	}
 }
 
