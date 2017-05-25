@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ksync/comm_system_factory.h"
 #include "ksync/comm_system_object.h"
 #include "ksync/gateway_thread.h"
+#include "ksync/pstream.h"
 
 #include "ArgParse/ArgParse.h"
 
@@ -278,6 +279,30 @@ int main(int argc, char** argv) {
 						Error("There was a problem sending the shutdown ack\n");
 					} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
 						Error("There was a timeout sending the shutdown ack\n");
+					}
+				} else if (recv_obj->GetType() == KSync::Comm::ExecuteCommand::Type) {
+					std::shared_ptr<KSync::Comm::ExecuteCommand> exec_com;
+					KSync::Comm::CommCreator(exec_com, recv_obj);
+					KPrint("Received command (%s)\n", exec_com->c_str());
+					redi::ipstream com_stream(exec_com->c_str());
+					std::vector<std::string> results;
+					std::string result;
+					while (std::getline(com_stream, result)) {
+						results.push_back(result);
+						result.clear();
+					}
+					std::string total_results;
+					for(auto results_it = results.begin(); results_it != results.end(); ++results_it) {
+						total_results += (*results_it)+"\n";
+					}
+					KSync::Comm::CommandOutput com_out;
+					com_out.SetStdout(total_results);
+					com_out.SetStderr("test err");
+
+					std::shared_ptr<KSync::Comm::CommObject> test_resp = com_out.GetCommObject();
+					status = client_socket->Send(test_resp);
+					if(status != KSync::Comm::CommSystemSocket::Success) {
+						Error("There was a problem sending the test reponse!\n");
 					}
 				}
 			}

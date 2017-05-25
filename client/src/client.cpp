@@ -232,6 +232,33 @@ int main(int argc, char** argv) {
 							}
 						}
 					}
+				} else if (message_to_send.substr(0,8) == "command:") {
+					std::string extracted_command = message_to_send.substr(8);
+					extracted_command = KSync::Utilities::trim(extracted_command);
+					KSync::Comm::ExecuteCommand command = extracted_command;
+					std::shared_ptr<KSync::Comm::CommObject> send_obj = command.GetCommObject();
+					status = client_socket->Send(send_obj);
+					if(status == KSync::Comm::CommSystemSocket::Other) {
+						Error("There was a problem sending the command!\n");
+					} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
+					} else {
+						std::shared_ptr<KSync::Comm::CommObject> ret_obj;
+						status = client_socket->ForceRecv(ret_obj);
+						if(status == KSync::Comm::CommSystemSocket::Other) {
+							Error("There was a problem receiving the reply!\n");
+						} else if (status == KSync::Comm::CommSystemSocket::Success) {
+							if(ret_obj->GetType() == KSync::Comm::CommandOutput::Type) {
+								std::shared_ptr<KSync::Comm::CommandOutput> com_output;
+								KSync::Comm::CommCreator(com_output, ret_obj);
+								KPrint("Output:\n");
+								KPrint("%s\n", com_output->GetStdout().c_str());
+								KPrint("Error:\n");
+								KPrint("%s\n", com_output->GetStderr().c_str());
+							} else {
+								Error("Other object types are not supported here\n");
+							}
+						}
+					}
 				} else {
 					std::shared_ptr<KSync::Comm::CommObject> send_obj;
 					KPrint("Sending message: (%s)\n", message_to_send.c_str());
