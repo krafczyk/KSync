@@ -131,6 +131,44 @@ namespace KSync {
 			return new_obj;
 		}
 
+		CommStringArray::CommStringArray(const std::shared_ptr<CommObject>& comm_obj) : CommunicableObject(comm_obj) {
+			const char* data = comm_obj->GetDataPointer();
+			size_t d_i = 0;
+			const size_t n_s = *((size_t*)(data+d_i));
+			d_i += sizeof(size_t);
+			this->resize(n_s);
+			for(size_t s_i = 0; s_i < n_s; ++s_i) {
+				const size_t s_i_n = *((size_t*)(data+d_i));
+				d_i += sizeof(size_t);
+				(*this)[s_i].assign(data+d_i, s_i_n);
+				d_i += s_i_n;
+			}
+		}
+
+		std::shared_ptr<CommObject> CommStringArray::GetCommObject() {
+			size_t total_new_size = 0;
+			total_new_size += sizeof(size_t);
+			for(size_t s_i = 0; s_i < this->size(); ++s_i) {
+				total_new_size += sizeof(size_t);
+				total_new_size += (*this)[s_i].size();
+			}
+			char* new_data = new char[total_new_size];
+			size_t d_i = 0;
+			//Write number of strings
+			*((size_t*)(new_data + d_i)) = this->size();
+			d_i += sizeof(size_t);
+			for(size_t s_i = 0; s_i < this->size(); ++s_i) {
+				//Write strings
+				*((size_t*)(new_data + d_i)) = (*this)[s_i].size();
+				d_i += sizeof(size_t);
+				memcpy(new_data+d_i, (*this)[s_i].data(), (*this)[s_i].size());
+				d_i += (*this)[s_i].size();
+			}
+			std::shared_ptr<CommObject> new_obj(new CommObject(new_data, total_new_size, false, this->GetType()));
+			delete[] new_data;
+			return new_obj;
+		}
+
 		GatewaySocketInitializationRequest::GatewaySocketInitializationRequest(const std::shared_ptr<CommObject>& comm_obj) : CommunicableObject(comm_obj) {
 			this->ClientId = ((Utilities::client_id_t*) comm_obj->GetDataPointer())[0];
 		}
@@ -144,21 +182,8 @@ namespace KSync {
 			return new_obj;
 		}
 
-		ClientSocketCreation::ClientSocketCreation(const std::shared_ptr<CommObject>& comm_obj) : CommunicableObject(comm_obj) {
-			this->broadcast_url.assign(comm_obj->GetDataPointer()+sizeof(size_t), ((size_t*) comm_obj->GetDataPointer())[0]);
-			this->client_url.assign(comm_obj->GetDataPointer()+(2*sizeof(size_t))+this->broadcast_url.size(), ((size_t*) (comm_obj->GetDataPointer()+sizeof(size_t)+this->broadcast_url.size()))[0]);
-		}
-
-		std::shared_ptr<CommObject> ClientSocketCreation::GetCommObject() {
-			size_t new_data_size = sizeof(size_t)+this->broadcast_url.size()+sizeof(size_t)+this->client_url.size();
-			char* new_data = new char[new_data_size];
-			((size_t*) new_data)[0] = this->broadcast_url.size();
-			memcpy(new_data+sizeof(size_t),this->broadcast_url.data(), this->broadcast_url.size());
-			((size_t*) (new_data+sizeof(size_t)+this->broadcast_url.size()))[0] = this->client_url.size();
-			memcpy(new_data+(2*sizeof(size_t))+this->broadcast_url.size(), this->client_url.data(), this->client_url.size());
-			std::shared_ptr<CommObject> new_obj(new CommObject(new_data, new_data_size, false, this->GetType()));
-			delete[] new_data;
-			return new_obj;
+		ClientSocketCreation::ClientSocketCreation() {
+			this->resize(2);
 		}
 
 		template void CommCreator(std::shared_ptr<SimpleCommunicableObject>& message, const std::shared_ptr<CommObject>& comm_obj);

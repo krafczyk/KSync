@@ -98,6 +98,15 @@ namespace KSync {
 				}
 		};
 
+		class CommStringArray : public CommunicableObject, public std::vector<std::string> {
+			public:
+				static const Type_t Type;
+				CommStringArray() {};
+				CommStringArray(const std::vector<std::string>& strings) : std::vector<std::string>(strings) {};
+				CommStringArray(const std::shared_ptr<CommObject>& comm_obj);
+				std::shared_ptr<CommObject> GetCommObject();
+		};
+
 		class GatewaySocketInitializationRequest : public CommunicableObject {
 			public:
 				static const Type_t Type;
@@ -126,30 +135,26 @@ namespace KSync {
 				}
 		};
 
-		class ClientSocketCreation : public CommunicableObject {
+		class ClientSocketCreation : public CommStringArray {
 			public:
 				static const Type_t Type;
-				ClientSocketCreation() {};
-				ClientSocketCreation(const std::shared_ptr<CommObject>& comm_obj);
-				std::shared_ptr<CommObject> GetCommObject();
+				ClientSocketCreation();
+				ClientSocketCreation(const std::shared_ptr<CommObject>& comm_obj) : CommStringArray(comm_obj) {};
 				virtual Type_t GetType() const {
 					return this->Type;
 				}
-				const std::string& GetBroadcastUrl() {
-					return this->broadcast_url;
+				const std::string& GetBroadcastUrl() const {
+					return (*this)[0];
 				}
 				void SetBroadcastUrl(const std::string& in) {
-					this->broadcast_url = in;
+					(*this)[0] = in;
 				}
-				const std::string& GetClientUrl() {
-					return this->client_url;
+				const std::string& GetClientUrl() const {
+					return (*this)[1];
 				}
 				void SetClientUrl(const std::string& in) {
-					this->client_url = in;
+					(*this)[1] = in;
 				}
-			private:
-				std::string broadcast_url;
-				std::string client_url;
 		};
 
 		class SocketConnectHerald : public SimpleCommunicableObject {
