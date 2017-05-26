@@ -299,6 +299,7 @@ int main(int argc, char** argv) {
 					KSync::Comm::CommandOutput com_out;
 					com_out.SetStdout(std_out);
 					com_out.SetStderr(std_err);
+					com_out.SetReturnCode(command_context->GetReturnCode());
 
 					std::shared_ptr<KSync::Comm::CommObject> test_resp = com_out.GetCommObject();
 					status = client_socket->Send(test_resp);

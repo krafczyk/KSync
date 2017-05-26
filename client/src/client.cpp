@@ -254,6 +254,7 @@ int main(int argc, char** argv) {
 								KPrint("%s\n", com_output->GetStdout().c_str());
 								KPrint("Error:\n");
 								KPrint("%s\n", com_output->GetStderr().c_str());
+								KPrint("Return Code: (%i)\n", com_output->GetReturnCode());
 							} else {
 								Error("Other object types are not supported here\n");
 							}
