@@ -188,8 +188,45 @@ namespace KSync {
 			this->resize(2);
 		}
 
-		CommandOutput::CommandOutput() {
-			this->resize(2);
+		CommandOutput::CommandOutput(const std::shared_ptr<CommObject>& comm_obj) : CommunicableObject(comm_obj) {
+			const char* data = comm_obj->GetDataPointer();
+			size_t d_i = 0;
+			size_t s_n = *((size_t*)(data+d_i));
+			d_i += sizeof(size_t);
+			this->std_out.assign(data+d_i, s_n);
+			d_i += s_n;
+			s_n = *((size_t*)(data+d_i));
+			d_i += sizeof(size_t);
+			this->std_err.assign(data+d_i, s_n);
+			d_i += s_n;
+			this->return_code = *((KSync::Commanding::ExecutionContext::Return_t*) (data+d_i));
+		}
+
+		std::shared_ptr<CommObject> CommandOutput::GetCommObject() {
+			size_t total_new_size = 0;
+			total_new_size += sizeof(size_t);
+			total_new_size += this->std_out.size();
+			total_new_size += sizeof(size_t);
+			total_new_size += this->std_err.size();
+			total_new_size += sizeof(this->return_code);
+
+			char* new_data = new char[total_new_size];
+			size_t d_i = 0;
+
+			//Write strings
+			*((size_t*)(new_data + d_i)) = this->std_out.size();
+			d_i += sizeof(size_t);
+			memcpy(new_data+d_i, this->std_out.data(), this->std_out.size());
+			d_i += this->std_out.size();
+			*((size_t*)(new_data + d_i)) = this->std_err.size();
+			d_i += sizeof(size_t);
+			memcpy(new_data+d_i, this->std_err.data(), this->std_err.size());
+			d_i += this->std_err.size();
+			*((KSync::Commanding::ExecutionContext::Return_t*) (new_data+d_i)) = this->return_code;
+
+			std::shared_ptr<CommObject> new_obj(new CommObject(new_data, total_new_size, false, this->GetType()));
+			delete[] new_data;
+			return new_obj;
 		}
 
 		template void CommCreator(std::shared_ptr<SimpleCommunicableObject>& message, const std::shared_ptr<CommObject>& comm_obj);

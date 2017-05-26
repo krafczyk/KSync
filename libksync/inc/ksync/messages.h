@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "ksync/utilities.h"
 #include "ksync/ksync_exception.h"
+#include "ksync/command_system_interface.h"
 
 namespace KSync {
 	namespace Comm {
@@ -218,26 +219,37 @@ namespace KSync {
 				}
 		};
 
-		class CommandOutput : public CommStringArray {
+		class CommandOutput : public CommunicableObject {
 			public:
 				static const Type_t Type;
-				CommandOutput();
-				CommandOutput(const std::shared_ptr<CommObject>& comm_obj) : CommStringArray(comm_obj) {};
+				CommandOutput() { return_code = -1; };
+				CommandOutput(const std::shared_ptr<CommObject>& comm_obj);
+				std::shared_ptr<CommObject> GetCommObject();
 				virtual Type_t GetType() const {
 					return this->Type;
 				}
 				const std::string& GetStdout() const {
-					return (*this)[0];
+					return this->std_out;
 				}
 				void SetStdout(const std::string& in) {
-					(*this)[0] = in;
+					this->std_out = in;
 				}
 				const std::string& GetStderr() const {
-					return (*this)[1];
+					return this->std_err;
 				}
 				void SetStderr(const std::string& in) {
-					(*this)[1] = in;
+					this->std_err = in;
 				}
+				KSync::Commanding::ExecutionContext::Return_t GetReturnCode() const {
+					return this->return_code;
+				}
+				void SetReturnCode(const KSync::Commanding::ExecutionContext::Return_t in) {
+					this->return_code = in;
+				}
+			private:
+				std::string std_out;
+				std::string std_err;
+				KSync::Commanding::ExecutionContext::Return_t return_code;
 		};
 	}
 }
