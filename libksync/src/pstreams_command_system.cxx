@@ -22,11 +22,13 @@ namespace KSync {
 			if(std_out_status||std_err_status) {
 				return Success;
 			} else {
+				process_stream->close();
 				return NoMore;
 			}
 		}
 
 		bool PSExecutionContext::IsFinished() {
+			process_stream->out();
 			if(process_stream) {
 				return process_stream->rdbuf()->exited();
 			} else {
@@ -35,8 +37,9 @@ namespace KSync {
 		}
 
 		ExecutionContext::Return_t PSExecutionContext::GetReturnCode() {
+			process_stream->out();
 			if(this->IsFinished()) {
-				return process_stream->rdbuf()->status();
+				return process_stream->rdbuf()->status() >> 8;
 			} else {
 				return -1;
 			}
