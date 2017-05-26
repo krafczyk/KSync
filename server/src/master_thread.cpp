@@ -30,6 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ksync/comm_system_interface.h"
 #include "ksync/comm_system_factory.h"
 #include "ksync/comm_system_object.h"
+#include "ksync/command_system_interface.h"
+#include "ksync/pstreams_command_system.h"
 #include "ksync/gateway_thread.h"
 #include "ksync/pstream.h"
 
@@ -99,6 +101,9 @@ int main(int argc, char** argv) {
 			return -2;
 		}
 	}
+
+	//Initialize command system
+	std::shared_ptr<KSync::Commanding::SystemInterface> command_system(new KSync::Commanding::PSCommandSystem());
 
 	//Initialize Gateway Thread socket
 	std::shared_ptr<KSync::Comm::CommSystemSocket> gateway_thread_socket;
@@ -284,20 +289,16 @@ int main(int argc, char** argv) {
 					std::shared_ptr<KSync::Comm::ExecuteCommand> exec_com;
 					KSync::Comm::CommCreator(exec_com, recv_obj);
 					KPrint("Received command (%s)\n", exec_com->c_str());
-					redi::ipstream com_stream(exec_com->c_str());
-					std::vector<std::string> results;
-					std::string result;
-					while (std::getline(com_stream, result)) {
-						results.push_back(result);
-						result.clear();
-					}
-					std::string total_results;
-					for(auto results_it = results.begin(); results_it != results.end(); ++results_it) {
-						total_results += (*results_it)+"\n";
-					}
+
+					std::shared_ptr<KSync::Commanding::ExecutionContext> command_context = command_system->GetExecutionContext();
+					command_context->LaunchCommand(exec_com->c_str());
+					std::string std_out;
+					std::string std_err;
+					command_context->GetOutput(std_out, std_err);
+
 					KSync::Comm::CommandOutput com_out;
-					com_out.SetStdout(total_results);
-					com_out.SetStderr("test err");
+					com_out.SetStdout(std_out);
+					com_out.SetStderr(std_err);
 
 					std::shared_ptr<KSync::Comm::CommObject> test_resp = com_out.GetCommObject();
 					status = client_socket->Send(test_resp);

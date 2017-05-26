@@ -14,7 +14,7 @@ namespace KSync {
 				Return_t GetReturnCode();
 				std::string GetCommandLaunched();
 			protected:
-				std::shared_ptr<redi::ipstream> process_stream;
+				std::shared_ptr<redi::pstream> process_stream;
 		};
 
 		class PSCommandSystem : public SystemInterface {
