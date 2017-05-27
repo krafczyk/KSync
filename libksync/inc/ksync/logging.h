@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "g3log/logworker.hpp"
 
 namespace KSync {
-	void InitializeLogger(std::unique_ptr<g3::LogWorker>& logworker, std::string& logfile_name,  const bool echo_to_std, const std::string& log_prefix, const std::string& log_file_dir);
+	void InitializeLogger(std::unique_ptr<g3::LogWorker>& logworker, const bool echo_to_std, const std::string& log_prefix, const std::string& log_file_dir);
 }
 
 const LEVELS MESSAGE { (INFO.value+DEBUG.value)/2, {""}};

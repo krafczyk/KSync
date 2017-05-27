@@ -61,9 +61,8 @@ int main(int argc, char** argv) {
 	}
 
 	//Initialize logging:
-	std::string log_filename;
 	std::unique_ptr<g3::LogWorker> logworker;
-	KSync::InitializeLogger(logworker, log_filename, true, "KSync Client", log_dir);
+	KSync::InitializeLogger(logworker, true, "KSync Client", log_dir);
 
 	//Get Default gateway socket url
 	if (!gateway_socket_url_defined) {

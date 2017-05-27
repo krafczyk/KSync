@@ -66,13 +66,12 @@ namespace KSync {
 		this->fileWrite(message);
 	}
 
-	void InitializeLogger(std::unique_ptr<g3::LogWorker>& logworker, std::string& logfile_name,  const bool echo_to_std, const std::string& log_prefix, const std::string& log_file_dir) {
+	void InitializeLogger(std::unique_ptr<g3::LogWorker>& logworker, const bool echo_to_std, const std::string& log_prefix, const std::string& log_file_dir) {
 		logworker = g3::LogWorker::createLogWorker();
 		//auto handle = logworker->addDefaultLogger(log_prefix, log_file_dir);
 		auto handle = logworker->addSink(std2::make_unique<KSyncSink>(echo_to_std, log_prefix, log_file_dir), &KSyncSink::ReceiveMessage);
 		g3::initializeLogging(logworker.get());
 		std::future<std::string> log_file_name = handle->call(&KSyncSink::fileName);
-		logfile_name = log_file_name.get();
-		fprintf(stdout, "Now printing to log file (%s)\n", log_file_name.get().c_str());
+		printf("Now printing to log file (%s)\n", log_file_name.get().c_str());
 	}
 }
