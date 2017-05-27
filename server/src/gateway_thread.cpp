@@ -7,7 +7,7 @@ namespace KSync {
 	namespace Server {
 		void gateway_thread(std::shared_ptr<KSync::Comm::CommSystemInterface> comm_system, const std::string& gateway_thread_socket_url, const std::string& gateway_socket_url) {
 			if(comm_system == nullptr) {
-				Error("The Gateway thread was given a null comm_system!!\n");
+				KError("The Gateway thread was given a null comm_system!!\n");
 				return;
 			}
 
@@ -74,7 +74,7 @@ namespace KSync {
 				std::shared_ptr<KSync::Comm::CommObject> recv_obj;
 				status = gateway_socket->Recv(recv_obj);
 				if(status == KSync::Comm::CommSystemSocket::Other) {
-					Error("There was a problem receiving connection requests!\n");
+					KError("There was a problem receiving connection requests!\n");
 					return;
 				} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
 				} else if (status == KSync::Comm::CommSystemSocket::EmptyMessage) {
@@ -83,24 +83,24 @@ namespace KSync {
 						KPrint("Received init request, Passing on..\n");
 						status = gateway_thread_socket->Send(recv_obj);
 						if(status == KSync::Comm::CommSystemSocket::Other) {
-							Error("There was a problem passing on the init request!\n");
+							KError("There was a problem passing on the init request!\n");
 							return;
 						} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
-							Error("Sending timed out!!!\n");
+							KError("Sending timed out!!!\n");
 							return;
 						} else {
 							std::shared_ptr<KSync::Comm::CommObject> resp_obj;
 							status = gateway_thread_socket->ForceRecv(resp_obj);
 							if (status == KSync::Comm::CommSystemSocket::Other) {
-								Error("There was a problem getting the response!!\n");
+								KError("There was a problem getting the response!!\n");
 								return;
 							} else {
 								status = gateway_socket->Send(resp_obj);
 								if (status == KSync::Comm::CommSystemSocket::Other) {
-									Error("There was a problem passing on the response!\n");
+									KError("There was a problem passing on the response!\n");
 									return;
 								} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
-									Error("There was a timeout when sending on the response!\n");
+									KError("There was a timeout when sending on the response!\n");
 									return;
 								}
 							}
@@ -112,14 +112,14 @@ namespace KSync {
 						std::shared_ptr<KSync::Comm::CommObject> send_obj = message->GetCommObject();
 						status = gateway_socket->Send(send_obj); 
 						if(status == KSync::Comm::CommSystemSocket::Other) {
-							Error("There was a problem sending a message!!\n");
+							KError("There was a problem sending a message!!\n");
 							return;
 						} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
-							Warning("Sending message timedout!\n");
+							KWarning("Sending message timedout!\n");
 							return;
 						}
 					} else {
-						Warning("Message unsupported! (%i) (%s)\n", recv_obj->GetType(), KSync::Comm::GetTypeName(recv_obj->GetType()));
+						KWarning("Message unsupported! (%i) (%s)\n", recv_obj->GetType(), KSync::Comm::GetTypeName(recv_obj->GetType()));
 					}
 				}
 
@@ -127,7 +127,7 @@ namespace KSync {
 				std::shared_ptr<KSync::Comm::CommObject> master_obj;
 				status = gateway_thread_socket->Recv(master_obj);
 				if(status == KSync::Comm::CommSystemSocket::Other) {
-					Error("There was a problem checking the master thread!\n");
+					KError("There was a problem checking the master thread!\n");
 				} else if ((status == KSync::Comm::CommSystemSocket::Timeout)||(status == KSync::Comm::CommSystemSocket::EmptyMessage)) {
 				} else {
 					if (master_obj->GetType() == KSync::Comm::ServerShuttingDown::Type) {

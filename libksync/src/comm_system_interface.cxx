@@ -16,7 +16,7 @@ namespace KSync {
 			if(this->bind) {
 				if(this->url.substr(0,6) == "ipc://") {
 					if(remove(this->url.substr(6).c_str()) < 0) {
-						Error("There was a problem deleting the IPC file\n");
+						KError("There was a problem deleting the IPC file\n");
 					}
 				}
 			}

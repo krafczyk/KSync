@@ -18,7 +18,7 @@ namespace KSync {
 
 		int NanomsgCommSystemSocket::BindImp(const std::string& address) {
 			if(nn_bind(this->socket, address.c_str()) < 0) {
-				Error("There was a problem binding to the address (%s)\n", address.c_str());
+				KError("There was a problem binding to the address (%s)\n", address.c_str());
 				return -1;
 			}
 			return 0;
@@ -26,7 +26,7 @@ namespace KSync {
 
 		int NanomsgCommSystemSocket::ConnectImp(const std::string& address) {
 			if(nn_connect(this->socket, address.c_str()) < 0) {
-				Error("There was a problem connecting to the address (%s)\n", address.c_str());
+				KError("There was a problem connecting to the address (%s)\n", address.c_str());
 				return -1;
 			}
 			return 0;
@@ -34,7 +34,7 @@ namespace KSync {
 
 		int NanomsgCommSystemSocket::Send(const std::shared_ptr<CommObject> comm_obj) {
 			if (this->socket < 0) {
-				Error("Can't send to a socket which isn't ready!\n");
+				KError("Can't send to a socket which isn't ready!\n");
 				return Other;
 			}
 			int sent_bytes = nn_send(this->socket, (const void*) comm_obj->GetDataPointer(), (int) comm_obj->GetDataSize(), 0);
@@ -44,11 +44,11 @@ namespace KSync {
 					if(err == ETIMEDOUT) {
 						return Timeout;
 					} else {
-						Error("Problem sending data!! %i (%s)\n", err, nn_strerror(err));
+						KError("Problem sending data!! %i (%s)\n", err, nn_strerror(err));
 						return Other;
 					}
 				} else {
-					Error("Wrong number of bytes sent!\n");
+					KError("Wrong number of bytes sent!\n");
 					return Other;
 				}
 			}
@@ -57,11 +57,11 @@ namespace KSync {
 
 		int NanomsgCommSystemSocket::Recv(std::shared_ptr<CommObject>& comm_obj) {
 			if (comm_obj) {
-				Error("Please pass a null pointer\n");
+				KError("Please pass a null pointer\n");
 				return Other;
 			}
 			if (this->socket < 0) {
-				Error("Can't receive from a socket which isn't ready!\n");
+				KError("Can't receive from a socket which isn't ready!\n");
 				return Other;
 			}
 			char* buf = 0;
@@ -69,7 +69,7 @@ namespace KSync {
 			if(bytes < 0) {
 				if(buf != 0) {
 					if(nn_freemsg(buf) != 0) {
-						Error("Problem freeing message!\n");
+						KError("Problem freeing message!\n");
 						return Other;
 					}
 				}
@@ -77,7 +77,7 @@ namespace KSync {
 				if(err == ETIMEDOUT) {
 					return Timeout;
 				} else {
-					Error("Problem receiving data!! %i (%s)\n", err, nn_strerror(err));
+					KError("Problem receiving data!! %i (%s)\n", err, nn_strerror(err));
 					return Other;
 				}
 			}
@@ -86,7 +86,7 @@ namespace KSync {
 			}
 			comm_obj.reset(new CommObject(buf, bytes, true));
 			if(nn_freemsg(buf) != 0) {
-				Error("Problem freeing message!\n");
+				KError("Problem freeing message!\n");
 				return Other;
 			}
 			return Success;
@@ -94,7 +94,7 @@ namespace KSync {
 
 		int NanomsgCommSystemSocket::SetSendTimeout(int timeout) {
 			if(nn_setsockopt(this->socket, NN_SOL_SOCKET, NN_SNDTIMEO, &timeout, sizeof(timeout)) != 0) {
-				Error("Failed to set the send timeout socket option!\n");
+				KError("Failed to set the send timeout socket option!\n");
 				return -1;
 			}
 			return 0;
@@ -102,7 +102,7 @@ namespace KSync {
 
 		int NanomsgCommSystemSocket::SetRecvTimeout(int timeout) {
 			if(nn_setsockopt(this->socket, NN_SOL_SOCKET, NN_RCVTIMEO, &timeout, sizeof(timeout)) != 0) {
-				Error("Failed to set the receive timeout socket option!\n");
+				KError("Failed to set the receive timeout socket option!\n");
 				return -1;
 			}
 			return 0;
@@ -120,7 +120,7 @@ namespace KSync {
 				nanomsg_socket->socket = nn_socket(AF_SP, NN_REQ);
 				if (nanomsg_socket->socket < 0) {
 					delete nanomsg_socket;
-					Error("There was a problem creating the NN_REQ socket!\n");
+					KError("There was a problem creating the NN_REQ socket!\n");
 					return -1;
 				}
 				socket.reset((CommSystemSocket*) nanomsg_socket);
@@ -135,7 +135,7 @@ namespace KSync {
 				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
 				nanomsg_socket->socket = nn_socket(AF_SP, NN_REP);
 				if (nanomsg_socket->socket < 0) {
-					Error("There was a problem creating the NN_REP socket!\n");
+					KError("There was a problem creating the NN_REP socket!\n");
 					return -1;
 				}
 				socket.reset((CommSystemSocket*) nanomsg_socket);
@@ -150,7 +150,7 @@ namespace KSync {
 				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
 				nanomsg_socket->socket = nn_socket(AF_SP, NN_PAIR);
 				if (nanomsg_socket->socket < 0) {
-					Error("There was a problem creating the NN_PAIR socket!\n");
+					KError("There was a problem creating the NN_PAIR socket!\n");
 					return -1;
 				}
 				socket.reset((CommSystemSocket*) nanomsg_socket);
@@ -165,7 +165,7 @@ namespace KSync {
 				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
 				nanomsg_socket->socket = nn_socket(AF_SP, NN_PUB);
 				if (nanomsg_socket->socket < 0) {
-					Error("There was a problem creating the NN_PUB socket!\n");
+					KError("There was a problem creating the NN_PUB socket!\n");
 					return -1;
 				}
 				socket.reset((CommSystemSocket*) nanomsg_socket);
@@ -180,11 +180,11 @@ namespace KSync {
 				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
 				nanomsg_socket->socket = nn_socket(AF_SP, NN_SUB);
 				if(nanomsg_socket->socket < 0) {
-					Error("There was a problem creating the NN_SUB socket!\n");
+					KError("There was a problem creating the NN_SUB socket!\n");
 					return -1;
 				}
 				if(nn_setsockopt(nanomsg_socket->socket, NN_SUB, NN_SUB_SUBSCRIBE, 0, 0) < 0) {
-					Error("There was a problem subscribing the subscriber socket!!\n");
+					KError("There was a problem subscribing the subscriber socket!!\n");
 					return -2;
 				}
 				socket.reset((CommSystemSocket*) nanomsg_socket);
@@ -195,7 +195,7 @@ namespace KSync {
 		}
 
 		int GetNanomsgCommSystem(std::shared_ptr<CommSystemInterface>& comm_interface __attribute__((unused))) {
-			Message("Starting Nanomsg Communication Backend\n");
+			KMessage("Starting Nanomsg Communication Backend\n");
 			comm_interface.reset(new NanomsgCommSystem());
 			return 0;
 		}

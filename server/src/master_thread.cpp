@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
 
 	int status;
 	if((status = arg_parser.ParseArgs(argc, argv)) < 0) {
-		Error("Problem parsing arguments\n");
+		KError("Problem parsing arguments\n");
 		arg_parser.PrintHelp();
 		return -1;
 	}
@@ -76,12 +76,12 @@ int main(int argc, char** argv) {
 	//Get gateway URL
 	if (!gateway_socket_url_defined) {
 		if(KSync::Utilities::get_default_ipc_connection_url(gateway_socket_url) < 0) {
-			Error("There was a problem getitng the default IPC connection URL.\n");
+			KError("There was a problem getitng the default IPC connection URL.\n");
 			return -2;
 		}
 	} else {
 		if(gateway_socket_url.substr(0, 3) != "icp") {
-			Error("Non icp sockets are not properly implemented at this time.\n");
+			KError("Non icp sockets are not properly implemented at this time.\n");
 			return -2;
 		}
 	}
@@ -153,10 +153,10 @@ int main(int argc, char** argv) {
 	std::shared_ptr<KSync::Comm::CommObject> herald_obj;
 	status = gateway_thread_socket->Recv(herald_obj);
 	if(status == KSync::Comm::CommSystemSocket::Other) {
-		Error("Didn't receive connect herald!\n");
+		KError("Didn't receive connect herald!\n");
 		return -6;
 	} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
-		Error("Herald retreive timed out!!!\n");
+		KError("Herald retreive timed out!!!\n");
 		return -7;
 	} else {
 		if(herald_obj->GetType() == KSync::Comm::SocketConnectHerald::Type) {
@@ -164,14 +164,14 @@ int main(int argc, char** argv) {
 			std::shared_ptr<KSync::Comm::CommObject> ack_obj = ack.GetCommObject();
 			status = gateway_thread_socket->Send(ack_obj);
 			if(status == KSync::Comm::CommSystemSocket::Other) {
-				Error("Couldn't send Acknowledgement!\n");
+				KError("Couldn't send Acknowledgement!\n");
 				return -7;
 			} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
-				Error("Retreival of Ack timed out!!\n");
+				KError("Retreival of Ack timed out!!\n");
 				return -8;
 			}
 		} else {
-			Error("Didn't get a herald type (%i)!!\n", herald_obj->GetType());
+			KError("Didn't get a herald type (%i)!!\n", herald_obj->GetType());
 			return -8;
 		}
 	}
@@ -183,7 +183,7 @@ int main(int argc, char** argv) {
 		std::shared_ptr<KSync::Comm::CommObject> recv_obj;
 		status = gateway_thread_socket->Recv(recv_obj);
 		if(status == KSync::Comm::CommSystemSocket::Other) {
-			Error("There was a problem checking the gateway thread socket!\n");
+			KError("There was a problem checking the gateway thread socket!\n");
 			return -9;
 		} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
 		} else if (status == KSync::Comm::CommSystemSocket::EmptyMessage) {
@@ -199,23 +199,23 @@ int main(int argc, char** argv) {
 					//Don't have a client with that ID yet! Handle creation of new socket
 					std::string new_socket_url;
 					if(KSync::Utilities::get_client_socket_url(new_socket_url, request->GetClientId()) < 0) {
-						Error("Error! Couldn't get the client socket url!\n");
+						KError("Error! Couldn't get the client socket url!\n");
 						return -10;
 					}
 
 					std::shared_ptr<KSync::Comm::CommSystemSocket> client_socket;
 					if (comm_system->Create_Pair_Socket(client_socket) < 0) {
-						Error("There was a problem creating the gateway thread socket!\n");
+						KError("There was a problem creating the gateway thread socket!\n");
 						return -10;
 					}
 
 					if (client_socket->SetRecvTimeout(1000) < 0) {
-						Error("There was a problem setting the recv timeout!\n");
+						KError("There was a problem setting the recv timeout!\n");
 						return -10;
 					}
 
 					if(client_socket->Bind(new_socket_url) < 0) {
-						Error("There was a problem binding the gateway thread socket!\n");
+						KError("There was a problem binding the gateway thread socket!\n");
 						return -10;
 					}
 
@@ -228,28 +228,28 @@ int main(int argc, char** argv) {
 					KPrint("Sending new client socket address!\n");
 					status = gateway_thread_socket->Send(socket_message_obj);
 					if(status == KSync::Comm::CommSystemSocket::Other) {
-						Error("Couldn't send response!\n");
+						KError("Couldn't send response!\n");
 						return -11;
 					} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
-						Error("Sending response timed out!!\n");
+						KError("Sending response timed out!!\n");
 						return -12;
 					}
 				} else {
 					//We have a client with that ID!
-					Warning("We already have a client with ID (%lu)!\n", request->GetClientId());
+					KWarning("We already have a client with ID (%lu)!\n", request->GetClientId());
 					KSync::Comm::GatewaySocketInitializationChangeId response;
 					std::shared_ptr<KSync::Comm::CommObject> resp_obj = response.GetCommObject();
 					status = gateway_thread_socket->Send(resp_obj);
 					if(status == KSync::Comm::CommSystemSocket::Other) {
-						Error("There was a problem sending a response to the gateway thread socket!\n");
+						KError("There was a problem sending a response to the gateway thread socket!\n");
 						return -11;
 					} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
-						Error("Sending response timedout!!\n");
+						KError("Sending response timedout!!\n");
 						return -12;
 					}
 				}
 			} else {
-				Error("Unsupported message from gateway thread! (%i) (%s)\n", recv_obj->GetType(), KSync::Comm::GetTypeName(recv_obj->GetType()));
+				KError("Unsupported message from gateway thread! (%i) (%s)\n", recv_obj->GetType(), KSync::Comm::GetTypeName(recv_obj->GetType()));
 				return -11;
 			}
 		}
@@ -261,7 +261,7 @@ int main(int argc, char** argv) {
 			std::shared_ptr<KSync::Comm::CommSystemSocket> client_socket = client_socket_it->second;
 			status = client_socket->Recv(recv_obj);
 			if(status == KSync::Comm::CommSystemSocket::Other) {
-				Error("There was a problem receiving a message from a client socket!\n");
+				KError("There was a problem receiving a message from a client socket!\n");
 			} else if ((status == KSync::Comm::CommSystemSocket::Timeout)||(status == KSync::Comm::CommSystemSocket::EmptyMessage)) {
 			} else {
 				if(recv_obj->GetType() == KSync::Comm::CommString::Type) {
@@ -271,9 +271,9 @@ int main(int argc, char** argv) {
 					std::shared_ptr<KSync::Comm::CommObject> send_obj = message->GetCommObject();
 					status = client_socket->Send(send_obj);
 					if(status == KSync::Comm::CommSystemSocket::Other) {
-						Error("There was a problem sending a message on a client socket!\n");
+						KError("There was a problem sending a message on a client socket!\n");
 					} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
-						Warning("Sending a message on a client socket timed out!\n");
+						KWarning("Sending a message on a client socket timed out!\n");
 					}
 				} else if (recv_obj->GetType() == KSync::Comm::ShutdownRequest::Type) {
 					finished = true;
@@ -281,9 +281,9 @@ int main(int argc, char** argv) {
 					std::shared_ptr<KSync::Comm::CommObject> shutdown_obj = shutdown_ack.GetCommObject();
 					status = client_socket->Send(shutdown_obj);
 					if(status == KSync::Comm::CommSystemSocket::Other) {
-						Error("There was a problem sending the shutdown ack\n");
+						KError("There was a problem sending the shutdown ack\n");
 					} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
-						Error("There was a timeout sending the shutdown ack\n");
+						KError("There was a timeout sending the shutdown ack\n");
 					}
 				} else if (recv_obj->GetType() == KSync::Comm::ExecuteCommand::Type) {
 					std::shared_ptr<KSync::Comm::ExecuteCommand> exec_com;
@@ -304,7 +304,7 @@ int main(int argc, char** argv) {
 					std::shared_ptr<KSync::Comm::CommObject> test_resp = com_out.GetCommObject();
 					status = client_socket->Send(test_resp);
 					if(status != KSync::Comm::CommSystemSocket::Success) {
-						Error("There was a problem sending the test reponse!\n");
+						KError("There was a problem sending the test reponse!\n");
 					}
 				}
 			}
@@ -317,18 +317,18 @@ int main(int argc, char** argv) {
 	std::shared_ptr<KSync::Comm::CommObject> shutdown_obj = shutdown_message.GetCommObject();
 	status = broadcast_socket->Send(shutdown_obj);
 	if(status == KSync::Comm::CommSystemSocket::Other) {
-		Error("There was a problem sending the shutdown message!\n");
+		KError("There was a problem sending the shutdown message!\n");
 	} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
-		Error("There was a timeout sending the shutdown message!\n");
+		KError("There was a timeout sending the shutdown message!\n");
 	} else {
 		KPrint("Shutdown sent!\n");
 	}
 	// Shutdown gateway thread
 	status = gateway_thread_socket->Send(shutdown_obj);
 	if(status == KSync::Comm::CommSystemSocket::Other) {
-		Error("There was a problem closing down the gateway thread!\n");
+		KError("There was a problem closing down the gateway thread!\n");
 	} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
-		Error("There was a timeout closing down the gateway thread!\n");
+		KError("There was a timeout closing down the gateway thread!\n");
 	}
 	//Join gateway thread
 	gateway.join();

@@ -21,7 +21,7 @@ namespace KSync {
 		int get_socket_dir(std::string& dir) {
 			char* login_name = getlogin();
 			if(login_name == 0) {
-				Error("Couldn't get the username!\n");
+				KError("Couldn't get the username!\n");
 				return -1;
 			}
 
@@ -30,13 +30,13 @@ namespace KSync {
 
 			if(access(ss.str().c_str(), F_OK) != 0) {
 				if(errno != 2) {
-					Error("An error was encountered while checking for the existence of the user temporary directory!\n");
+					KError("An error was encountered while checking for the existence of the user temporary directory!\n");
 					return -2;
 				}
 				//Directory doesn't exist, we better create it
 				
 				if(mkdir(ss.str().c_str(), 0700) != 0) {
-					Error("An error was encountered while creating the user temporary directory!\n");
+					KError("An error was encountered while creating the user temporary directory!\n");
 					return -3;
 				}
 			}
@@ -46,13 +46,13 @@ namespace KSync {
 			
 			if(access(ss.str().c_str(), F_OK) != 0) {
 				if(errno != 2) {
-					Error("An error was encountered while checking for the existence of the ksync directory!\n");
+					KError("An error was encountered while checking for the existence of the ksync directory!\n");
 					return -2;
 				}
 				//Directory doesn't exist, we better create it
 				
 				if(mkdir(ss.str().c_str(), 0700) != 0) {
-					Error("An error was encountered while creating the ksync directory (%s)!\n", ss.str().c_str());
+					KError("An error was encountered while creating the ksync directory (%s)!\n", ss.str().c_str());
 					return -3;
 				}
 			}
@@ -64,7 +64,7 @@ namespace KSync {
 		int get_default_ipc_connection_url(std::string& connection_url) {
 			std::string socket_dir;
 			if(KSync::Utilities::get_socket_dir(socket_dir) < 0) {
-				Error("There was a problem getting the default socket directory!\n");
+				KError("There was a problem getting the default socket directory!\n");
 				return -2;
 			}
 			std::stringstream ss;
@@ -83,7 +83,7 @@ namespace KSync {
 		int get_default_broadcast_url(std::string& url) {
 			std::string socket_dir;
 			if(KSync::Utilities::get_socket_dir(socket_dir) < 0) {
-				Error("There was a problem getting the default socket directory!\n");
+				KError("There was a problem getting the default socket directory!\n");
 				return -2;
 			}
 			std::stringstream ss;
@@ -104,7 +104,7 @@ namespace KSync {
 		int get_client_socket_url(std::string& socket_url, const client_id_t client_id) {
 			std::string socket_dir;
 			if(KSync::Utilities::get_socket_dir(socket_dir) < 0 ) {
-				Error("There was a problem getting the default socket directory!\n");
+				KError("There was a problem getting the default socket directory!\n");
 				return -2;
 			}
 			std::stringstream ss;
