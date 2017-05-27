@@ -41,10 +41,10 @@ namespace KSync {
 			if(status == -1) {
 				int err = zmq_errno();
 				if(err == EAGAIN) {
-					KWarning("Send timed out!!\n");
+					LOGF(WARNING, "Send timed out!!\n");
 					return Timeout;
 				} else {
-					KError("Problem sending data!! %i (%s)\n", err, zmq_strerror(err));
+					LOGF(WARNING, "Problem sending data!! %i (%s)\n", err, zmq_strerror(err));
 					return Other;
 				}
 			}
@@ -64,10 +64,10 @@ namespace KSync {
 			if(status == -1) {
 				int err = zmq_errno();
 				if(err == EAGAIN) {
-					KWarning("Recv timed out!!\n");
+					LOGF(WARNING, "Recv timed out!!\n");
 					return Timeout;
 				} else {
-					KError("Problem receiving data!! %i (%s)\n", err, zmq_strerror(err));
+					LOGF(WARNING, "Problem receiving data!! %i (%s)\n", err, zmq_strerror(err));
 					return Other;
 				}
 			}
@@ -153,7 +153,7 @@ namespace KSync {
 		}
 
 		int GetZeromqCommSystem(std::shared_ptr<CommSystemInterface>& comm_interface __attribute__((unused))) {
-			KMessage("Starting ZeroMQ Communication Backend\n");
+			LOGF(MESSAGE, "Starting ZeroMQ Communication Backend\n");
 			comm_interface.reset(new ZeroMQCommSystem());
 			return 0;
 		}

@@ -10,18 +10,37 @@
 
 namespace KSync {
 	namespace Utilities {
-		void set_up_common_arguments_and_defaults(ArgParse::ArgParser& Parser, std::string& gateway_socket_url, bool& gateway_socket_url_defined, bool& nanomsg) {
+		void set_up_common_arguments_and_defaults(ArgParse::ArgParser& Parser, std::string& log_dir, std::string& gateway_socket_url, bool& gateway_socket_url_defined, bool& nanomsg) {
+			log_dir = "";
 			gateway_socket_url = "";
 			gateway_socket_url_defined = false;
 			nanomsg = false;
 
+			Parser.AddArgument("--log-dir", "Use this directory for logging.", &log_dir);
 			Parser.AddArgument("--nanomsg", "Use nanomsg comm backend. Deafult is zeromq", &nanomsg);
 			Parser.AddArgument("gateway-socket", "Socket to use to negotiate new client connections. Default is : ipc:///tmp/ksync/<user>/ksync-connect.ipc", &gateway_socket_url, ArgParse::Argument::Optional, &gateway_socket_url_defined);
+		}
+		int get_user_ksync_dir(std::string& dir) {
+			char* login_name = getlogin();
+			if(login_name == 0) {
+				LOGF(SEVERE, "Couldn't get the username!\n");
+				return -1;
+			}
+			std::stringstream ss;
+			ss << "/home/" << login_name << "/.ksync";
+			dir = ss.str();
+			if(access(dir.c_str(), F_OK) != 0) {
+				if(mkdir(dir.c_str(), 0700) != 0) {
+					LOGF(SEVERE, "There was a problem creating the ksync user directory!\n");
+					return -2;
+				}
+			}
+			return 0;
 		}
 		int get_socket_dir(std::string& dir) {
 			char* login_name = getlogin();
 			if(login_name == 0) {
-				KError("Couldn't get the username!\n");
+				LOGF(SEVERE, "Couldn't get the username!\n");
 				return -1;
 			}
 
@@ -30,13 +49,13 @@ namespace KSync {
 
 			if(access(ss.str().c_str(), F_OK) != 0) {
 				if(errno != 2) {
-					KError("An error was encountered while checking for the existence of the user temporary directory!\n");
+					LOGF(SEVERE, "An error was encountered while checking for the existence of the user temporary directory!\n");
 					return -2;
 				}
 				//Directory doesn't exist, we better create it
 				
 				if(mkdir(ss.str().c_str(), 0700) != 0) {
-					KError("An error was encountered while creating the user temporary directory!\n");
+					LOGF(SEVERE, "An error was encountered while creating the user temporary directory!\n");
 					return -3;
 				}
 			}
@@ -46,13 +65,13 @@ namespace KSync {
 			
 			if(access(ss.str().c_str(), F_OK) != 0) {
 				if(errno != 2) {
-					KError("An error was encountered while checking for the existence of the ksync directory!\n");
+					LOGF(SEVERE, "An error was encountered while checking for the existence of the ksync directory!\n");
 					return -2;
 				}
 				//Directory doesn't exist, we better create it
 				
 				if(mkdir(ss.str().c_str(), 0700) != 0) {
-					KError("An error was encountered while creating the ksync directory (%s)!\n", ss.str().c_str());
+					LOGF(SEVERE, "An error was encountered while creating the ksync directory (%s)!\n", ss.str().c_str());
 					return -3;
 				}
 			}
@@ -64,7 +83,7 @@ namespace KSync {
 		int get_default_ipc_connection_url(std::string& connection_url) {
 			std::string socket_dir;
 			if(KSync::Utilities::get_socket_dir(socket_dir) < 0) {
-				KError("There was a problem getting the default socket directory!\n");
+				LOGF(SEVERE, "There was a problem getting the default socket directory!\n");
 				return -2;
 			}
 			std::stringstream ss;
@@ -83,7 +102,7 @@ namespace KSync {
 		int get_default_broadcast_url(std::string& url) {
 			std::string socket_dir;
 			if(KSync::Utilities::get_socket_dir(socket_dir) < 0) {
-				KError("There was a problem getting the default socket directory!\n");
+				LOGF(SEVERE, "There was a problem getting the default socket directory!\n");
 				return -2;
 			}
 			std::stringstream ss;
@@ -104,7 +123,7 @@ namespace KSync {
 		int get_client_socket_url(std::string& socket_url, const client_id_t client_id) {
 			std::string socket_dir;
 			if(KSync::Utilities::get_socket_dir(socket_dir) < 0 ) {
-				KError("There was a problem getting the default socket directory!\n");
+				LOGF(SEVERE, "There was a problem getting the default socket directory!\n");
 				return -2;
 			}
 			std::stringstream ss;

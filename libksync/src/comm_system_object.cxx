@@ -26,11 +26,11 @@ namespace KSync {
 		CommObject::CommObject(const char* data, const size_t size, const bool pre_packed, const Type_t type) {
 			if(data == 0) {
 				if (size != 0) {
-					KError("Can't use size != 0 with a null data pointer!!\n");
+					LOGF(SEVERE, "Can't use size != 0 with a null data pointer!!\n");
 					throw CommObjectConstructorException();
 				}
 				if (pre_packed) {
-					KError("Can't say an object is pre-packed if using a null data input\n");
+					LOGF(SEVERE, "Can't say an object is pre-packed if using a null data input\n");
 					throw CommObjectConstructorException();
 				}
 				this->type = type;

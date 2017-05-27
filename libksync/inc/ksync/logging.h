@@ -19,30 +19,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef KSYNC_LOGGING_HDR
 #define KSYNC_LOGGING_HDR
 
-#include <cstring>
+#include <string>
+#include <memory>
 
-#define TNRM  "\x1B[0m"
-#define TRED  "\x1B[31m"
-#define TGRN  "\x1B[32m"
-#define TYEL  "\x1B[33m"
-#define TBLU  "\x1B[34m"
-#define TMAG  "\x1B[35m"
-#define TCYN  "\x1B[36m"
-#define TWHT  "\x1B[37m"
-
-#define TMSG TGRN
-#define TERR TRED
-#define TWRN TYEL
-#define TDBG TBLU
+#include "g3log/g3log.hpp"
+#include "g3log/logworker.hpp"
 
 namespace KSync {
-	void Print(const char* format, ...);
+	void InitializeLogger(std::unique_ptr<g3::LogWorker>& logworker, const bool echo_to_std, const std::string& log_prefix, const std::string& log_file_dir);
 }
 
-#define KPrint(format, ...) KSync::Print(format, ##__VA_ARGS__)
-#define KMessage(format, ...) KSync::Print("%s%s-M (%s:%i)%s: " format , TMSG, __PRETTY_FUNCTION__, basename(__FILE__), __LINE__, TNRM, ##__VA_ARGS__)
-#define KWarning(format, ...) KSync::Print("%s%s-W (%s:%i)%s: " format , TWRN, __PRETTY_FUNCTION__, basename(__FILE__), __LINE__, TNRM, ##__VA_ARGS__)
-#define KDebug(format, ...) KSync::Print("%s%s-D (%s:%i)%s: " format , TDBG, __PRETTY_FUNCTION__, basename(__FILE__), __LINE__, TNRM, ##__VA_ARGS__)
-#define KError(format, ...) KSync::Print("%s%s-E (%s:%i)%s: " format , TERR, __PRETTY_FUNCTION__, basename(__FILE__), __LINE__, TNRM, ##__VA_ARGS__)
+const LEVELS MESSAGE { (INFO.value+DEBUG.value)/2, {""}};
+const LEVELS SEVERE { (FATAL.value-1), {"SEVERE"}};
 
 #endif

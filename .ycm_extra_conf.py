@@ -46,6 +46,7 @@ def get_package_spack_installed_directory(package_name):
 flags = [
 '-Wall',
 '-Wextra',
+'-Wno-format-nonliteral',
 # THIS IS IMPORTANT! Without a "-std=<something>" flag, clang won't know which
 # language to use when compiling headers. So it will guess. Badly. So C++
 # headers will be compiled as C headers. You don't want that so ALWAYS specify
@@ -73,6 +74,10 @@ flags = [
 (get_package_spack_installed_directory('nanomsg') + '/include'),
 '-I',
 (get_package_spack_installed_directory('zeromq') + '/include'),
+'-I',
+(get_package_spack_installed_directory('ncurses') + '/include'),
+'-I',
+(get_package_spack_installed_directory('g3log') + '/include'),
 ]
 
 # Set this to the absolute path to the folder (NOT the file!) containing the

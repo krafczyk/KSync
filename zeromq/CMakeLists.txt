@@ -14,7 +14,12 @@
 #You should have received a copy of the GNU General Public License
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+find_package(G3LOG REQUIRED)
+find_package(PkgConfig)
+pkg_search_module(libzmq REQUIRED libzmq)
+
 include_directories(${libksync_INCLUDE_DIR})
+include_directories(${G3LOG_INCLUDE_DIRS})
 include_directories(${zeromq_module_INCLUDE_DIR})
 include_directories(${libzmq_INCLUDEDIR})
 

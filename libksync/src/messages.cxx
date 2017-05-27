@@ -68,7 +68,7 @@ namespace KSync {
 			} else if (type == ServerShuttingDown::Type) {
 				return "ServerShuttingDown";
 			} else {
-				KError("Here (%i)\n", type);
+				LOGF(SEVERE, "Here (%i)\n", type);
 				throw TypeException(type);
 			}
 		}
@@ -81,7 +81,7 @@ namespace KSync {
 
 		void CheckTypeCompatibility(const Type_t typea, const Type_t typeb) {
 			if(typea != typeb) {
-				KError("Typea: %lu Typeb: %lu\n", typea, typeb);
+				LOGF(SEVERE, "Typea: %u Typeb: %u\n", typea, typeb);
 				throw TypeException(typea);
 			}
 		}

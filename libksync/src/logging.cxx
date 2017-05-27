@@ -16,16 +16,62 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <cstdio>
-#include <cstdarg>
+#include <future>
 
 #include "ksync/logging.h"
 
 namespace KSync {
-	void Print(const char* format, ...) {
-		va_list argptr;
-		va_start(argptr, format);
-		vprintf(format, argptr);
-		va_end(argptr);
+	class KSyncSink : public g3::FileSink {
+		public:
+			enum FG_Color {
+				RED = 31,
+				GRN = 32,
+				YEL = 33,
+				BLU = 34,
+				MAG = 35,
+				CYN = 36,
+				WHT = 37,
+				BLK = 0,
+			};
+
+			FG_Color GetColor(const LEVELS level) const {
+				if (level.value == MESSAGE.value) {
+					return GRN;
+				} else if (level.value == INFO.value) {
+					return BLK;
+				} else if (level.value == WARNING.value) {
+					return YEL;
+				} else if (level.value == DEBUG.value) {
+					return BLU;
+				} else if (level.value == SEVERE.value) {
+					return RED;
+				} else if (level.value == FATAL.value) {
+					return MAG;
+				} else {
+					return WHT;
+				}
+			}
+
+			KSyncSink(const bool echo_to_std, const std::string& log_prefix, const std::string& log_directory, const std::string& logger_id="ksync") : FileSink(log_prefix, log_directory, logger_id) { this->echo_to_std = echo_to_std;};
+			virtual ~KSyncSink() {};
+			void ReceiveMessage(g3::LogMessageMover message);
+		private:
+			bool echo_to_std;
+	};
+
+	void KSyncSink::ReceiveMessage(g3::LogMessageMover message) {
+		if(echo_to_std) {
+			fprintf(stdout, "\x1B[%im%s\x1B[0m", GetColor(message.get()._level), message.get().toString().c_str());
+		}
+		this->fileWrite(message);
+	}
+
+	void InitializeLogger(std::unique_ptr<g3::LogWorker>& logworker, const bool echo_to_std, const std::string& log_prefix, const std::string& log_file_dir) {
+		logworker = g3::LogWorker::createLogWorker();
+		//auto handle = logworker->addDefaultLogger(log_prefix, log_file_dir);
+		auto handle = logworker->addSink(std2::make_unique<KSyncSink>(echo_to_std, log_prefix, log_file_dir), &KSyncSink::ReceiveMessage);
+		g3::initializeLogging(logworker.get());
+		std::future<std::string> log_file_name = handle->call(&KSyncSink::fileName);
+		printf("Now printing to log file (%s)\n", log_file_name.get().c_str());
 	}
 }
