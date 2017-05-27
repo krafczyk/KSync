@@ -41,10 +41,10 @@ namespace KSync {
 			if(status == -1) {
 				int err = zmq_errno();
 				if(err == EAGAIN) {
-					LOGF(WARNING, "Send timed out!!\n");
+					LOGF(WARNING, "Send timed out!!");
 					return Timeout;
 				} else {
-					LOGF(WARNING, "Problem sending data!! %i (%s)\n", err, zmq_strerror(err));
+					LOGF(WARNING, "Problem sending data!! %i (%s)", err, zmq_strerror(err));
 					return Other;
 				}
 			}
@@ -53,7 +53,7 @@ namespace KSync {
 
 		int ZeroMQCommSystemSocket::Recv(std::shared_ptr<CommObject>& comm_obj) {
 			if (comm_obj) {
-				printf("Please pass an empty pointer\n");
+				printf("Please pass an empty pointer");
 				return Other;
 			}
 			if (socket == 0) {
@@ -64,10 +64,10 @@ namespace KSync {
 			if(status == -1) {
 				int err = zmq_errno();
 				if(err == EAGAIN) {
-					LOGF(WARNING, "Recv timed out!!\n");
+					LOGF(WARNING, "Recv timed out!!");
 					return Timeout;
 				} else {
-					LOGF(WARNING, "Problem receiving data!! %i (%s)\n", err, zmq_strerror(err));
+					LOGF(WARNING, "Problem receiving data!! %i (%s)", err, zmq_strerror(err));
 					return Other;
 				}
 			}
@@ -153,7 +153,7 @@ namespace KSync {
 		}
 
 		int GetZeromqCommSystem(std::shared_ptr<CommSystemInterface>& comm_interface __attribute__((unused))) {
-			LOGF(MESSAGE, "Starting ZeroMQ Communication Backend\n");
+			LOGF(MESSAGE, "Starting ZeroMQ Communication Backend");
 			comm_interface.reset(new ZeroMQCommSystem());
 			return 0;
 		}

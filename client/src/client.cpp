@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
 	KSync::Utilities::set_up_common_arguments_and_defaults(arg_parser, log_dir, gateway_socket_url, gateway_socket_url_defined, nanomsg);
 
 	if(arg_parser.ParseArgs(argc, argv) < 0) {
-		LOGF(SEVERE, "Problem parsing arguments\n");
+		LOGF(SEVERE, "Problem parsing arguments");
 		arg_parser.PrintHelp();
 		return -1;
 	}
@@ -67,28 +67,28 @@ int main(int argc, char** argv) {
 	//Get Default gateway socket url
 	if (!gateway_socket_url_defined) {
 		if(KSync::Utilities::get_default_ipc_connection_url(gateway_socket_url) < 0) {
-			LOGF(SEVERE, "There was a problem getitng the default IPC connection URL.\n");
+			LOGF(SEVERE, "There was a problem getitng the default IPC connection URL.");
 			return -2;
 		}
 	} else {
 		if(gateway_socket_url.substr(0, 3) != "icp") {
-			LOGF(SEVERE, "Non icp sockets are not properly implemented at this time.\n");
+			LOGF(SEVERE, "Non icp sockets are not properly implemented at this time.");
 			return -2;
 		}
 	}
 
-	LOGF(INFO, "Using the following socket url: %s\n", gateway_socket_url.c_str());
+	LOGF(INFO, "Using the following socket url: %s", gateway_socket_url.c_str());
 
 	//Initialize Comm System
 	std::shared_ptr<KSync::Comm::CommSystemInterface> comm_system;
 	if (!nanomsg) {
 		if (KSync::Comm::GetZeromqCommSystem(comm_system) < 0) {
-			LOGF(SEVERE, "There was a problem initializing the ZeroMQ communication system!\n");
+			LOGF(SEVERE, "There was a problem initializing the ZeroMQ communication system!");
 			return -2;
 		}
 	} else {
 		if (KSync::Comm::GetNanomsgCommSystem(comm_system) < 0) {
-			LOGF(SEVERE, "There was a problem initializing the Nanomsg communication system!\n");
+			LOGF(SEVERE, "There was a problem initializing the Nanomsg communication system!");
 			return -2;
 		}
 	}
@@ -96,17 +96,17 @@ int main(int argc, char** argv) {
 	//Connect to gateway socket
 	std::shared_ptr<KSync::Comm::CommSystemSocket> gateway_socket;
 	if (comm_system->Create_Gateway_Req_Socket(gateway_socket) < 0) {
-		LOGF(SEVERE, "There was a problem creating the gateway socket!\n");
+		LOGF(SEVERE, "There was a problem creating the gateway socket!");
 		return -3;
 	}
 
 	if(gateway_socket->SetRecvTimeout(20000) < 0) {
-		LOGF(SEVERE, "There was a problem setting the receive timeout!\n");
+		LOGF(SEVERE, "There was a problem setting the receive timeout!");
 		return -4;
 	}
 
 	if (gateway_socket->Connect(gateway_socket_url) < 0) {
-		LOGF(SEVERE, "There was a problem connecting to the gateway socket!\n");
+		LOGF(SEVERE, "There was a problem connecting to the gateway socket!");
 		return -4;
 	}
 
@@ -119,51 +119,51 @@ int main(int argc, char** argv) {
 		std::shared_ptr<KSync::Comm::CommObject> request_obj = request.GetCommObject();
 		status = gateway_socket->Send(request_obj);
 		if(status == KSync::Comm::CommSystemSocket::Other) {
-			LOGF(WARNING, "There was a problem sending the message!!\n");
+			LOGF(WARNING, "There was a problem sending the message!!");
 		} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
-			LOGF(WARNING, "Sending the message timed out!\n");
+			LOGF(WARNING, "Sending the message timed out!");
 		} else {
 			std::shared_ptr<KSync::Comm::CommObject> recv_obj;
 			status = gateway_socket->Recv(recv_obj);
 			if(status == KSync::Comm::CommSystemSocket::Other) {
-				LOGF(WARNING, "Problem receiving response\n");
+				LOGF(WARNING, "Problem receiving response");
 			} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
-				LOGF(WARNING, "Receiving response timed out!\n");
+				LOGF(WARNING, "Receiving response timed out!");
 			} else {
 				if(recv_obj->GetType() == KSync::Comm::ClientSocketCreation::Type) {
 					std::shared_ptr<KSync::Comm::ClientSocketCreation> creation_response;
 					KSync::Comm::CommCreator(creation_response, recv_obj);
 					//Start and connect to client socket
 					if(comm_system->Create_Pair_Socket(client_socket) < 0) {
-						LOGF(SEVERE, "There was a problem creating the pair socket!\n");
+						LOGF(SEVERE, "There was a problem creating the pair socket!");
 						return -1;
 					}
 					if(client_socket->SetRecvTimeout(1000) < 0) {
-						LOGF(SEVERE, "There was a problem setting the client socket timeout!\n");
+						LOGF(SEVERE, "There was a problem setting the client socket timeout!");
 						return -2;
 					}
 					if(client_socket->Connect(creation_response->GetClientUrl()) < 0) {
-						LOGF(SEVERE, "Couldn't connect to the new client socket address!!\n");
+						LOGF(SEVERE, "Couldn't connect to the new client socket address!!");
 						return -3;
 					}
 
 					//Start and connect to broadcast socket
 					if(comm_system->Create_Sub_Socket(broadcast_socket) < 0) {
-						LOGF(SEVERE, "There was a problem creating the broadcast socket!\n");
+						LOGF(SEVERE, "There was a problem creating the broadcast socket!");
 						return -4;
 					}
 					if(broadcast_socket->SetRecvTimeout(1000) < 0) {
-						LOGF(SEVERE, "Couldn't set the timeout of the broadcast socket!\n");
+						LOGF(SEVERE, "Couldn't set the timeout of the broadcast socket!");
 						return -5;
 					}
 					if(broadcast_socket->Connect(creation_response->GetBroadcastUrl()) < 0) {
-						LOGF(SEVERE, "There was a problem connecting to the broadcast socket!\n");
+						LOGF(SEVERE, "There was a problem connecting to the broadcast socket!");
 						return -5;
 					}
 				} else if(recv_obj->GetType() == KSync::Comm::GatewaySocketInitializationChangeId::Type) {
-					LOGF(WARNING, "Received a ChangeId Request!!\n");
+					LOGF(WARNING, "Received a ChangeId Request!!");
 				} else {
-					LOGF(WARNING, "Unrecognized Message!\n");
+					LOGF(WARNING, "Unrecognized Message!");
 				}
 			}
 		}
@@ -218,7 +218,7 @@ int main(int argc, char** argv) {
 			try {
 				fut_stat = io_future.wait_for(std::chrono::milliseconds(0));
 			} catch (std::future_error e) {
-				LOGF(SEVERE, "There was a futures error!!! (%s)\n", e.what());
+				LOGF(SEVERE, "There was a futures error!!! (%s)", e.what());
 				return -100;
 			}
 			if((fut_stat== std::future_status::ready)&&(!finished)) {
@@ -229,17 +229,17 @@ int main(int argc, char** argv) {
 					std::shared_ptr<KSync::Comm::CommObject> shutdown_obj = shutdown_req.GetCommObject();
 					status = client_socket->Send(shutdown_obj);
 					if(status == KSync::Comm::CommSystemSocket::Other) {
-						LOGF(WARNING, "There was an error sending the shutdown request!\n");
+						LOGF(WARNING, "There was an error sending the shutdown request!");
 					} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
-						LOGF(WARNING, "There was a timeout sending the shutdown request!\n");
+						LOGF(WARNING, "There was a timeout sending the shutdown request!");
 					} else {
 						std::shared_ptr<KSync::Comm::CommObject> rep_obj;
 						status = client_socket->ForceRecv(rep_obj);
 						if(status == KSync::Comm::CommSystemSocket::Other) {
-							LOGF(WARNING, "There was a problem getting a response to the shutdown request!\n");
+							LOGF(WARNING, "There was a problem getting a response to the shutdown request!");
 						} else {
 							if(rep_obj->GetType() != KSync::Comm::ShutdownAck::Type) {
-								LOGF(WARNING, "Shutdown Acknowledgement not received!\n");
+								LOGF(WARNING, "Shutdown Acknowledgement not received!");
 								break;
 							}
 						}
@@ -251,13 +251,13 @@ int main(int argc, char** argv) {
 					std::shared_ptr<KSync::Comm::CommObject> send_obj = command.GetCommObject();
 					status = client_socket->Send(send_obj);
 					if(status == KSync::Comm::CommSystemSocket::Other) {
-						LOGF(WARNING, "There was a problem sending the command!\n");
+						LOGF(WARNING, "There was a problem sending the command!");
 					} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
 					} else {
 						std::shared_ptr<KSync::Comm::CommObject> ret_obj;
 						status = client_socket->ForceRecv(ret_obj);
 						if(status == KSync::Comm::CommSystemSocket::Other) {
-							LOGF(WARNING, "There was a problem receiving the reply!\n");
+							LOGF(WARNING, "There was a problem receiving the reply!");
 						} else if (status == KSync::Comm::CommSystemSocket::Success) {
 							if(ret_obj->GetType() == KSync::Comm::CommandOutput::Type) {
 								std::shared_ptr<KSync::Comm::CommandOutput> com_output;
@@ -268,35 +268,35 @@ int main(int argc, char** argv) {
 								printf("%s\n", com_output->GetStderr().c_str());
 								printf("Return Code: (%i)\n", com_output->GetReturnCode());
 							} else {
-								LOGF(WARNING, "Other object types are not supported here\n");
+								LOGF(WARNING, "Other object types are not supported here");
 							}
 						}
 					}
 				} else {
 					std::shared_ptr<KSync::Comm::CommObject> send_obj;
-					LOGF(INFO, "Sending message: (%s)\n", message_to_send.c_str());
+					LOGF(INFO, "Sending message: (%s)", message_to_send.c_str());
 					send_obj = message_to_send.GetCommObject();
 					status = client_socket->Send(send_obj);
 					if(status == KSync::Comm::CommSystemSocket::Other) {
-						LOGF(SEVERE, "There was a problem sending the string to the server!\n");
+						LOGF(SEVERE, "There was a problem sending the string to the server!");
 						return -1;
 					} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
-						LOGF(SEVERE, "Sending the message timed out!!\n");
+						LOGF(SEVERE, "Sending the message timed out!!");
 						return -2;
 					} else {
 						std::shared_ptr<KSync::Comm::CommObject> recv_obj;
 						status = client_socket->ForceRecv(recv_obj);
 						if(status == KSync::Comm::CommSystemSocket::Other) {
-							LOGF(SEVERE, "There was a problem receiving a response!\n");
+							LOGF(SEVERE, "There was a problem receiving a response!");
 							return -3;
 						} else if ((status == KSync::Comm::CommSystemSocket::Timeout)||(status == KSync::Comm::CommSystemSocket::EmptyMessage)) {
 						} else {
 							if(recv_obj->GetType() == KSync::Comm::CommString::Type) {
 								std::shared_ptr<KSync::Comm::CommString> received_string;
 								KSync::Comm::CommCreator(received_string, recv_obj);
-								LOGF(INFO, "Received(%s)\n", received_string->c_str());
+								LOGF(INFO, "Received(%s)", received_string->c_str());
 								if (*received_string != message_to_send) {
-									LOGF(SEVERE, "Received message was different!\n");
+									LOGF(SEVERE, "Received message was different!");
 								}
 							}
 						}
@@ -316,14 +316,14 @@ int main(int argc, char** argv) {
 		std::shared_ptr<KSync::Comm::CommObject> broad_obj;
 		status = broadcast_socket->Recv(broad_obj);
 		if(status == KSync::Comm::CommSystemSocket::Other) {
-			LOGF(WARNING, "There was a problem reading from the broadcast socket!\n");
+			LOGF(WARNING, "There was a problem reading from the broadcast socket!");
 		} else if ((status == KSync::Comm::CommSystemSocket::Timeout)||(status == KSync::Comm::CommSystemSocket::EmptyMessage)) {
 		} else {
 			if(broad_obj->GetType() == KSync::Comm::ServerShuttingDown::Type) {
-				LOGF(WARNING, "Server shutdown detected, Shutting down.\n");
+				LOGF(WARNING, "Server shutdown detected, Shutting down.");
 				finished = true;
 			} else {
-				LOGF(WARNING, "Other message types unsupported here!\n");
+				LOGF(WARNING, "Other message types unsupported here!");
 			}
 		}
 	}
