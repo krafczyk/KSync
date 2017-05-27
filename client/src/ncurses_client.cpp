@@ -633,9 +633,13 @@ void StatusPanel::Draw() {
 	//this->mvwin(2,2);
 	//this->frame("test");
 	//this->refresh();
+	LOGF(DEBUG, "1");
 	this->UpdatePanelDimPos();
+	LOGF(DEBUG, "2");
 	this->frame("Status");
+	LOGF(DEBUG, "3");
 	this->refresh();
+	LOGF(DEBUG, "4");
 	//std::string title = "Connection: ";
 	//if(this->status->GetConnected()) {
 	//	this->LabeledPrint(title, "Connected", 0);
