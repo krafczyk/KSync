@@ -676,8 +676,9 @@ int main(int argc, char** argv) {
 	}
 
 	//Initialize logging:
+	std::string log_filename;
 	std::unique_ptr<g3::LogWorker> logworker;
-	KSync::InitializeLogger(logworker, false, "KSync NCurses Client", log_dir);
+	KSync::InitializeLogger(logworker, log_filename, false, "KSync NCurses Client", log_dir);
 
 	initscr();
 	cbreak();
@@ -696,5 +697,7 @@ int main(int argc, char** argv) {
 	} while (getch() != 'q');
 
 	endwin();
+
+	printf("Logfile was: %s\n", log_filename.c_str());
 	return 0;
 }
