@@ -603,29 +603,18 @@ class StatusPanel : public MyPanel {
 };
 
 void StatusPanel::UpdatePanelDimPos() {
-	//int max_y;
-	//int max_x;
-	//getmaxyx(max_y, max_x);
-	//int h = max_y;
-	//int w = max_x/2;
-	int h = 10;
-	int w = 10;
-	this->mvwin(h, w);
-	this->wresize(h*2, w*2);
-	//bool need_to_resize = false;
-	//if(this->height() != h) {
-	//	need_to_resize = true;
-	//}
-	//if(this->width() != w) {
-	//	need_to_resize = true;
-	//}
-	//if(this->begx() != max_x-w) {
-	//	need_to_resize = true;
-	//}
-	//if(need_to_resize) {
-	//	this->mvwin(0, max_x-1-w);
-	//	this->wresize(h, w);
-	//}
+	int h = LINES;
+	int w = COLS/2;
+	int y = 0;
+	int x = w;
+	if(x+w > COLS-1) {
+		x = COLS-1-w;
+	}
+	if(y+h > LINES-1) {
+		y = LINES-1-h;
+	}
+	this->mvwin(0, x);
+	this->wresize(h, w);
 }
 
 void StatusPanel::Draw() {
@@ -633,13 +622,7 @@ void StatusPanel::Draw() {
 	//this->mvwin(2,2);
 	//this->frame("test");
 	//this->refresh();
-	LOGF(DEBUG, "1");
-	this->UpdatePanelDimPos();
-	LOGF(DEBUG, "2");
 	this->frame("Status");
-	LOGF(DEBUG, "3");
-	this->refresh();
-	LOGF(DEBUG, "4");
 	//std::string title = "Connection: ";
 	//if(this->status->GetConnected()) {
 	//	this->LabeledPrint(title, "Connected", 0);
@@ -695,9 +678,16 @@ int main(int argc, char** argv) {
 	std::shared_ptr<status_info> status(new status_info());
 	StatusPanel status_panel(status);
 
+	int c = 0;
 	do {
+		if(c == KEY_RESIZE) {
+			LOGF(INFO, "Resize detected!");
+			endwin();
+			refresh();
+			status_panel.UpdatePanelDimPos();
+		}
 		status_panel.Draw();
-	} while (getch() != 'q');
+	} while ((c = getch()) != 'q');
 
 	endwin();
 	return 0;
