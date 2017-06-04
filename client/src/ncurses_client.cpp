@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <chrono>
 
-#include "cursesw.h"
+#include "curses.h"
 #include "panel.h"
 #include "menu.h"
 
@@ -11,631 +11,206 @@
 #include "ksync/utilities.h"
 #include "ksync/logging.h"
 
-#include "cursesapp.h"
-#include "cursesm.h"
-#include "cursesf.h"
-
-//
-// -------------------------------------------------------------------------
-//
-class SillyDemo
-{
-  public:
-  void run(int sleeptime) {
-
-    NCursesPanel *mystd = new NCursesPanel();
-
-    //  Make a few small demo panels
-
-    NCursesPanel *u = new NCursesPanel(8, 20, 12, 4);
-    NCursesPanel *v = new NCursesPanel(8, 20, 10, 6);
-    NCursesPanel *w = new NCursesPanel(8, 20, 8, 8);
-    NCursesPanel *x = new NCursesPanel(8, 20, 6, 10);
-    NCursesPanel *y = new NCursesPanel(8, 20, 4, 12);
-    NCursesPanel *z = new NCursesPanel(8, 30, 2, 14);
-
-    //  Draw something on the main screen, so we can see what happens
-    //  when panels get moved or deleted.
-
-    mystd->box();
-    mystd->move(mystd->height()/2, 1);
-    mystd->hline(mystd->width()-2);
-    mystd->move(1, mystd->width()/2);
-    mystd->vline(mystd->height()-2);
-    mystd->addch(0, mystd->width()/2, ACS_TTEE);
-    mystd->addch(mystd->height()-1, mystd->width()/2, ACS_BTEE);
-    mystd->addch(mystd->height()/2, 0, ACS_LTEE);
-    mystd->addch(mystd->height()/2, mystd->width()-1, ACS_RTEE);
-    mystd->addch(mystd->height()/2, mystd->width()/2, ACS_PLUS);
-
-    //  Draw frames with titles around panels so that we can see where
-    //  the panels are located.
-    u->boldframe("Win U");
-    v->frame("Win V");
-    w->boldframe("Win W");
-    x->frame("Win X");
-    y->boldframe("Win Y");
-    z->frame("Win Z");
-    if (NCursesApplication::getApplication()->useColors()) {
-      u->bkgd(' '|COLOR_PAIR(1));
-      w->bkgd(' '|COLOR_PAIR(1));
-      y->bkgd(' '|COLOR_PAIR(1));
-      v->bkgd(' '|COLOR_PAIR(2));
-      x->bkgd(' '|COLOR_PAIR(2));
-      z->bkgd(' '|COLOR_PAIR(2));
-    }
-
-    //  A refresh to any valid panel updates all panels and refreshes
-    //  the screen.  Using mystd is just convenient - We know it's always
-    //  valid until the end of the program.
-
-    mystd->refresh();
-    sleep(sleeptime);
-
-    //  Show what happens when panels are deleted and moved.
-
-    sleep(sleeptime);
-    delete u;
-    mystd->refresh();
-
-    sleep(sleeptime);
-    delete z;
-    mystd->refresh();
-
-    sleep(sleeptime);
-    delete v;
-    mystd->refresh();
-
-    // show how it looks when a panel moves
-    sleep(sleeptime);
-    y->mvwin(5, 30);
-    mystd->refresh();
-
-    sleep(sleeptime);
-    delete y;
-    mystd->refresh();
-
-    // show how it looks when you raise a panel
-    sleep(sleeptime);
-    w->top();
-    mystd->refresh();
-
-    sleep(sleeptime);
-    delete w;
-    mystd->refresh();
-
-    sleep(sleeptime);
-    delete x;
-
-    mystd->clear();
-    mystd->refresh();
-
-    //  Don't forget to clean up the main screen.  Since this is the
-    //  last thing using NCursesWindow, this has the effect of
-    //  shutting down ncurses and restoring the terminal state.
-
-    sleep(sleeptime);
-    delete mystd;
-  }
-};
-
-class UserData
-{
-private:
-  int u;
-public:
-  UserData(int x) : u(x) {}
-  int sleeptime() const { return u; }
-};
-//
-// -------------------------------------------------------------------------
-//
-template<class T> class MyAction : public NCursesUserItem<T>
-{
-public:
-  MyAction (const char* p_name,
-            const T* p_UserData)
-    : NCursesUserItem<T>(p_name, static_cast<const char*>(0), p_UserData)
-  {}
-
-  virtual ~MyAction() {}
-
-  bool action() {
-    SillyDemo a;
-    a.run(NCursesUserItem<T>::UserData()->sleeptime());
-    return FALSE;
-  }
-};
-
-template class MyAction<UserData>;
-template class NCURSES_IMPEXP NCursesUserItem<UserData>;
-
-class QuitItem : public NCursesMenuItem
-{
-public:
-  QuitItem() : NCursesMenuItem("Quit") {
-  }
-
-  bool action() {
-    return TRUE;
-  }
-};
-//
-// -------------------------------------------------------------------------
-//
-class Label : public NCursesFormField
-{
-public:
-  Label(const char* title,
-        int row, int col)
-    : NCursesFormField(1, static_cast<int>(::strlen(title)), row, col) {
-      set_value(title);
-      options_off(O_EDIT|O_ACTIVE);
-  }
-};
-//
-// -------------------------------------------------------------------------
-//
-class MyFieldType : public UserDefinedFieldType
-{
-private:
-  int chk;
-protected:
-  bool field_check(NCursesFormField& f) {
-    (void) f;
-    return TRUE;
-  }
-  bool char_check(int c) {
-    return (c==chk?TRUE:FALSE);
-  }
-public:
-  MyFieldType(int x) : chk(x) {
-  }
-};
-//
-// -------------------------------------------------------------------------
-//
-class TestForm : public NCursesForm
-{
-private:
-  NCursesFormField** F;
-  MyFieldType* mft;
-  Integer_Field *ift;
-  Enumeration_Field *eft;
-
-  static const char *weekdays[];
-
-public:
-  TestForm()
-    : NCursesForm(13, 51, (lines() - 15)/2, (cols() - 53)/2),
-      F(0),
-      mft(0),
-      ift(0),
-      eft(0)
-  {
-
-    F     = new NCursesFormField*[10];
-    mft   = new MyFieldType('X');
-    ift   = new Integer_Field(0, 1, 10);
-    eft   = new Enumeration_Field(weekdays);
-
-    F[0]  = new Label("Demo Entry Form", 0, 16);
-    F[1]  = new Label("Weekday Enum", 2, 1);
-    F[2]  = new Label("Number(1-10)", 2, 21);
-    F[3]  = new Label("Only 'X'", 2, 35);
-    F[4]  = new Label("Multiline Field (Dynamic and Scrollable)", 5, 1);
-    F[5]  = new NCursesFormField(1, 18, 3, 1);
-    F[6]  = new NCursesFormField(1, 12, 3, 21);
-    F[7]  = new NCursesFormField(1, 12, 3, 35);
-    F[8]  = new NCursesFormField(4, 46, 6, 1, 2);
-    F[9]  = new NCursesFormField();
-
-    InitForm(F, TRUE, TRUE);
-    boldframe();
-
-    F[5]->set_fieldtype(*eft);
-    F[6]->set_fieldtype(*ift);
-
-    F[7]->set_fieldtype(*mft);
-    F[7]->set_maximum_growth(20); // max. 20 characters
-    F[7]->options_off(O_STATIC);  // make field dynamic
-
-    F[8]->set_maximum_growth(10); // max. 10 lines
-    F[8]->options_off(O_STATIC);  // make field dynamic
-  }
-
-  TestForm& operator=(const TestForm& rhs)
-  {
-    if (this != &rhs) {
-      *this = rhs;
-    }
-    return *this;
-  }
-
-  TestForm(const TestForm& rhs)
-    : NCursesForm(rhs), F(0), mft(0), ift(0), eft(0)
-  {
-  }
-
-  ~TestForm() {
-    delete mft;
-    delete ift;
-    delete eft;
-  }
-};
-
-const char* TestForm::weekdays[] = {
-    "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday",
-    "Friday", "Saturday", NULL };
-//
-// -------------------------------------------------------------------------
-//
-class FormAction : public NCursesMenuItem
-{
-public:
-  FormAction(const char *s) : NCursesMenuItem(s) {
-  }
-
-  bool action() {
-    TestForm F;
-    Soft_Label_Key_Set* S = new Soft_Label_Key_Set;
-    for(int i=1; i <= S->labels(); i++) {
-      char buf[8];
-      assert(i < 100);
-      sprintf(buf, "Frm%02d", i);
-      (*S)[i] = buf;                                      // Text
-      (*S)[i] = Soft_Label_Key_Set::Soft_Label_Key::Left; // Justification
-    }
-    NCursesApplication::getApplication()->push(*S);
-    F();
-    NCursesApplication::getApplication()->pop();
-    delete S;
-    return FALSE;
-  }
-};
-//
-// -------------------------------------------------------------------------
-//
-class PadAction : public NCursesMenuItem
-{
-public:
-  PadAction(const char* s) : NCursesMenuItem(s) {
-  }
-
-  bool action() {
-    const int GRIDSIZE = 3;
-    const int PADSIZE  = 200;
-    unsigned gridcount = 0;
-
-    NCursesPanel mystd;
-    NCursesPanel P(mystd.lines()-2, mystd.cols()-2, 1, 1);
-    NCursesFramedPad FP(P, PADSIZE, PADSIZE);
-
-    for (int i=0; i < PADSIZE; i++) {
-      for (int j=0; j < PADSIZE; j++) {
-        if (i % GRIDSIZE == 0 && j % GRIDSIZE == 0) {
-          if (i==0 || j==0)
-            FP.addch('+');
-          else
-            FP.addch(static_cast<chtype>('A' + (gridcount++ % 26)));
-        }
-        else if (i % GRIDSIZE == 0)
-          FP.addch('-');
-        else if (j % GRIDSIZE == 0)
-          FP.addch('|');
-        else
-          FP.addch(' ');
-      }
-    }
-
-    P.label("Pad Demo", NULL);
-    FP();
-    P.clear();
-    return FALSE;
-  }
-};
-
-//
-// -------------------------------------------------------------------------
-//
-class PassiveItem : public NCursesMenuItem
-{
-public:
-  PassiveItem(const char* text) : NCursesMenuItem(text) {
-    options_off(O_SELECTABLE);
-  }
-};
-
-//
-// -------------------------------------------------------------------------
-//
-class ScanAction : public NCursesMenuItem
-{
-public:
-  ScanAction(const char* s) : NCursesMenuItem(s) {
-  }
-
-  bool action() {
-    NCursesPanel *mystd = new NCursesPanel();
-
-    NCursesPanel *w = new NCursesPanel(mystd->lines() - 2, mystd->cols() - 2, 1, 1);
-    w->box();
-    w->refresh();
-
-    NCursesPanel *s = new NCursesPanel(w->lines() - 6, w->cols() - 6, 3, 3);
-    s->scrollok(TRUE);
-    ::echo();
-
-    s->printw("Enter decimal integers.  The running total will be shown\n");
-    int nvalue = -1;
-    int result = 0;
-    while (nvalue != 0) {
-      nvalue = 0;
-      s->scanw("%d", &nvalue);
-      if (nvalue != 0) {
-        s->printw("%d: ", result += nvalue);
-      }
-      s->refresh();
-    }
-    s->printw("\nPress any key to continue...");
-    s->getch();
-
-    delete s;
-    delete w;
-    delete mystd;
-    ::noecho();
-    return FALSE;
-  }
-};
-
-//
-// -------------------------------------------------------------------------
-//
-class MyMenu : public NCursesMenu
-{
-private:
-  NCursesPanel* P;
-  NCursesMenuItem** I;
-  UserData *u;
-  #define n_items 7
-
-public:
-  MyMenu ()
-    : NCursesMenu (n_items+2, 8, (lines()-10)/2, (cols()-10)/2),
-      P(0), I(0), u(0)
-  {
-    u = new UserData(1);
-    I = new NCursesMenuItem*[1+n_items];
-    I[0] = new PassiveItem("One");
-    I[1] = new PassiveItem("Two");
-    I[2] = new MyAction<UserData> ("Silly", u);
-    I[3] = new FormAction("Form");
-    I[4] = new PadAction("Pad");
-    I[5] = new ScanAction("Scan");
-    I[6] = new QuitItem();
-    I[7] = new NCursesMenuItem(); // Terminating empty item
-
-    InitMenu(I, TRUE, TRUE);
-
-    P = new NCursesPanel(1, n_items, LINES-1, 1);
-    boldframe("Demo", "Silly");
-    P->show();
-  }
-
-  MyMenu& operator=(const MyMenu& rhs)
-  {
-    if (this != &rhs) {
-      *this = rhs;
-    }
-    return *this;
-  }
-
-  MyMenu(const MyMenu& rhs)
-    : NCursesMenu(rhs), P(0), I(0), u(0)
-  {
-  }
-
-  ~MyMenu()
-  {
-    P->hide();
-    delete P;
-    delete u;
-  }
-
-  virtual void On_Menu_Init()
-  {
-    NCursesWindow W(::stdscr);
-    P->move(0, 0);
-    P->clrtoeol();
-    for(int i=1; i<=count(); i++)
-      P->addch('0' + i);
-    P->bkgd(W.getbkgd());
-    refresh();
-  }
-
-  virtual void On_Menu_Termination()
-  {
-    P->move(0, 0);
-    P->clrtoeol();
-    refresh();
-  }
-
-  virtual void On_Item_Init(NCursesMenuItem& item)
-  {
-    P->move(0, item.index());
-    P->attron(A_REVERSE);
-    P->printw("%1d", 1+item.index());
-    P->attroff(A_REVERSE);
-    refresh();
-  }
-
-  virtual void On_Item_Termination(NCursesMenuItem& item)
-  {
-    P->move(0, item.index());
-    P->attroff(A_REVERSE);
-    P->printw("%1d", 1+item.index());
-    refresh();
-  }
-};
-//
-// -------------------------------------------------------------------------
-//
-class TestApplication : public NCursesApplication
-{
-protected:
-  int titlesize() const { return 1; }
-  void title();
-  Soft_Label_Key_Set::Label_Layout useSLKs() const {
-    return Soft_Label_Key_Set::PC_Style_With_Index;
-  }
-  void init_labels(Soft_Label_Key_Set& S) const;
-
-public:
-  TestApplication() : NCursesApplication(TRUE) {
-  }
-
-  int run();
-};
-
-void TestApplication::init_labels(Soft_Label_Key_Set& S) const
-{
-  for(int i=1; i <= S.labels(); i++) {
-    char buf[8];
-    assert(i < 100);
-    sprintf(buf, "Key%02d", i);
-    S[i] = buf;                                      // Text
-    S[i] = Soft_Label_Key_Set::Soft_Label_Key::Left; // Justification
-  }
-}
-
-void TestApplication::title()
-{
-  const char * const titleText = "Simple C++ Binding Demo";
-  const int len = ::strlen(titleText);
-
-  titleWindow->bkgd(screen_titles());
-  titleWindow->addstr(0, (titleWindow->cols() - len)/2, titleText);
-  titleWindow->noutrefresh();
-}
-
-
-int TestApplication::run()
-{
-  MyMenu M;
-  M();
-  return 0;
-}
-
-//
-// -------------------------------------------------------------------------
-//
-//static TestApplication *Demo = new TestApplication();
-
-class status_info {
+//ACS Characters
+//Upper Left corner:        ACS_ULCORNER
+//Upper Right corner:       ACS_URCORNER
+//Lower Left corner:        ACS_LLCORNER
+//Lower Right corner:       ACS_LRCORNER
+//Tee pointing right:       ACS_LTEE
+//Tee pointing left:        ACS_RTEE
+//Tee pointing up:          ACS_BTEE
+//Tee pointing down:        ACS_TTEE
+//Horizontal line:          ACS_HLINE
+//Vertical line:            ACS_VLINE
+
+class NCursesWindow {
 	public:
-		status_info() { connected = false; };
-		bool GetConnected() const {
-			return this->connected;
+		const chtype ls = ACS_VLINE;
+		const chtype rs = ACS_VLINE;
+		const chtype ts = ACS_HLINE;
+		const chtype bs = ACS_HLINE;
+		const chtype tl = ACS_ULCORNER;
+		const chtype tr = ACS_URCORNER;
+		const chtype bl = ACS_LLCORNER;
+		const chtype br = ACS_LRCORNER;
+		const chtype lt = ACS_LTEE;
+		const chtype rt = ACS_RTEE;
+		const chtype bt = ACS_BTEE;
+		const chtype tt = ACS_TTEE;
+
+		NCursesWindow(const unsigned int _height, const unsigned int _width, const unsigned int _starty, const unsigned int _startx);
+		~NCursesWindow();
+
+		unsigned int height() const {
+			return this->_height;
 		}
-		void SetConnected(bool in) {
-			this->connected = in;
+		unsigned int width() const {
+			return this->_width;
 		}
+		unsigned int starty() const {
+			return this->_starty;
+		}
+		unsigned int startx() const {
+			return this->_startx;
+		}
+		const std::string& title() const {
+			return this->_title;
+		}
+		void title(const std::string& in) {
+			this->_title = in;
+		}
+		static std::string shorten_string(const std::string& str, unsigned int w);
+		void print_left_justified(unsigned int loc_y, unsigned int loc_x, unsigned int w, const std::string& in);
+		void print_right_justified(unsigned int loc_y, unsigned int loc_x, unsigned int w, const std::string& in);
+		void print_center_justified(unsigned int loc_y, unsigned int loc_x, unsigned int w, const std::string& in);
+		void print(unsigned int loc_y, unsigned int loc_x, const std::string& in);
+
+		void clear();
+		void draw_border();
+		void Mvwin(unsigned int y, unsigned int x);
+		void MVwin(int dy, int dx);
+		void resize(unsigned int h, unsigned int w);
 
 	private:
-		bool connected;
+		unsigned int _height;
+		unsigned int _width;
+		unsigned int _starty;
+		unsigned int _startx;
+		std::string _title;
 };
 
-class MyPanel : public NCursesPanel {
-	public:
-		MyPanel(int h, int w, int y, int x) : NCursesPanel(h, w, y, x) {};
-		void LeftJustifiedPrint(const std::string& message, const int row, const int l = 0);
-		void RightJustifiedPrint(const std::string& message, const int row, const int r = -1);
-		void CenteredPrint(const std::string& message, const int row, const int l = 0, const int r = -1);
-		void LabeledPrint(const std::string& title, const std::string& message, const int row);
-};
-
-void MyPanel::LeftJustifiedPrint(const std::string& message, const int row, const int l) {
-	this->move(row+1, l+1);
-	this->CUR_addstr(message.c_str());
+NCursesWindow::NCursesWindow(const unsigned int _height, const unsigned int _width, const unsigned int _starty, const unsigned int _startx) {
+	this->_height = _height;
+	this->_width = _width;
+	this->_starty = _starty;
+	this->_startx = _startx;
 }
 
-void MyPanel::RightJustifiedPrint(const std::string& message, const int row, const int r) {
-	int R;
-	if(r == -1) {
-		R = this->width()-message.size()-1;
-	} else {
-		R = r-message.size();
+NCursesWindow::~NCursesWindow() {
+}
+
+void NCursesWindow::clear() {
+	for(unsigned int i = 0; i < this->_height; ++i) {
+		mvhline(starty()+i, this->startx(), ' ', this->_width);
 	}
-	this->move(row+1, R);
-	this->CUR_addstr(message.c_str());
 }
 
-void MyPanel::CenteredPrint(const std::string& message, const int row, const int l, const int r) {
-	int R;
-	if(r == -1) {
-		R = this->width()-1;
-	} else {
-		R = r;
-	}
-	int C = (R/2)+((l+1)/2); //center
-	int L = C-(message.size()/2);
-	if(L < l+1) {
-		L = l+1;
-	}
-	this->move(row+1, L);
-	this->CUR_addstr(message.c_str());
+void NCursesWindow::draw_border() {
+	mvhline(starty(), startx()+1, ts, width()-2);
+	mvhline(starty()+height()-1, startx()+1, bs, width()-2);
+	mvvline(starty()+1, startx(), ls, height()-2);
+	mvvline(starty()+1, startx()+width()-1, rs, height()-2);
+	mvaddch(starty(), startx(), tl);
+	mvaddch(starty(), startx()+width()-1, tr);
+	mvaddch(starty()+height()-1, startx(), bl);
+	mvaddch(starty()+height()-1, startx()+width()-1, br);
+	//wborder(this->win, ls, rs, ts, bs, tl, tr, bl, br);
 }
 
-void MyPanel::LabeledPrint(const std::string& title, const std::string& message, const int row) {
-	this->LeftJustifiedPrint(title, row);
-	this->CenteredPrint(message, row, title.size()+1);
+void NCursesWindow::Mvwin(unsigned int y, unsigned int x) {
+	this->clear();
+	this->_starty = y;
+	this->_startx = x;
 }
 
-class StatusPanel : public MyPanel {
-	public:
-		StatusPanel(std::shared_ptr<status_info>& status) : MyPanel(20, 20, 0, 0) {
-			this->status = status;
+void NCursesWindow::MVwin(int dy, int dx) {
+	this->clear();
+	bool set = false;
+	if(dy < 0) {
+		if(this->_starty < (unsigned int) abs(dy)) {
+			this->_starty = 0;
+			set = true;
 		}
-		void UpdatePanelDimPos();
-		void Draw();
-	private:
-		std::shared_ptr<status_info> status;
-};
-
-void StatusPanel::UpdatePanelDimPos() {
-	int h = LINES;
-	int w = COLS/2;
-	int y = 0;
-	int x = w;
-	if(x+w > COLS-1) {
-		x = COLS-1-w;
+	} else {
+		if((unsigned int)(this->_starty+dy) >= (unsigned int)LINES) {
+			this->_starty = LINES-1;
+			set = true;
+		}
 	}
-	if(y+h > LINES-1) {
-		y = LINES-1-h;
+	if(!set) {
+		this->_starty = ((int)this->_starty)+dy;
 	}
-	this->mvwin(0, x);
-	this->wresize(h, w);
+	set = false;
+	if(dx < 0) {
+		if(this->_startx < (unsigned int) abs(dx)) {
+			this->_startx = 0;
+			set = true;
+		}
+	} else {
+		if((unsigned int)(this->_startx+dx) >= (unsigned int) COLS) {
+			this->_startx = COLS-1;
+			set = true;
+		}
+	}
+	if(!set) {
+		this->_startx = ((int)this->_startx)+dx;
+	}
 }
 
-void StatusPanel::Draw() {
-	//this->wresize(5,5);
-	//this->mvwin(2,2);
-	//this->frame("test");
-	//this->refresh();
-	this->frame("Status");
-	//std::string title = "Connection: ";
-	//if(this->status->GetConnected()) {
-	//	this->LabeledPrint(title, "Connected", 0);
-	//} else {
-	//	this->LabeledPrint(title, "Not connected", 0);
-	//}
-	//this->move(1,1);
-	//this->printw("testing");
-	//this->move(1,1);
-	//this->printw("123");
-	//this->refresh();
+void NCursesWindow::resize(unsigned int h, unsigned int w) {
+	this->clear();
+	this->_height = h;
+	this->_width = w;
 }
 
+std::string NCursesWindow::shorten_string(const std::string& str, unsigned int w) {
+	std::string to_print = str;
+	if(str.size() > w) {
+		to_print = str.substr(0, w);
+		if(w <= 4) {
+			for(unsigned int i=1; i <= w; ++i) {
+				to_print[i] = '.';
+			}
+		} else {
+			for(unsigned int i=0; i < 3; ++i) {
+				to_print[to_print.size()-1-i] = '.';
+			}
+		}
+	}
+	return to_print;
+}
+
+void NCursesWindow::print(unsigned int loc_y, unsigned int loc_x, const std::string& in) {
+	mvprintw(starty()+loc_y, startx()+loc_x, in.c_str());
+}
+
+void NCursesWindow::print_left_justified(unsigned int loc_y, unsigned int loc_x, unsigned int w, const std::string& in) {
+	if(loc_x > width()) {
+		// do nothing..
+		return;
+	}
+
+	//Adjust if too far
+	if(loc_x + w > width()) {
+		w = width()-loc_x;
+	}
+	std::string to_print = shorten_string(in, w);
+
+	print(loc_y, loc_x, to_print);
+}
+
+void NCursesWindow::print_right_justified(unsigned int loc_y, unsigned int loc_x, unsigned int w, const std::string& in) {
+	unsigned int left = loc_x;
+	if(in.size() < w) {
+		left = loc_x+(w-in.size());
+		w = in.size();
+	}
+
+	print_left_justified(loc_y, left, w, in);
+}
+
+void NCursesWindow::print_center_justified(unsigned int loc_y, unsigned int loc_x, unsigned int w, const std::string& in) {
+	unsigned int center = loc_x+(w/2);
+	unsigned int left = loc_x;
+	if(in.size() < w) {
+		left = center-(in.size()/2);
+		w = in.size();
+	}
+
+	print_left_justified(loc_y, left, w, in);
+}
+
+//gui thread
 int main(int argc, char** argv) {
 	std::string log_dir;
 	std::string gateway_socket_url;
@@ -646,7 +221,7 @@ int main(int argc, char** argv) {
 	KSync::Utilities::set_up_common_arguments_and_defaults(arg_parser, log_dir, gateway_socket_url, gateway_socket_url_defined, nanomsg);
 
 	if(arg_parser.ParseArgs(argc, argv) < 0) {
-		//Error("Problem parsing arguments\n");
+		printf("Problem parsing arguments\n");
 		arg_parser.PrintHelp();
 		return -1;
 	}
@@ -670,23 +245,44 @@ int main(int argc, char** argv) {
 	cbreak();
 	noecho();
 	keypad(stdscr, TRUE);
+	refresh();
 
-	//NCursesPanel test_window(10, 40, 0, 20);
-	//test_window.frame("Status");
-	//test_window.refresh();
-
-	std::shared_ptr<status_info> status(new status_info());
-	StatusPanel status_panel(status);
+	NCursesWindow test_window(10, 20, 10, 10);
+	NCursesWindow test_window_2(10, 20, 10, 10);
 
 	int c = 0;
 	do {
-		if(c == KEY_RESIZE) {
-			LOGF(INFO, "Resize detected!");
-			endwin();
-			refresh();
-			status_panel.UpdatePanelDimPos();
+		// Key cycle
+		switch(c) {
+			case KEY_LEFT: {
+				test_window.MVwin(0, -1);
+				break;
+			}
+			case KEY_RIGHT: {
+				test_window.MVwin(0, 1);
+				break;
+			}
+			case KEY_UP: {
+				test_window.MVwin(-1, 0);
+				break;
+			}
+			case KEY_DOWN: {
+				test_window.MVwin(1, 0);
+				break;
+			}
 		}
-		status_panel.Draw();
+	//	LOGF(INFO, "Start char(%i)", c);
+		// Draw cycle
+		test_window_2.clear();
+		test_window_2.draw_border();
+		test_window.clear();
+		test_window.draw_border();
+		//test_window.print(1,1,"test");
+		//test_window.print_left_justified(1, 1, 4, "test");
+		test_window.print_left_justified(1, 1, 18, "test test");
+		test_window.print_right_justified(2, 1, 18, "test test");
+		test_window.print_center_justified(3, 1, 18, "test test");
+		refresh();
 	} while ((c = getch()) != 'q');
 
 	endwin();
