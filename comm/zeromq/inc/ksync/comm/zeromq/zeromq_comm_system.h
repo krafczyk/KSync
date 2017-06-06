@@ -1,17 +1,19 @@
-#ifndef KSYNC_NANOMSG_COMM_SYSTEM_HDR
-#define KSYNC_NANOMSG_COMM_SYSTEM_HDR
+#ifndef KSYNC_ZEROMQ_COMM_SYSTEM_HDR
+#define KSYNC_ZEROMQ_COMM_SYSTEM_HDR
 
-#include "ksync/comm_system_interface.h"
-#include "ksync/comm_system_factory.h"
+#include "ksync/comm/interface.h"
+#include "ksync/comm/factory.h"
+
+#include "zmq.hpp"
 
 namespace KSync {
 	namespace Comm {
-		class NanomsgCommSystem;
-		class NanomsgCommSystemSocket : public CommSystemSocket {
-			friend class NanomsgCommSystem;
+		class ZeroMQCommSystem;
+		class ZeroMQCommSystemSocket : public CommSystemSocket {
+			friend class ZeroMQCommSystem;
 			public:
-				NanomsgCommSystemSocket();
-				~NanomsgCommSystemSocket();
+				ZeroMQCommSystemSocket();
+				~ZeroMQCommSystemSocket();
 
 				int BindImp(const std::string& address);
 				int ConnectImp(const std::string& address);
@@ -20,23 +22,23 @@ namespace KSync {
 				int SetSendTimeout(int timeout);
 				int SetRecvTimeout(int timeout);
 
-				int GetSocketId() const {
-					return socket;
-				}
 			private:
-				int socket;
+				zmq::socket_t* socket;
 		};
 
-		class NanomsgCommSystem : public CommSystemInterface {
+		class ZeroMQCommSystem : public CommSystemInterface {
 			public:
-				NanomsgCommSystem();
-				~NanomsgCommSystem();
+				ZeroMQCommSystem();
+				~ZeroMQCommSystem();
 
 				int Create_Gateway_Req_Socket(std::shared_ptr<CommSystemSocket>& socket);
 				int Create_Gateway_Rep_Socket(std::shared_ptr<CommSystemSocket>& socket);
 				int Create_Pair_Socket(std::shared_ptr<CommSystemSocket>& socket);
 				int Create_Pub_Socket(std::shared_ptr<CommSystemSocket>& socket);
 				int Create_Sub_Socket(std::shared_ptr<CommSystemSocket>& socket);
+
+			private:
+				zmq::context_t* context;
 		};
 	}
 }

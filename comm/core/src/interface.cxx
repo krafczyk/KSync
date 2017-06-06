@@ -1,5 +1,5 @@
 #include "ksync/logging.h"
-#include "ksync/comm_system_interface.h"
+#include "ksync/comm/interface.h"
 
 namespace KSync {
 	namespace Comm {

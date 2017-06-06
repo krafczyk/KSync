@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef KSYNC_COMM_SYSTEM_FAC_HDR
 #define KSYNC_COMM_SYSTEM_FAC_HDR
 
-#include "ksync/comm_system_interface.h"
+#include "ksync/comm/interface.h"
 
 namespace KSync {
 	namespace Comm {

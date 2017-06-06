@@ -19,14 +19,15 @@ project (ksync)
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-set(libksync_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libksync/inc" CACHE INTERNAL "ksync include dir")
-set(zeromq_module_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/zeromq/inc" CACHE INTERNAL "zeromq ksync module include dir")
-set(nanomsg_module_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/nanomsg/inc" CACHE INTERNAL "nanomsg ksync module include dir")
+set(core_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/core/inc" CACHE INTERNAL "core include dir")
+set(comm_core_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/comm/core/inc" CACHE INTERNAL "comm core include dir")
+set(comm_zeromq_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/comm/zeromq/inc" CACHE INTERNAL "comm zeromq include dir")
+set(comm_nanomsg_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/comm/nanomsg/inc" CACHE INTERNAL "comm nanomsg include dir")
 
 add_definitions(-std=c++11 -Wall -Wextra -Werror)
 
-add_subdirectory(libksync)
-add_subdirectory(nanomsg)
-add_subdirectory(zeromq)
+add_subdirectory(core)
+add_subdirectory(comm)
+#add_subdirectory(gui)
 add_subdirectory(server)
 add_subdirectory(client)

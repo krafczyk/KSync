@@ -1,7 +1,7 @@
 #ifndef KSYNC_SERVER_GATEWAY_THREAD_HDR
 #define KSYNC_SERVER_GATEWAY_THREAD_HDR
 
-#include "ksync/comm_system_interface.h"
+#include "ksync/comm/interface.h"
 
 namespace KSync {
 	namespace Server {

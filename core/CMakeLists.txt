@@ -15,10 +15,12 @@
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 find_package(G3LOG REQUIRED)
-include_directories(${libksync_INCLUDE_DIR})
+include_directories(${core_INCLUDE_DIR})
+message("comm core: ${comm_core_INCLUDE_DIR}")
+include_directories(${comm_core_INCLUDE_DIR})
 include_directories(${G3LOG_INCLUDE_DIRS})
 
-add_library (ksync SHARED src/logging.cxx src/messages.cxx src/comm_system_interface.cxx src/comm_system_object.cxx src/command_system_interface.cxx src/pstreams_command_system.cxx src/utilities.cxx)
+add_library (ksync SHARED src/logging.cxx src/messages.cxx src/command_system_interface.cxx src/pstreams_command_system.cxx src/utilities.cxx)
 
 install (TARGETS ksync DESTINATION lib)
 install (DIRECTORY inc/ksync DESTINATION include FILES_MATCHING PATTERN "*.h")

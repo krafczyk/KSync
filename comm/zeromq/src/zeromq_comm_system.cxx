@@ -1,5 +1,5 @@
 #include "ksync/logging.h"
-#include "ksync_zeromq/zeromq_comm_system.h"
+#include "ksync/comm/zeromq/zeromq_comm_system.h"
 
 namespace KSync {
 	namespace Comm {

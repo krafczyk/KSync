@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 
-#include "ksync/comm_system_object.h"
+#include "ksync/comm/object.h"
 
 namespace KSync {
 	namespace Comm {

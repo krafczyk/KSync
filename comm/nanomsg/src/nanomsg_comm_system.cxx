@@ -1,5 +1,5 @@
 #include "ksync/logging.h"
-#include "ksync_nanomsg/nanomsg_comm_system.h"
+#include "ksync/comm/nanomsg/nanomsg_comm_system.h"
 
 #include "nanomsg/nn.h"
 #include "nanomsg/reqrep.h"

@@ -29,8 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ksync/client.h"
 #include "ksync/messages.h"
 #include "ksync/utilities.h"
-#include "ksync/comm_system_interface.h"
-#include "ksync/comm_system_factory.h"
+#include "ksync/comm/interface.h"
+#include "ksync/comm/factory.h"
 
 #include "ArgParse/ArgParse.h"
 

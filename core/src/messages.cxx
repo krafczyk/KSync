@@ -22,9 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstring>
 
-#include "ksync/messages.h"
-#include "ksync/comm_system_object.h"
 #include "ksync/logging.h"
+#include "ksync/messages.h"
+#include "ksync/comm/object.h"
 
 namespace KSync {
 	namespace Comm {

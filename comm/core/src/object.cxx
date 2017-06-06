@@ -2,7 +2,7 @@
 #include <sstream>
 
 #include "ksync/logging.h"
-#include "ksync/comm_system_object.h"
+#include "ksync/comm/object.h"
 
 namespace KSync {
 	namespace Comm {
