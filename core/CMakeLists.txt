@@ -16,7 +16,6 @@
 
 find_package(G3LOG REQUIRED)
 include_directories(${core_INCLUDE_DIR})
-message("comm core: ${comm_core_INCLUDE_DIR}")
 include_directories(${comm_core_INCLUDE_DIR})
 include_directories(${G3LOG_INCLUDE_DIRS})
 

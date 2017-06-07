@@ -23,11 +23,12 @@ set(core_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/core/inc" CACHE INTERNAL "core
 set(comm_core_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/comm/core/inc" CACHE INTERNAL "comm core include dir")
 set(comm_zeromq_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/comm/zeromq/inc" CACHE INTERNAL "comm zeromq include dir")
 set(comm_nanomsg_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/comm/nanomsg/inc" CACHE INTERNAL "comm nanomsg include dir")
+set(ui_ncurses_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ui/ncurses/inc" CACHE INTERNAL "ui ncurses include dir")
 
 add_definitions(-std=c++11 -Wall -Wextra -Werror)
 
 add_subdirectory(core)
 add_subdirectory(comm)
-#add_subdirectory(gui)
+add_subdirectory(ui)
 add_subdirectory(server)
 add_subdirectory(client)
