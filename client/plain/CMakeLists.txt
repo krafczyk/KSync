@@ -1,0 +1,28 @@
+find_package(G3LOG REQUIRED)
+find_package(PkgConfig)
+pkg_search_module(ArgParse REQUIRED ArgParse)
+pkg_search_module(nanomsg REQUIRED nanomsg)
+pkg_search_module(libzmq REQUIRED libzmq)
+
+include_directories(inc)
+include_directories(${core_INCLUDE_DIR})
+include_directories(${comm_core_INCLUDE_DIR})
+include_directories(${comm_zeromq_INCLUDE_DIR})
+include_directories(${comm_nanomsg_INCLUDE_DIR})
+include_directories(${G3LOG_INCLUDE_DIRS})
+include_directories(${ArgParse_INCLUDEDIR})
+
+add_executable(ksync_client src/client.cpp)
+add_definitions(-pthread)
+
+target_link_libraries(ksync_client ksync)
+target_link_libraries(ksync_client ksync_comm_core)
+target_link_libraries(ksync_client ksync_comm_zeromq)
+target_link_libraries(ksync_client ksync_comm_nanomsg)
+target_link_libraries(ksync_client ${G3LOG_LIBRARIES})
+target_link_libraries(ksync_client ${ArgParse_LDFLAGS})
+target_link_libraries(ksync_client ${libzmq_LDFLAGS})
+target_link_libraries(ksync_client ${nanomsg_LDFLAGS})
+target_link_libraries(ksync_client -lpthread)
+
+install (TARGETS ksync_client DESTINATION bin)

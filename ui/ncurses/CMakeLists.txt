@@ -13,7 +13,7 @@ include_directories(${menuw_INCLUDE_DIR})
 include_directories(${formw_INCLUDE_DIR})
 include_directories(${ncursesw_INCLUDE_DIR})
 
-add_library (ksync_ui_ncurses SHARED src/window.cxx)
+add_library (ksync_ui_ncurses SHARED src/window.cxx src/menu.cxx src/interface.cxx)
 
 install (TARGETS ksync_ui_ncurses DESTINATION lib)
 install (DIRECTORY inc/ksync DESTINATION include FILES_MATCHING PATTERN "*.h")

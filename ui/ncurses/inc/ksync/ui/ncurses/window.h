@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "ksync/ui/ncurses/interface.h"
+
 #include "curses.h"
 
 //ACS Characters
@@ -19,7 +21,7 @@
 
 namespace KSync {
 	namespace Ui {
-		class NCursesWindow {
+		class NCursesWindow : public Object {
 			public:
 				const chtype ls = ACS_VLINE;
 				const chtype rs = ACS_VLINE;
@@ -33,10 +35,10 @@ namespace KSync {
 				const chtype rt = ACS_RTEE;
 				const chtype bt = ACS_BTEE;
 				const chtype tt = ACS_TTEE;
-		
-				NCursesWindow(const unsigned int _height, const unsigned int _width, const unsigned int _starty, const unsigned int _startx);
-				~NCursesWindow();
-		
+
+				NCursesWindow(const unsigned int _height, const unsigned int _width, const unsigned int _starty, const unsigned int _startx, Object* parent = 0);
+				virtual ~NCursesWindow();
+
 				unsigned int height() const {
 					return this->_height;
 				}
@@ -63,10 +65,11 @@ namespace KSync {
 		
 				void clear();
 				void draw_border();
+				void draw_title();
 				void Mvwin(unsigned int y, unsigned int x);
 				void MVwin(int dy, int dx);
 				void resize(unsigned int h, unsigned int w);
-		
+
 			private:
 				unsigned int _height;
 				unsigned int _width;

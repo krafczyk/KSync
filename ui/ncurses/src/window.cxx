@@ -1,8 +1,9 @@
+#include "ksync/logging.h"
 #include "ksync/ui/ncurses/window.h"
 
 namespace KSync {
 	namespace Ui {
-		NCursesWindow::NCursesWindow(const unsigned int _height, const unsigned int _width, const unsigned int _starty, const unsigned int _startx) {
+		NCursesWindow::NCursesWindow(const unsigned int _height, const unsigned int _width, const unsigned int _starty, const unsigned int _startx, Object* parent) : Object(parent) {
 			this->_height = _height;
 			this->_width = _width;
 			this->_starty = _starty;
@@ -28,6 +29,19 @@ namespace KSync {
 			mvaddch(starty()+height()-1, startx(), bl);
 			mvaddch(starty()+height()-1, startx()+width()-1, br);
 			//wborder(this->win, ls, rs, ts, bs, tl, tr, bl, br);
+		}
+
+		void NCursesWindow::draw_title() {
+			unsigned int w = this->_title.size();
+			unsigned int mid = this->startx()+(this->_width/2);
+			unsigned int left = mid-(w/2);
+			unsigned int right = left + w;
+			LOGF(INFO, "1 (%i) (%i)", this->starty(), left-1);
+			mvaddch(this->starty(), left-1, rt);
+			LOGF(INFO, "2 (%i) (%i)", this->starty(), left);
+			this->print_left_justified(0,left-this->startx(), w, this->_title);
+			LOGF(INFO, "3 (%i) (%i)", this->starty(), right);
+			mvaddch(this->starty(), right, lt);
 		}
 		
 		void NCursesWindow::Mvwin(unsigned int y, unsigned int x) {
