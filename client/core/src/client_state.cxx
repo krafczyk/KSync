@@ -3,7 +3,15 @@
 namespace KSync {
 	namespace Client {
 		ClientState::ClientState() {
-			this->finished = false;
+			this->finished.store(false);
+		}
+
+		bool ClientState::GetFinished() const {
+			return this->finished.load();
+		}
+
+		void ClientState::SetFinished(bool in) {
+			this->finished.store(in);
 		}
 	}
 }

@@ -13,6 +13,18 @@
 #include "ksync/ui/ncurses/interface.h"
 #include "ksync/ui/ncurses/window.h"
 #include "ksync/ui/ncurses/menu.h"
+#include "ksync/client/client_state.h"
+
+class StateInfo : public KSync::Ui::NCursesWindow {
+	public:
+		StateInfo(std::shared_ptr<KSync::Client::ClientState>& state, unsigned int h, unsigned int w, unsigned int y, unsigned int x, KSync::Ui::Object* parent = 0);
+
+		void Draw();
+		void HandleEvent(chtype event);
+
+	private:
+		std::shared_ptr<KSync::Client::ClientState> client_state;
+};
 
 class MainMenu : public KSync::Ui::NCursesMenu {
 	public:
@@ -28,6 +40,8 @@ class AppStateManager : public KSync::Ui::NCursesWindow {
 		AppStateManager();
 		virtual ~AppStateManager();
 
+		void PositionSubordinates();
+
 		void Draw();
 		void HandleEvent(const chtype event);
 
@@ -40,10 +54,34 @@ class AppStateManager : public KSync::Ui::NCursesWindow {
 
 	private:
 		State_t state;
-		bool finished;
+		std::shared_ptr<KSync::Client::ClientState> client_state;
 };
 
+StateInfo::StateInfo(std::shared_ptr<KSync::Client::ClientState>& state, unsigned int h, unsigned int w, unsigned int y, unsigned int x, KSync::Ui::Object* parent) : KSync::Ui::NCursesWindow(h, w, y, x, parent) {
+	this->title("State Information");
+	this->client_state = state;
+}
+
+void StateInfo::Draw() {
+	this->draw_border();
+	this->draw_title();
+	if(this->client_state->GetFinished()) {
+		this->print_center_justified(1, 1, this->width()-2, "Finished...");
+	} else {
+		this->print_center_justified(1, 1, this->width()-2, "Running...");
+	}
+	mvaddch(this->starty()+2, this->startx(), lt);
+	mvaddch(this->starty()+2, this->startx()+this->width()-1, rt);
+	mvhline(this->starty()+2, this->startx()+1, ts, this->width()-2);
+}
+
+void StateInfo::HandleEvent(chtype event __attribute__((unused))) {
+}
+
+
+
 MainMenu::MainMenu(unsigned int h, unsigned int w, unsigned int y, unsigned int x, Object* parent) : KSync::Ui::NCursesMenu(h, w, y, x, parent) {
+	this->title("Main Menu");
 	this->AppendToMenu("Test 1");
 	this->AppendToMenu("Test 2");
 	this->AppendToMenu("Quit");
@@ -66,13 +104,31 @@ void MainMenu::Draw() {
 
 AppStateManager::AppStateManager() : KSync::Ui::NCursesWindow(LINES,COLS,0,0) {
 	state = Main;
-	finished = false;
-	MainMenu* main_menu = new MainMenu(LINES-2,COLS/2,1,1,this);
-	main_menu->title("Main Menu");
+	this->client_state.reset(new KSync::Client::ClientState());
+	MainMenu* main_menu = new MainMenu(0,0,0,0,this);
 	this->AddChildObject("main_menu", main_menu);
+	StateInfo* state_info = new StateInfo(this->client_state, 0,0,0,0, this);
+	this->AddChildObject("state_info", state_info);
+	this->PositionSubordinates();
 }
 
 AppStateManager::~AppStateManager() {
+}
+
+void AppStateManager::PositionSubordinates() {
+	this->Mvwin(0,0);
+	this->resize(LINES, COLS);
+
+	MainMenu* main_menu = (MainMenu*) this->GetChildObject("main_menu");
+	if(main_menu != 0) {
+		main_menu->Mvwin(1,1);
+		main_menu->resize(LINES-2,COLS/2);
+	}
+	StateInfo* state_info = (StateInfo*) this->GetChildObject("state_info");
+	if(state_info != 0) {
+		state_info->Mvwin(1,1+(COLS/2));
+		state_info->resize(LINES-2, COLS-2-(COLS/2));
+	}
 }
 
 void AppStateManager::Draw() {
@@ -82,19 +138,16 @@ void AppStateManager::Draw() {
 	if(main_menu != 0) {
 		main_menu->Draw();
 	}
+	Object* state_info = this->GetChildObject("state_info");
+	if(state_info != 0) {
+		state_info->Draw();
+	}
 }
 
 void AppStateManager::HandleEvent(const chtype event) {
 	if(this->state == Main) {
 		Object* main_menu = this->GetChildObject("main_menu");
-		if(main_menu == 0) {
-			this->finished = true;
-		} else {
-			main_menu->HandleEvent(event);
-			if(this->GetChildObject("main_menu") == 0) {
-				this->finished = true;
-			}
-		}
+		main_menu->HandleEvent(event);
 	}
 }
 
@@ -106,11 +159,11 @@ void AppStateManager::Run() {
 		refresh();
 		c = getch();
 		this->HandleEvent(c);
-	} while (!(this->finished));
+	} while (!(this->client_state->GetFinished()));
 }
 
 void AppStateManager::Quit() {
-	this->finished = true;
+	this->client_state->SetFinished(true);
 }
 
 //gui thread
