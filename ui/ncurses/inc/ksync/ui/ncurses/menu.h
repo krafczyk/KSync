@@ -14,6 +14,9 @@ namespace KSync {
 				NCursesMenu(unsigned int h, unsigned int w, unsigned int y, unsigned int x, Object* parent = 0) : NCursesWindow(h, w, y, x, parent) { selected_item = 0; }
 				virtual ~NCursesMenu() {};
 				void AppendToMenu(const std::string& entry_string);
+				void SetMenuItem(const size_t m_i, const std::string& menu_item);
+				int GetIdxOfMenuItem(const std::string& menu_item);
+				void ReplaceMenuItem(const std::string& menu_item, const std::string& new_name);
 				const std::string& GetNameOfSelected();
 
 				virtual void Draw();

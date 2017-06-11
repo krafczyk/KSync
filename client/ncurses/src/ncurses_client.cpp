@@ -14,6 +14,8 @@
 #include "ksync/ui/ncurses/window.h"
 #include "ksync/ui/ncurses/menu.h"
 #include "ksync/client/client_state.h"
+#include "ksync/comm/interface.h"
+#include "ksync/comm/factory.h"
 
 class StateInfo : public KSync::Ui::NCursesWindow {
 	public:
@@ -37,12 +39,13 @@ class MainMenu : public KSync::Ui::NCursesMenu {
 
 class AppStateManager : public KSync::Ui::NCursesWindow {
 	public:
-		AppStateManager();
+		AppStateManager(const bool nanomsg, const std::string& gateway_socket_url);
 		virtual ~AppStateManager();
 
 		void PositionSubordinates();
 
 		void Draw();
+		void InitializeCommSystem();
 		void HandleEvent(const chtype event);
 
 		void Run();
@@ -54,7 +57,9 @@ class AppStateManager : public KSync::Ui::NCursesWindow {
 
 	private:
 		State_t state;
+		std::string gateway_socket_url;
 		std::shared_ptr<KSync::Client::ClientState> client_state;
+		std::shared_ptr<KSync::Comm::CommSystemInterface> comm_interface;
 };
 
 StateInfo::StateInfo(std::shared_ptr<KSync::Client::ClientState>& state, unsigned int h, unsigned int w, unsigned int y, unsigned int x, KSync::Ui::Object* parent) : KSync::Ui::NCursesWindow(h, w, y, x, parent) {
@@ -73,17 +78,31 @@ void StateInfo::Draw() {
 	mvaddch(this->starty()+2, this->startx(), lt);
 	mvaddch(this->starty()+2, this->startx()+this->width()-1, rt);
 	mvhline(this->starty()+2, this->startx()+1, ts, this->width()-2);
+	std::stringstream ss;
+	if(this->client_state->GetCommNanomsg()) {
+		ss << "Nanomsg ";
+	} else {
+		ss << "Zeromq ";
+	}
+	ss << "Comm System ";
+	if(this->client_state->GetCommInitialized()) {
+		ss << "Initialized";
+	} else {
+		ss << "Uninitialized";
+	}
+	this->print_center_justified(3, 1, this->width()-2, ss.str());
+	mvaddch(this->starty()+4, this->startx(), lt);
+	mvaddch(this->starty()+4, this->startx()+this->width()-1, rt);
+	mvhline(this->starty()+4, this->startx()+1, ts, this->width()-2);
 }
+
 
 void StateInfo::HandleEvent(chtype event __attribute__((unused))) {
 }
 
-
-
 MainMenu::MainMenu(unsigned int h, unsigned int w, unsigned int y, unsigned int x, Object* parent) : KSync::Ui::NCursesMenu(h, w, y, x, parent) {
 	this->title("Main Menu");
-	this->AppendToMenu("Test 1");
-	this->AppendToMenu("Test 2");
+	this->AppendToMenu("Initialize Comm System");
 	this->AppendToMenu("Quit");
 }
 
@@ -91,7 +110,9 @@ void MainMenu::HandleEvent(const chtype event) {
 	if((event == KEY_ENTER)||(event == 10)) {
 		if(this->GetNameOfSelected() == "Quit") {
 			((AppStateManager*) this->GetParentObject())->Quit();
-		}// else if (this->GetNameOfSelected() == "Connect
+		} else if (this->GetNameOfSelected() == "Initialize Comm System") {
+			((AppStateManager*) this->GetParentObject())->InitializeCommSystem();
+		}
 	} else {
 		KSync::Ui::NCursesMenu::HandleEvent(event);
 	}
@@ -102,14 +123,16 @@ void MainMenu::Draw() {
 	this->draw_title();
 }
 
-AppStateManager::AppStateManager() : KSync::Ui::NCursesWindow(LINES,COLS,0,0) {
+AppStateManager::AppStateManager(const bool nanomsg, const std::string& gateway_socket_url) : KSync::Ui::NCursesWindow(LINES,COLS,0,0) {
 	state = Main;
 	this->client_state.reset(new KSync::Client::ClientState());
+	this->client_state->SetCommNanomsg(nanomsg);
 	MainMenu* main_menu = new MainMenu(0,0,0,0,this);
 	this->AddChildObject("main_menu", main_menu);
 	StateInfo* state_info = new StateInfo(this->client_state, 0,0,0,0, this);
 	this->AddChildObject("state_info", state_info);
 	this->PositionSubordinates();
+	this->gateway_socket_url = gateway_socket_url;
 }
 
 AppStateManager::~AppStateManager() {
@@ -166,6 +189,25 @@ void AppStateManager::Quit() {
 	this->client_state->SetFinished(true);
 }
 
+void AppStateManager::InitializeCommSystem() {
+	if(this->client_state->GetCommNanomsg()) {
+		if(KSync::Comm::GetNanomsgCommSystem(this->comm_interface) < 0) {
+			LOGF(SEVERE, "There was a problem initializing the ZeroMQ communication system!");
+			this->Quit();
+		}
+	} else {
+		if(KSync::Comm::GetZeromqCommSystem(this->comm_interface) < 0) {
+			LOGF(SEVERE, "There was a problem initializing the Nanomsg communication system!");
+			this->Quit();
+		}
+	}
+	this->client_state->SetCommInitialized(true);
+	MainMenu* main_menu = (MainMenu*) this->GetChildObject("main_menu");
+	if(main_menu != 0) {
+		main_menu->ReplaceMenuItem("Initialize Comm System", "Connect To Server");
+	}
+}
+
 //gui thread
 int main(int argc, char** argv) {
 	std::string log_dir;
@@ -197,13 +239,28 @@ int main(int argc, char** argv) {
 	std::unique_ptr<g3::LogWorker> logworker;
 	KSync::InitializeLogger(logworker, false, "KSync NCurses Client", log_dir);
 
+	//Get Default gateway socket url
+	if (!gateway_socket_url_defined) {
+		if(KSync::Utilities::get_default_ipc_connection_url(gateway_socket_url) < 0) {
+			LOGF(SEVERE, "There was a problem getitng the default IPC connection URL.");
+			return -2;
+		}
+	} else {
+		if(gateway_socket_url.substr(0, 3) != "icp") {
+			LOGF(SEVERE, "Non icp sockets are not properly implemented at this time.");
+			return -2;
+		}
+	}
+
+	LOGF(INFO, "Using the following socket url: %s", gateway_socket_url.c_str());
+
 	initscr();
 	cbreak();
 	noecho();
 	keypad(stdscr, TRUE);
 	refresh();
 
-	AppStateManager app_man;
+	AppStateManager app_man(nanomsg, gateway_socket_url);
 	app_man.title("KSync Client");
 
 	app_man.Run();

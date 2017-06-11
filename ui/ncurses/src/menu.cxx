@@ -8,12 +8,9 @@ namespace KSync {
 		}
 
 		void NCursesMenu::Draw() {
-			LOGF(INFO, "1 (%lu)", this->menu_items.size());
 			this->draw_border();
 			for(size_t m_i = 0; m_i < this->menu_items.size(); ++m_i) {
-				LOGF(INFO, "2");
 				if(selected_item == m_i) {
-					LOGF(INFO, "3");
 					attron(A_REVERSE);
 				}
 				this->print_center_justified(m_i+1, 1, this->width()-2, this->menu_items[m_i]);
@@ -39,6 +36,31 @@ namespace KSync {
 
 		const std::string& NCursesMenu::GetNameOfSelected() {
 			return this->menu_items[this->selected_item];
+		}
+
+		void NCursesMenu::SetMenuItem(const size_t m_i, const std::string& menu_item) {
+			this->menu_items[m_i] = menu_item;
+		}
+
+		int NCursesMenu::GetIdxOfMenuItem(const std::string& menu_item) {
+			int m_i = 0;
+			for(; (size_t) m_i<this->menu_items.size(); ++m_i) {
+				if(this->menu_items[m_i] == menu_item) {
+					break;
+				}
+			}
+			if((size_t) m_i != this->menu_items.size()) {
+				return m_i;
+			} else {
+				return -1;
+			}
+		}
+
+		void NCursesMenu::ReplaceMenuItem(const std::string& menu_item, const std::string& new_name) {
+			int idx = GetIdxOfMenuItem(menu_item);
+			if(idx != -1) {
+				SetMenuItem(idx, new_name);
+			}
 		}
 	}
 }

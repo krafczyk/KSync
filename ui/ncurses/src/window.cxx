@@ -36,11 +36,8 @@ namespace KSync {
 			unsigned int mid = this->startx()+(this->_width/2);
 			unsigned int left = mid-(w/2);
 			unsigned int right = left + w;
-			LOGF(INFO, "1 (%i) (%i)", this->starty(), left-1);
 			mvaddch(this->starty(), left-1, rt);
-			LOGF(INFO, "2 (%i) (%i)", this->starty(), left);
 			this->print_left_justified(0,left-this->startx(), w, this->_title);
-			LOGF(INFO, "3 (%i) (%i)", this->starty(), right);
 			mvaddch(this->starty(), right, lt);
 		}
 		
