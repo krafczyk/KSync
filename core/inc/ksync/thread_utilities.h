@@ -197,6 +197,10 @@ namespace KSync {
 				std::shared_ptr<node> head;
 				std::shared_ptr<node> tail;
 
+				void set_new_tail(std::shared_ptr<node>& old_tail, const std::shared_ptr<node>& new_tail) {
+					const std::shared_ptr<node> current_tail = old_tail;
+					while(!std::atomic_compare_exchange_weak(tail, old_tail, new_tail) && old_tail == current_tail);
+				}
 				/*std::shared_ptr<node> pop_head() {
 					const std::shared_ptr<node> old_head = std::atomic_load(head);
 					if(old_head == std::atomic_load(tail)) {
@@ -217,20 +221,33 @@ namespace KSync {
 					}
 				}
 
+				// pop with helping for push
 				std::shared_ptr<T> pop() {
 					//Same solution as in lock-free stack for pop.
-					std::shared_ptr<node> old_head = std::atomic_load(head);
-					while(old_head && !std::atomic_compare_exchange_weak(head,
-						old_head, old_head->next));
-					return old_head ? old_head->data : std::shared_ptr<T>();
+					while (true) {
+						std::shared_ptr<node> old_head = std::atomic_load(head);
+						if(old_head == std::atomic_load(tail)) {
+							return std::shared_ptr<T>();
+						}
+						//Load head's next node pointer
+						std::shared_ptr<node> next = std::atomic_load(old_head->next);
+						//Move head's pointer to next node
+						if(std::atomic_compare_exchange_strong(head, old_head, next)) {
+							//Success! return data
+							return std::move(next->data);
+						}
+						//Failure, try again!
+					}
 				}
 
+				// push to allow helping
 				void push(std::shared_ptr<T>& new_value) {
 					//Create new data
 					std::shared_ptr<T> new_data(std::move(new_value));
 					//Create new empty node for end of queue.
 					std::shared_ptr<node> p(new node);
-					while (true) {
+					bool finished = false;
+					while (!finished) {
 						//Create emtpy data pointer
 						std::shared_ptr<T> expected_old_data;
 						//Get current tail.
@@ -240,16 +257,17 @@ namespace KSync {
 						//Exchange it's content for the new data we created.
 						//We do this first so that node's data is prepared.
 						if(std::atomic_compare_exchange_strong(old_tail->data, expected_old_data, new_data)) {
-							std::shared_ptr<node> null_next;
-							if(std::atomic_compare_exchange_strong(old_tail->next, null_next, p
-							//Set tail's next pointer to new empty node.
-							old_tail->next = p;
-							//atomically store empty node as new tail..
-							std::atomic_store(tail, p);
-							//old version:
-							//old_tail = std::atomic_exchange(tail, p);
+							//Success! we can exit this pass through the loop!
+							finished = true;
 							break;
 						}
+						//Create empty node pointer
+						std::shared_ptr<node> null_next;
+						//Point tail's next to new empty node if it has a null pointer
+						std::atomic_compare_exchange_strong(old_tail->next, null_next, p);
+						//Set tail to new empty node.
+						set_new_tail(old_tail, p);
+
 					}
 				}
 		};
