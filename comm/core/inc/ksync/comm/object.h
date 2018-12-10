@@ -28,7 +28,11 @@ namespace KSync {
 						CommObjectConstructorException();
 				};
 
-				CommObject(const char* data, const size_t size, const bool pre_packed, const Comm::Type_t type = Comm::CommunicableObject::Type);
+				typedef short unsigned int message_id_t;
+
+				static message_id_t GenMessageId();
+
+				CommObject(const char* data, const size_t size, const bool pre_packed, const Comm::Type_t type = Comm::CommunicableObject::Type, const message_id_t reply_id = 0);
 				~CommObject();
 
 				int Pack() __attribute__((warn_unused_result));
@@ -45,10 +49,19 @@ namespace KSync {
 				Comm::Type_t GetType() const {
 					return this->type;
 				}
+				message_id_t GetMessageId() const  {
+					return this->message_id;
+				}
+				message_id_t GetReplyId() const {
+					return this->reply_id;
+				}
+
 
 			private:
 				bool packed;
 				Comm::Type_t type;
+				message_id_t message_id;
+				message_id_t reply_id;
 				char crc;
 				char* data;
 				size_t size;

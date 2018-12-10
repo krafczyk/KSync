@@ -113,12 +113,6 @@ namespace KSync {
 		int get_default_connection_url(std::string& connection_url) {
 			return get_default_ipc_connection_url(connection_url);
 		}
-		client_id_t GenerateNewClientId() {
-			std::random_device rd;
-			std::mt19937_64 gen(rd());
-			std::uniform_int_distribution<client_id_t> dis(std::numeric_limits<client_id_t>::min(), std::numeric_limits<client_id_t>::max());
-			return dis(gen);
-		}
 
 		int get_client_socket_url(std::string& socket_url, const client_id_t client_id) {
 			std::string socket_dir;

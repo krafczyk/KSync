@@ -5,6 +5,7 @@
 #include "nanomsg/reqrep.h"
 #include "nanomsg/pair.h"
 #include "nanomsg/pubsub.h"
+#include "nanomsg/pipeline.h"
 
 namespace KSync {
 	namespace Comm {
@@ -114,7 +115,7 @@ namespace KSync {
 		NanomsgCommSystem::~NanomsgCommSystem() {
 		}
 
-		int NanomsgCommSystem::Create_Gateway_Req_Socket(std::shared_ptr<CommSystemSocket>& socket) {
+		int NanomsgCommSystem::Create_Gateway_Req_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout, int send_timeout) {
 			if (!socket) {
 				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
 				nanomsg_socket->socket = nn_socket(AF_SP, NN_REQ);
@@ -124,13 +125,15 @@ namespace KSync {
 					return -1;
 				}
 				socket.reset((CommSystemSocket*) nanomsg_socket);
+				socket->SetSendTimeout(send_timeout);
+				socket->SetRecvTimeout(recv_timeout);
 				return 0;
 			} else {
 				return -1;
 			}
 		}
 
-		int NanomsgCommSystem::Create_Gateway_Rep_Socket(std::shared_ptr<CommSystemSocket>& socket) {
+		int NanomsgCommSystem::Create_Gateway_Rep_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout, int send_timeout) {
 			if (!socket) {
 				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
 				nanomsg_socket->socket = nn_socket(AF_SP, NN_REP);
@@ -139,13 +142,15 @@ namespace KSync {
 					return -1;
 				}
 				socket.reset((CommSystemSocket*) nanomsg_socket);
+				socket->SetSendTimeout(send_timeout);
+				socket->SetRecvTimeout(recv_timeout);
 				return 0;
 			} else {
 				return -1;
 			}
 		}
 
-		int NanomsgCommSystem::Create_Pair_Socket(std::shared_ptr<CommSystemSocket>& socket) {
+		int NanomsgCommSystem::Create_Pair_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout, int send_timeout) {
 			if (!socket) {
 				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
 				nanomsg_socket->socket = nn_socket(AF_SP, NN_PAIR);
@@ -154,13 +159,15 @@ namespace KSync {
 					return -1;
 				}
 				socket.reset((CommSystemSocket*) nanomsg_socket);
+				socket->SetSendTimeout(send_timeout);
+				socket->SetRecvTimeout(recv_timeout);
 				return 0;
 			} else {
 				return -1;
 			}
 		}
 
-		int NanomsgCommSystem::Create_Pub_Socket(std::shared_ptr<CommSystemSocket>& socket) {
+		int NanomsgCommSystem::Create_Pub_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout, int send_timeout) {
 			if (!socket) {
 				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
 				nanomsg_socket->socket = nn_socket(AF_SP, NN_PUB);
@@ -169,13 +176,15 @@ namespace KSync {
 					return -1;
 				}
 				socket.reset((CommSystemSocket*) nanomsg_socket);
+				socket->SetSendTimeout(send_timeout);
+				socket->SetRecvTimeout(recv_timeout);
 				return 0;
 			} else {
 				return -1;
 			}
 		}
 
-		int NanomsgCommSystem::Create_Sub_Socket(std::shared_ptr<CommSystemSocket>& socket) {
+		int NanomsgCommSystem::Create_Sub_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout, int send_timeout) {
 			if (!socket) {
 				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
 				nanomsg_socket->socket = nn_socket(AF_SP, NN_SUB);
@@ -188,6 +197,42 @@ namespace KSync {
 					return -2;
 				}
 				socket.reset((CommSystemSocket*) nanomsg_socket);
+				socket->SetSendTimeout(send_timeout);
+				socket->SetRecvTimeout(recv_timeout);
+				return 0;
+			} else {
+				return -3;
+			}
+		}
+
+		int NanomsgCommSystem::Create_Pull_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout, int send_timeout) {
+			if (!socket) {
+				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
+				nanomsg_socket->socket = nn_socket(AF_SP, NN_PULL);
+				if(nanomsg_socket->socket < 0) {
+					LOGF(SEVERE, "There was a problem creating the NN_PULL socket!");
+					return -1;
+				}
+				socket.reset((CommSystemSocket*) nanomsg_socket);
+				socket->SetSendTimeout(send_timeout);
+				socket->SetRecvTimeout(recv_timeout);
+				return 0;
+			} else {
+				return -3;
+			}
+		}
+
+		int NanomsgCommSystem::Create_Push_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout, int send_timeout) {
+			if (!socket) {
+				NanomsgCommSystemSocket* nanomsg_socket = new NanomsgCommSystemSocket();
+				nanomsg_socket->socket = nn_socket(AF_SP, NN_PUSH);
+				if(nanomsg_socket->socket < 0) {
+					LOGF(SEVERE, "There was a problem creating the NN_PUSH socket!");
+					return -1;
+				}
+				socket.reset((CommSystemSocket*) nanomsg_socket);
+				socket->SetSendTimeout(send_timeout);
+				socket->SetRecvTimeout(recv_timeout);
 				return 0;
 			} else {
 				return -3;

@@ -21,6 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 #include <algorithm>
+#include <mutex>
+#include <memory>
+#include <random>
 #include "ArgParse/ArgParse.h"
 
 namespace KSync {
@@ -33,9 +36,22 @@ namespace KSync {
 		int get_default_gateway_thread_url(std::string& connection_url);
 		int get_default_broadcast_url(std::string& url);
 		int get_default_connection_url(std::string& connection_url);
+
+		static thread_local std::shared_ptr<std::mt19937_64> rand_gen;
+
+		template <class T>
+		T GenUniformRandom() {
+			if (!rand_gen) {
+				std::random_device rd;
+				rand_gen.reset(new std::mt19937_64(rd()));
+			}
+			std::uniform_int_distribution<T> dis(std::numeric_limits<T>::min(), std::numeric_limits<T>::max());
+			return dis(*rand_gen);
+		}
+
 		typedef unsigned long client_id_t;
-		client_id_t GenerateNewClientId();
-		int get_client_socket_url(std::string& dir, const client_id_t client_id);
+
+		int get_client_socket_url(std::string& socket_url, const client_id_t client_id);
 		static inline std::string &ltrim(std::string &s) {
 			s.erase(s.begin(), std::find_if(s.begin(), s.end(),
 				std::not1(std::ptr_fun<int, int>(std::isspace))));

@@ -3,9 +3,13 @@
 
 #include <memory>
 #include <atomic>
+#include <future>
+#include <mutex>
+#include <utility>
 
 namespace KSync {
 	namespace Utilities {
+		// Implementation from C++ Concurrency in action
 		template<typename T>
 		class threadsafe_lock_free_stack {
 			private:
@@ -33,6 +37,7 @@ namespace KSync {
 		};
 
 		//Thread-safe lock-free single producer single consumer queue
+		//Implementation inspired from C++ Concurrency in action
 		template<typename T>
 		class spsc_threadsafe_lock_free_queue {
 			private:
@@ -113,6 +118,7 @@ namespace KSync {
 		};
 
 		//Thread-safe queue with a busy-wait queue (not truely lock-free)
+		//Implementation from C++ Concurrency in action
 		template<typename T>
 		class threadsafe_queue {
 			private:
@@ -183,6 +189,7 @@ namespace KSync {
 		};
 
 		//Thread-safe queue with a busy-wait queue (not truely lock-free)
+		//Implementation inspired from C++ Concurrency in action
 		template<typename T>
 		class threadsafe_lock_free_queue {
 			private:
@@ -192,6 +199,7 @@ namespace KSync {
 					node(const T& data_):
 						data(std::make_shared<T>(data_)) {
 					}
+					node() {}
 				};
 
 				std::shared_ptr<node> head;
@@ -268,6 +276,150 @@ namespace KSync {
 						//Set tail to new empty node.
 						set_new_tail(old_tail, p);
 
+					}
+				}
+		};
+
+		template<class T>
+		class FutureWrapper {
+			public:
+				FutureWrapper(std::shared_ptr<std::atomic<bool>> grabbed, std::future<T>&& in) : value_grabbed(grabbed), the_future(in) {}
+				FutureWrapper(FutureWrapper<T>&& rhs) : value_grabbed(std::move(rhs.value_grabbed)), the_future(std::move(rhs.the_future)) {}
+				T get() {
+					T answer = the_future.get();
+					value_grabbed->store(true);
+					return answer;
+				}
+				void wait() {
+					the_future.wait();
+				}
+				template<class Rep, class Period>
+				std::future_status wait_for(const std::chrono::duration<Rep,Period>& timeout_duration) const {
+					return the_future.wait_for(timeout_duration);
+				}
+				template<class Clock, class Duration>
+				std::future_status wait_until(const std::chrono::time_point<Clock,Duration>& timeout_time) const {
+					return the_future.wait_until(timeout_time);
+				}
+			private:
+				std::shared_ptr<std::atomic<bool>> value_grabbed;
+				std::future<T> the_future;
+		};
+
+		template<class T>
+		class PromiseWrapper {
+			public:
+				PromiseWrapper() {
+					value_grabbed->store(false);
+				}
+				bool grabbed() {
+					return value_grabbed->load();
+				}
+				FutureWrapper<T>&& get_future() {
+					return std::move(FutureWrapper<T>(value_grabbed, std::move(the_promise.get_future())));
+				}
+				void set_value(const T& value) {
+					the_promise.set_value(value);
+				}
+				void set_value(T&& value) {
+					the_promise.set_value(value);
+				}
+				void set_value_at_thread_exit(const T& value) {
+					the_promise.set_value_at_thread_exit(value);
+				}
+				void set_value_at_thread_exit(T&& value) {
+					the_promise.set_value_at_thread_exit(value);
+				}
+				void set_exception(std::exception_ptr p) {
+					the_promise.set_exception(p);
+				}
+				void set_exception_at_thread_exit(std::exception_ptr p) {
+					the_promise.set_exception_at_thread_exit(p);
+				}
+
+			private:
+				std::shared_ptr<std::atomic<bool>> value_grabbed;
+				std::promise<T> the_promise;
+		};
+
+		// Implementation taken from C++ Concurrency in Action page 176
+		template<class T>
+		class threadsafe_list {
+			private:
+				struct node {
+					std::mutex m;
+					std::shared_ptr<T> data;
+					std::shared_ptr<node> next;
+					node():
+						next() {
+					}
+					node(const T& data_):
+						data(std::make_shared<T>(data_)) {
+					}
+				};
+				node head;
+			public:
+				threadsafe_list() {
+				}
+
+				~threadsafe_list() {
+					remove_if([](node const&){return true;});
+				}
+
+				threadsafe_list(threadsafe_list const& other) = delete;
+				threadsafe_list& operator=(threadsafe_list const& other) = delete;
+
+				void push_front(T const& value) {
+					std::unique_ptr<node> new_node(new node(value));
+					std::lock_guard<std::mutex> lk(head.m);
+					new_node->next = std::move(head.next);
+					head.next = std::move(new_node);
+				}
+
+				template<typename Function>
+				void for_each(Function f) {
+					node* current = &head;
+					std::unique_lock<std::mutex> lk(head.m);
+					while(const node* next = current->next.get()) {
+						std::unique_lock<std::mutex> next_lk(next->m);
+						lk.unlock();
+						f(*next->data);
+						current = next;
+						lk=std::move(next_lk);
+					}
+				}
+
+				template<typename Predicate>
+				std::shared_ptr<T> find_first_if(Predicate p) {
+					node* current = &head;
+					std::unique_lock<std::mutex> lk(head.m);
+					while(const node* next = current->next.get()) {
+						std::unique_lock<std::mutex> next_lk(next->m);
+						lk.unlock();
+						if(p(*next->data)) {
+							return next->data;
+						}
+						current = next;
+						lk = std::move(next_lk);
+					}
+					return std::shared_ptr<T>();
+				}
+
+				template<typename Predicate>
+				void remove_if(Predicate p) {
+					node* current = &head;
+					std::unique_lock<std::mutex> lk(head.m);
+					while(const node* next = current->next.get()) {
+						std::unique_lock<std::mutex> next_lk(next->m);
+						if(p(*next->data)) {
+							std::unique_ptr<node> old_next = std::move(current->next);
+							current->next = std::move(next->next);
+							next_lk.unlock();
+						} else {
+							lk.unlock();
+							current = next;
+							lk = std::move(next_lk);
+						}
 					}
 				}
 		};

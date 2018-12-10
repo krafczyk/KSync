@@ -42,8 +42,8 @@ namespace KSync {
 				virtual int Send(const std::shared_ptr<CommObject> comm_obj) = 0;
 				virtual int Recv(std::shared_ptr<CommObject>& comm_obj) = 0;
 				virtual int ForceRecv(std::shared_ptr<CommObject>& comm_obj);
-				virtual int SetSendTimeout(int timeout) = 0;
-				virtual int SetRecvTimeout(int timeout) = 0;
+				virtual int SetSendTimeout(int timeout = -1) = 0;
+				virtual int SetRecvTimeout(int timeout = -1) = 0;
 			protected:
 				bool bind;
 				std::string url;
@@ -54,11 +54,13 @@ namespace KSync {
 				CommSystemInterface();
 				virtual ~CommSystemInterface();
 
-				virtual int Create_Gateway_Req_Socket(std::shared_ptr<CommSystemSocket>& socket) = 0;
-				virtual int Create_Gateway_Rep_Socket(std::shared_ptr<CommSystemSocket>& socket) = 0;
-				virtual int Create_Pair_Socket(std::shared_ptr<CommSystemSocket>& socket) = 0;
-				virtual int Create_Pub_Socket(std::shared_ptr<CommSystemSocket>& socket) = 0;
-				virtual int Create_Sub_Socket(std::shared_ptr<CommSystemSocket>& socket) = 0;
+				virtual int Create_Gateway_Req_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout = -1, int send_timeout = -1) = 0;
+				virtual int Create_Gateway_Rep_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout = -1, int send_timeout = -1) = 0;
+				virtual int Create_Pair_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout = -1, int send_timeout = -1) = 0;
+				virtual int Create_Pub_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout = -1, int send_timeout = -1) = 0;
+				virtual int Create_Sub_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout = -1, int send_timeout = -1) = 0;
+				virtual int Create_Pull_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout = -1, int send_timeout = -1) = 0;
+				virtual int Create_Push_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout = -1, int send_timeout = -1) = 0;
 		};
 	}
 }

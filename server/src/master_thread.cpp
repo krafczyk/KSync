@@ -30,10 +30,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ksync/comm/interface.h"
 #include "ksync/comm/factory.h"
 #include "ksync/comm/object.h"
+#include "ksync/client_communicator.h"
 #include "ksync/command_system_interface.h"
 #include "ksync/pstreams_command_system.h"
 #include "ksync/gateway_thread.h"
 #include "ksync/pstream.h"
+#include "ksync/common_ops.h"
+#include "ksync/thread_utilities.h"
 
 #include "ArgParse/ArgParse.h"
 
@@ -86,32 +89,18 @@ int main(int argc, char** argv) {
 	KSync::InitializeLogger(logworker, true, "KSync Server", log_dir);
 
 	//Get gateway URL
-	if (!gateway_socket_url_defined) {
-		if(KSync::Utilities::get_default_ipc_connection_url(gateway_socket_url) < 0) {
-			LOGF(SEVERE, "There was a problem getitng the default IPC connection URL.");
-			return -2;
-		}
-	} else {
-		if(gateway_socket_url.substr(0, 3) != "icp") {
-			LOGF(SEVERE, "Non icp sockets are not properly implemented at this time.");
-			return -2;
-		}
+	if (KSync::Utilities::GetGatewaySocketURL(gateway_socket_url, gateway_socket_url_defined) < 0) {
+		LOGF(SEVERE, "There was a problem getting the gateway socket URL!");
+		return -2;
 	}
 
 	LOGF(INFO, "Using the following socket url: %s", gateway_socket_url.c_str());
 
 	//Initialize communication system
 	std::shared_ptr<KSync::Comm::CommSystemInterface> comm_system;
-	if (!nanomsg) {
-		if (KSync::Comm::GetZeromqCommSystem(comm_system) < 0) {
-			LOGF(SEVERE, "There was a problem initializing the ZeroMQ communication system!");
-			return -2;
-		}
-	} else {
-		if (KSync::Comm::GetNanomsgCommSystem(comm_system) < 0) {
-			LOGF(SEVERE, "There was a problem initializing the Nanomsg communication system!");
-			return -2;
-		}
+	if (KSync::Utilities::GetCommSystem(comm_system, nanomsg) < 0) {
+		LOGF(SEVERE, "There was a problem initializing the comm system!");
+		return -2;
 	}
 
 	//Initialize command system
@@ -119,13 +108,8 @@ int main(int argc, char** argv) {
 
 	//Initialize Gateway Thread socket
 	std::shared_ptr<KSync::Comm::CommSystemSocket> gateway_thread_socket;
-	if (comm_system->Create_Pair_Socket(gateway_thread_socket) < 0) {
+	if (comm_system->Create_Pair_Socket(gateway_thread_socket, 10) < 0) {
 		LOGF(SEVERE, "There was a problem creating the gateway thread socket!");
-		return -3;
-	}
-
-	if (gateway_thread_socket->SetRecvTimeout(1000) < 0) {
-		LOGF(SEVERE, "There was a problem setting the recv timeout!");
 		return -3;
 	}
 
@@ -140,24 +124,6 @@ int main(int argc, char** argv) {
 		return -5;
 	}
 
-	//Initialize Broadcast socket
-	std::shared_ptr<KSync::Comm::CommSystemSocket> broadcast_socket;
-	if (comm_system->Create_Pub_Socket(broadcast_socket) < 0) {
-		LOGF(SEVERE, "There was a problem creating the broadcast socket!");
-		return -3;
-	}
-
-	std::string broadcast_url;
-	if(KSync::Utilities::get_default_broadcast_url(broadcast_url) < 0) {
-		LOGF(SEVERE, "There was a problem getting the default broadcast socket url!");
-		return -4;
-	}
-
-	if(broadcast_socket->Bind(broadcast_url) < 0) {
-		LOGF(SEVERE, "There was a problem binding the broadcast socket!");
-		return -5;
-	}
-
 	//Launch Gateway Thread
 	std::thread gateway(KSync::Server::gateway_thread, comm_system, gateway_thread_socket_url, gateway_socket_url);
 
@@ -167,7 +133,8 @@ int main(int argc, char** argv) {
 	if(status == KSync::Comm::CommSystemSocket::Other) {
 		LOGF(SEVERE, "Didn't receive connect herald!");
 		return -6;
-	} else if (status == KSync::Comm::CommSystemSocket::Timeout) {
+	} else if ((status == KSync::Comm::CommSystemSocket::Timeout)||
+	           (status == KSync::Comm::CommSystemSocket::EmptyMessage)) {
 		LOGF(SEVERE, "Herald retreive timed out!!!");
 		return -7;
 	} else {
@@ -188,7 +155,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	std::map<KSync::Utilities::client_id_t, std::shared_ptr<KSync::Comm::CommSystemSocket>> client_sockets;
+	ClientCommunicatorList client_communicators;
 
 	while(!finished) {
 		//Check gateway thread
@@ -206,32 +173,34 @@ int main(int argc, char** argv) {
 				std::shared_ptr<KSync::Comm::GatewaySocketInitializationRequest> request;
 				KSync::Comm::CommCreator(request, recv_obj);
 				LOGF(INFO, "Received client id: (%lu)\n",request->GetClientId());
-				if(client_sockets.find(request->GetClientId()) == client_sockets.end()) {
+				std::shared_ptr<KSync::Comm::ClientCommunicator> client_communicator = client_communicators.find_first_if(request->GetClientId());
+				if(client_communicator == nullptr) {
 					LOGF(INFO, "Generating new client socket!");
 					//Don't have a client with that ID yet! Handle creation of new socket
-					std::string new_socket_url;
-					if(KSync::Utilities::get_client_socket_url(new_socket_url, request->GetClientId()) < 0) {
-						LOGF(SEVERE, "Error! Couldn't get the client socket url!");
-						return -10;
-					}
+					client_communicator.reset(new ClientCommunicator(comm_system, request->GetClientId(), true))
+					//std::string new_socket_url;
+					//if(KSync::Utilities::get_client_socket_url(new_socket_url, request->GetClientId()) < 0) {
+					//	LOGF(SEVERE, "Error! Couldn't get the client socket url!");
+					//	return -10;
+					//}
 
-					std::shared_ptr<KSync::Comm::CommSystemSocket> client_socket;
-					if (comm_system->Create_Pair_Socket(client_socket) < 0) {
-						LOGF(SEVERE, "There was a problem creating the gateway thread socket!");
-						return -10;
-					}
+					//std::shared_ptr<KSync::Comm::CommSystemSocket> client_socket;
+					//if (comm_system->Create_Pair_Socket(client_socket) < 0) {
+					//	LOGF(SEVERE, "There was a problem creating the gateway thread socket!");
+					//	return -10;
+					//}
 
-					if (client_socket->SetRecvTimeout(1000) < 0) {
-						LOGF(SEVERE, "There was a problem setting the recv timeout!");
-						return -10;
-					}
+					//if (client_socket->SetRecvTimeout(1000) < 0) {
+					//	LOGF(SEVERE, "There was a problem setting the recv timeout!");
+					//	return -10;
+					//}
 
-					if(client_socket->Bind(new_socket_url) < 0) {
-						LOGF(SEVERE, "There was a problem binding the gateway thread socket!");
-						return -10;
-					}
+					//if(client_socket->Bind(new_socket_url) < 0) {
+					//	LOGF(SEVERE, "There was a problem binding the gateway thread socket!");
+					//	return -10;
+					//}
 
-					client_sockets[request->GetClientId()] = client_socket;
+					client_communicators.push_front(*client_communicator);
 
 					KSync::Comm::ClientSocketCreation socket_message;
 					socket_message.SetClientUrl(new_socket_url);

@@ -32,11 +32,13 @@ namespace KSync {
 				NanomsgCommSystem();
 				~NanomsgCommSystem();
 
-				int Create_Gateway_Req_Socket(std::shared_ptr<CommSystemSocket>& socket);
-				int Create_Gateway_Rep_Socket(std::shared_ptr<CommSystemSocket>& socket);
-				int Create_Pair_Socket(std::shared_ptr<CommSystemSocket>& socket);
-				int Create_Pub_Socket(std::shared_ptr<CommSystemSocket>& socket);
-				int Create_Sub_Socket(std::shared_ptr<CommSystemSocket>& socket);
+				int Create_Gateway_Req_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout = -1, int send_timeout = -1);
+				int Create_Gateway_Rep_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout = -1, int send_timeout = -1);
+				int Create_Pair_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout = -1, int send_timeout = -1);
+				int Create_Pub_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout = -1, int send_timeout = -1);
+				int Create_Sub_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout = -1, int send_timeout = -1);
+				int Create_Pull_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout = -1, int send_timeout = -1);
+				int Create_Push_Socket(std::shared_ptr<CommSystemSocket>& socket, int recv_timeout = -1, int send_timeout = -1);
 		};
 	}
 }
