@@ -86,6 +86,18 @@ flags = [
 (get_package_spack_installed_directory('ncurses') + '/include'),
 '-I',
 (get_package_spack_installed_directory('g3log') + '/include'),
+'-isystem',
+'/usr/bin/../lib64/gcc/x86_64-pc-linux-gnu/8.2.1/../../../../include/c++/8.2.1',
+'-isystem',
+'/usr/bin/../lib64/gcc/x86_64-pc-linux-gnu/8.2.1/../../../../include/c++/8.2.1/x86_64-pc-linux-gnu',
+'-isystem',
+'/usr/bin/../lib64/gcc/x86_64-pc-linux-gnu/8.2.1/../../../../include/c++/8.2.1/backward',
+'-isystem',
+'/usr/local/include'
+'-isystem',
+'/usr/lib/clang/7.0.0/include'
+'-isystem',
+'/usr/include'
 ]
 
 # Set this to the absolute path to the folder (NOT the file!) containing the
