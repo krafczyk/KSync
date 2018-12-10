@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ksync/comm/interface.h"
 #include "ksync/comm/factory.h"
 
-#include "ArgParse/ArgParse.h"
+#include "ksync/ArgParseStandalone.h"
 
 int main(int argc, char** argv) {
 	std::string log_dir;

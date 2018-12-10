@@ -20,7 +20,7 @@
 #include "ksync/common_ops.h"
 #include "ksync/thread_utilities.h"
 
-#include "ArgParse/ArgParse.h"
+#include "ksync/ArgParseStandalone.h"
 
 bool finished = false;
 
@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	ClientCommunicatorList client_communicators;
+	KSync::Comm::ClientCommunicatorList client_communicators;
 
 	while(!finished) {
 		//Check gateway thread
@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
 				if(client_communicator == nullptr) {
 					LOGF(INFO, "Generating new client socket!");
 					//Don't have a client with that ID yet! Handle creation of new socket
-					client_communicator.reset(new ClientCommunicator(comm_system, request->GetClientId(), true))
+					client_communicator.reset(new KSync::Comm::ClientCommunicator(comm_system, request->GetClientId(), true));
 					//std::string new_socket_url;
 					//if(KSync::Utilities::get_client_socket_url(new_socket_url, request->GetClientId()) < 0) {
 					//	LOGF(SEVERE, "Error! Couldn't get the client socket url!");

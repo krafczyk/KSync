@@ -8,7 +8,7 @@ namespace KSync {
 	namespace Exception {
 		class BasicException : public std::exception {
 			public:
-				BasicException() {
+				BasicException(const std::string& message = "") {
 					this->message = message;
 				};
 				const std::string& GetMessage() {
